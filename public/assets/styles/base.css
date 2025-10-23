@@ -1,0 +1,43 @@
+#dm-root.dm-root {
+    --dm-bg: #f3f3f7;
+    --dm-surface: #ffffff;
+    --dm-border: #d9d9de;
+    --dm-border-strong: #babac4;
+    --dm-text: #16161d;
+    --dm-text-muted: #6a6a76;
+    --dm-text-quiet: #a0a0ad;
+    --dm-action: #4d38ff;
+    --dm-action-dark: #3323c5;
+    --dm-action-outline: #16161d;
+    --dm-radius-lg: 28px;
+    --dm-radius-md: 20px;
+    --dm-radius-sm: 12px;
+    --dm-shadow-sm: 0 16px 40px rgba(22, 22, 29, 0.08);
+    --dm-shadow-md: 0 28px 60px rgba(22, 22, 29, 0.12);
+
+    position: relative;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 56px 0 88px;
+    background: var(--dm-bg);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-size: 16px;
+    color: var(--dm-text);
+    line-height: 1.5;
+}
+
+#dm-root.dm-root * {
+    box-sizing: border-box;
+}
+
+#dm-root.dm-root button,
+
+#dm-root.dm-root input,
+
+#dm-root.dm-root select,
+
+#dm-root.dm-root textarea {
+    font: inherit;
+    color: inherit;
+}

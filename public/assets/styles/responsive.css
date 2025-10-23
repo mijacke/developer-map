@@ -1,0 +1,147 @@
+@media (max-width: 960px) {
+    .dm-header {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .dm-main-surface {
+        padding: 32px;
+    }
+
+    .dm-main-surface__header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 24px;
+    }
+
+    .dm-subnav {
+        justify-content: center;
+    }
+
+    .dm-subnav {
+        flex-wrap: wrap;
+    }
+
+    .dm-placeholder-grid,
+    .dm-modal__body--with-media {
+        grid-template-columns: 1fr;
+    }
+
+    .dm-row {
+        grid-template-columns: 100px 1fr;
+        grid-template-areas:
+            'media name'
+            'media type'
+            'media actions'
+            'media shortcode';
+        gap: 12px;
+    }
+
+    .dm-row__media {
+        grid-area: media;
+    }
+
+    .dm-row__name {
+        grid-area: name;
+    }
+
+    .dm-row__type {
+        grid-area: type;
+    }
+
+    .dm-row__actions {
+        grid-area: actions;
+    }
+
+    .dm-row__shortcode {
+        grid-area: shortcode;
+    }
+
+    .dm-board__head,
+    .dm-board__row {
+        grid-template-columns: minmax(240px, 1fr) 120px 160px 1fr;
+        gap: 16px;
+    }
+
+    .dm-board__cell--actions {
+        justify-content: flex-start;
+    }
+
+    .dm-board__cell--shortcode {
+        justify-content: flex-start;
+    }
+
+    .dm-draw__toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .dm-draw__output {
+        min-width: 0;
+        width: 100%;
+        text-align: left;
+    }
+}
+
+@media (max-width: 720px) {
+    #dm-root.dm-root {
+        padding: 18px;
+    }
+
+    .dm-app {
+        padding: 0 12px;
+        gap: 32px;
+    }
+
+    .dm-topbar {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 24px;
+    }
+
+    .dm-main-surface {
+        padding: 24px;
+        border-radius: 24px;
+    }
+
+    .dm-subnav {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .dm-subnav__button {
+        flex: 1 1 auto;
+    }
+
+    .dm-board__head,
+    .dm-board__row {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .dm-board__cell,
+    .dm-board__cell--actions {
+        justify-content: flex-start;
+    }
+
+    .dm-board__cell--shortcode code {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .dm-card,
+    .dm-dashboard__list {
+        padding: 22px;
+    }
+
+    .dm-dashboard__list-head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dm-dashboard__actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+}
