@@ -135,7 +135,7 @@
 
 .dm-row__type {
     font-weight: 600;
-    color: var(--dm-content-text-color);
+    color: var(--dm-text-muted);
 }
 
 .dm-row__actions {
