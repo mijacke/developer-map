@@ -18,6 +18,24 @@ const SETTINGS_SECTIONS = {
     FONTS: 'fonts',
 };
 
+const MEDIA = {
+    building: new URL('../media/demo-building-placeholder.svg', import.meta.url).href,
+    draw: new URL('../media/demo-building-draw.svg', import.meta.url).href,
+    floor: new URL('../media/demo-floorplan-placeholder.svg', import.meta.url).href,
+    cursor: new URL('../media/demo-pointer.svg', import.meta.url).href,
+};
+
+const DRAW_VIEWBOX = { width: 1280, height: 720 };
+
+const DEFAULT_DRAW_POINTS = [
+    { x: 260, y: 320 },
+    { x: 640, y: 260 },
+    { x: 1005, y: 330 },
+    { x: 960, y: 436 },
+    { x: 600, y: 468 },
+    { x: 320, y: 390 },
+];
+
 /**
  * Initialise the Developer Map dashboard inside the provided root element.
  * @param {{ root: HTMLElement; runtimeConfig: Record<string, unknown>; projectConfig?: object }} options
@@ -57,6 +75,7 @@ export function initDeveloperMap(options) {
     function render() {
         root.innerHTML = [renderAppShell(state, data), renderModal(state, data)].join('');
         attachEventHandlers();
+        enhanceDrawModal();
     }
 
     function attachEventHandlers() {
@@ -146,6 +165,325 @@ export function initDeveloperMap(options) {
                 }
             });
         }
+    }
+
+    function enhanceDrawModal() {
+        if (!state.modal || state.modal.type !== 'draw-coordinates') {
+            return;
+        }
+        const drawRoot = root.querySelector('[data-dm-draw-root]');
+        if (!drawRoot) {
+            return;
+        }
+        initDrawSurface(drawRoot);
+    }
+
+    function initDrawSurface(drawRoot) {
+        if (!drawRoot || drawRoot.dataset.dmDrawReady === '1') {
+            return;
+        }
+
+        drawRoot.dataset.dmDrawReady = '1';
+
+        const overlay = drawRoot.querySelector('[data-role="overlay"]');
+        const fill = drawRoot.querySelector('[data-role="fill"]');
+        const outline = drawRoot.querySelector('[data-role="outline"]');
+        const baseline = drawRoot.querySelector('[data-role="baseline"]');
+        const handlesLayer = drawRoot.querySelector('[data-role="handles"]');
+        const output = drawRoot.querySelector('[data-role="output"]');
+        const cursor = drawRoot.querySelector('.dm-draw__cursor');
+        const stage = drawRoot.querySelector('.dm-draw__stage');
+        const resetButton = root.querySelector('[data-dm-reset-draw]');
+        const saveButton = root.querySelector('[data-dm-save-draw]');
+        const floorName = drawRoot.dataset.dmFloorName ?? 'Lokalita';
+
+        if (!overlay || !fill || !outline || !baseline || !handlesLayer || !output || !stage) {
+            return;
+        }
+
+        let points = clonePoints(DEFAULT_DRAW_POINTS);
+        let handleElements = [];
+        let activeHandle = null;
+        let activeIndex = -1;
+        let preventClick = false;
+        let cursorAnchorIndex = 0;
+
+        const handleResize = () => positionCursor();
+        window.addEventListener('resize', handleResize);
+
+        const observer = new MutationObserver(() => {
+            if (!root.contains(drawRoot)) {
+                teardown();
+            }
+        });
+        observer.observe(root, { childList: true, subtree: true });
+
+        function teardown() {
+            window.removeEventListener('resize', handleResize);
+            observer.disconnect();
+        }
+
+        function clonePoints(source) {
+            return source.map((point) => ({ x: point.x, y: point.y }));
+        }
+
+        function clampPoint(point) {
+            return {
+                x: Math.max(0, Math.min(DRAW_VIEWBOX.width, Math.round(point.x))),
+                y: Math.max(0, Math.min(DRAW_VIEWBOX.height, Math.round(point.y))),
+            };
+        }
+
+        function toViewBoxCoordinates(event) {
+            const rect = overlay.getBoundingClientRect();
+            const scaleX = DRAW_VIEWBOX.width / rect.width;
+            const scaleY = DRAW_VIEWBOX.height / rect.height;
+            return {
+                x: (event.clientX - rect.left) * scaleX,
+                y: (event.clientY - rect.top) * scaleY,
+            };
+        }
+
+        function pointsToString(list) {
+            return list.map((point) => `${point.x},${point.y}`).join(' ');
+        }
+
+        function pointsToClosedString(list) {
+            if (!list.length) {
+                return '';
+            }
+            const extended = list.concat(list[0]);
+            return extended.map((point) => `${point.x},${point.y}`).join(' ');
+        }
+
+        function updateShapes() {
+            const pointString = pointsToString(points);
+            const closedString = pointsToClosedString(points);
+            fill.setAttribute('points', pointString);
+            outline.setAttribute('points', closedString);
+            baseline.setAttribute('points', closedString);
+            points.forEach((point, index) => {
+                const handle = handleElements[index];
+                if (handle) {
+                    handle.setAttribute('cx', String(point.x));
+                    handle.setAttribute('cy', String(point.y));
+                }
+            });
+        }
+
+        function updateOutput() {
+            const normalised = points.map((point) => [
+                Number((point.x / DRAW_VIEWBOX.width).toFixed(4)),
+                Number((point.y / DRAW_VIEWBOX.height).toFixed(4)),
+            ]);
+            output.textContent = `${floorName}: ${JSON.stringify(normalised)}`;
+        }
+
+        function positionCursor() {
+            if (!cursor) {
+                return;
+            }
+            if (!points.length) {
+                cursor.style.transform = 'translate(-9999px, -9999px)';
+                return;
+            }
+            if (cursorAnchorIndex >= points.length) {
+                cursorAnchorIndex = points.length - 1;
+            }
+            const anchor = points[cursorAnchorIndex];
+            const overlayRect = overlay.getBoundingClientRect();
+            const stageRect = stage.getBoundingClientRect();
+            const scaleX = overlayRect.width / DRAW_VIEWBOX.width;
+            const scaleY = overlayRect.height / DRAW_VIEWBOX.height;
+            const x = (anchor.x * scaleX) + (overlayRect.left - stageRect.left) - 28;
+            const y = (anchor.y * scaleY) + (overlayRect.top - stageRect.top) - 28;
+            cursor.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+        }
+
+        function redraw() {
+            updateShapes();
+            updateOutput();
+            positionCursor();
+        }
+
+        function buildHandles() {
+            handlesLayer.innerHTML = points
+                .map(
+                    (point, index) => `
+                        <circle tabindex="0" role="button" aria-label="Bod ${index + 1}" data-index="${index}" cx="${point.x}" cy="${point.y}" r="14"></circle>
+                    `,
+                )
+                .join('');
+            handleElements = Array.from(handlesLayer.querySelectorAll('circle'));
+            if (cursorAnchorIndex >= points.length) {
+                cursorAnchorIndex = Math.max(0, points.length - 1);
+            }
+            handleElements.forEach((handle) => {
+                handle.addEventListener('pointerdown', startDrag);
+                handle.addEventListener('keydown', handleHandleKeydown);
+            });
+        }
+
+        function handleHandleKeydown(event) {
+            const target = event.currentTarget;
+            const index = Number(target.getAttribute('data-index'));
+            if (!Number.isFinite(index)) return;
+            const step = event.shiftKey ? 10 : 4;
+            let changed = false;
+            switch (event.key) {
+                case 'ArrowUp':
+                    points[index].y = Math.max(0, points[index].y - step);
+                    changed = true;
+                    break;
+                case 'ArrowDown':
+                    points[index].y = Math.min(DRAW_VIEWBOX.height, points[index].y + step);
+                    changed = true;
+                    break;
+                case 'ArrowLeft':
+                    points[index].x = Math.max(0, points[index].x - step);
+                    changed = true;
+                    break;
+                case 'ArrowRight':
+                    points[index].x = Math.min(DRAW_VIEWBOX.width, points[index].x + step);
+                    changed = true;
+                    break;
+                case 'Delete':
+                case 'Backspace':
+                    if (points.length > 3) {
+                        points.splice(index, 1);
+                        if (cursorAnchorIndex >= points.length) {
+                            cursorAnchorIndex = Math.max(0, points.length - 1);
+                        }
+                        buildHandles();
+                        redraw();
+                    }
+                    break;
+                default:
+                    break;
+            }
+            if (changed) {
+                redraw();
+            }
+        }
+
+        function startDrag(event) {
+            const target = event.currentTarget;
+            activeIndex = Number(target.getAttribute('data-index'));
+            if (!Number.isFinite(activeIndex)) {
+                return;
+            }
+            activeHandle = target;
+            cursorAnchorIndex = activeIndex;
+            preventClick = false;
+            activeHandle.classList.add('is-active');
+            activeHandle.setPointerCapture(event.pointerId);
+            event.preventDefault();
+            window.addEventListener('pointermove', handleDrag);
+            window.addEventListener('pointerup', endDrag, { once: true });
+        }
+
+        function handleDrag(event) {
+            if (activeIndex < 0) {
+                return;
+            }
+            preventClick = true;
+            const { x, y } = toViewBoxCoordinates(event);
+            points[activeIndex] = clampPoint({ x, y });
+            redraw();
+        }
+
+        function endDrag(event) {
+            if (activeIndex < 0) {
+                return;
+            }
+            const { x, y } = toViewBoxCoordinates(event);
+            points[activeIndex] = clampPoint({ x, y });
+            if (activeHandle) {
+                activeHandle.releasePointerCapture(event.pointerId);
+                activeHandle.classList.remove('is-active');
+            }
+            activeHandle = null;
+            activeIndex = -1;
+            window.removeEventListener('pointermove', handleDrag);
+            setTimeout(() => {
+                preventClick = false;
+            }, 0);
+            redraw();
+        }
+
+        function handleOverlayClick(event) {
+            if (event.target !== overlay || preventClick) {
+                preventClick = false;
+                return;
+            }
+            const { x, y } = toViewBoxCoordinates(event);
+            const point = clampPoint({ x, y });
+            insertPoint(point);
+        }
+
+        function insertPoint(point) {
+            if (points.length < 3) {
+                points.push(point);
+                buildHandles();
+                redraw();
+                return;
+            }
+            let bestIndex = 0;
+            let bestDistance = Number.POSITIVE_INFINITY;
+            for (let i = 0; i < points.length; i += 1) {
+                const a = points[i];
+                const b = points[(i + 1) % points.length];
+                const distance = distanceToSegment(point, a, b);
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    bestIndex = i + 1;
+                }
+            }
+            points.splice(bestIndex, 0, point);
+            cursorAnchorIndex = bestIndex;
+            buildHandles();
+            redraw();
+        }
+
+        function distanceToSegment(point, a, b) {
+            const abx = b.x - a.x;
+            const aby = b.y - a.y;
+            const apx = point.x - a.x;
+            const apy = point.y - a.y;
+            const ab2 = (abx * abx) + (aby * aby);
+            const t = ab2 === 0 ? 0 : Math.max(0, Math.min(1, ((apx * abx) + (apy * aby)) / ab2));
+            const closestX = a.x + (abx * t);
+            const closestY = a.y + (aby * t);
+            const dx = point.x - closestX;
+            const dy = point.y - closestY;
+            return Math.sqrt((dx * dx) + (dy * dy));
+        }
+
+        if (resetButton) {
+            resetButton.addEventListener('click', () => {
+                points = clonePoints(DEFAULT_DRAW_POINTS);
+                cursorAnchorIndex = 0;
+                buildHandles();
+                redraw();
+            });
+        }
+
+        if (saveButton) {
+            saveButton.addEventListener('click', () => {
+                const normalised = points.map((point) => ({
+                    x: Number((point.x / DRAW_VIEWBOX.width).toFixed(4)),
+                    y: Number((point.y / DRAW_VIEWBOX.height).toFixed(4)),
+                }));
+                console.info(`[Developer Map] ${floorName} – uložené súradnice`, normalised);
+                setState({ modal: null });
+            });
+        }
+
+        overlay.addEventListener('click', handleOverlayClick);
+
+        buildHandles();
+        redraw();
+        positionCursor();
     }
 
     const instance = {
@@ -250,15 +588,15 @@ function renderProjectRow(project, shortcode) {
         <div class="dm-board__row dm-board__row--project" role="row">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
                 <div class="dm-board__thumb dm-board__thumb--project" aria-hidden="true">
-                    <div class="dm-board__thumb-image dm-board__thumb-image--project"></div>
+                    <img src="${MEDIA.building}" alt="${escapeHtml(`Náhľad projektu ${project.name}`)}" loading="lazy" />
                 </div>
                 <button type="button" class="dm-board__primary" data-dm-project="${project.id}">${escapeHtml(project.name)}</button>
             </div>
             <div class="dm-board__cell dm-board__cell--type" role="cell">${escapeHtml(project.type)}</div>
             <div class="dm-board__cell dm-board__cell--actions" role="cell">
-                <button class="dm-board__chip" data-dm-project="${project.id}">Otvoriť</button>
-                <button class="dm-board__chip" data-dm-modal="edit-map" data-dm-payload="${project.id}">Upraviť</button>
-                <button class="dm-board__chip" data-dm-modal="delete-map" data-dm-payload="${project.id}">Zmazať</button>
+                <button type="button" class="dm-board__chip" data-dm-project="${project.id}">Otvoriť</button>
+                <button type="button" class="dm-board__chip" data-dm-modal="edit-map" data-dm-payload="${project.id}">Upraviť</button>
+                <button type="button" class="dm-board__chip" data-dm-modal="delete-map" data-dm-payload="${project.id}">Zmazať</button>
             </div>
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell">
                 <code>${escapeHtml(shortcode)}</code>
@@ -272,15 +610,16 @@ function renderFloorRow(floor, shortcode) {
         <div class="dm-board__row dm-board__row--floor" role="row">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
                 <div class="dm-board__thumb dm-board__thumb--floor" aria-hidden="true">
-                    <div class="dm-board__thumb-image dm-board__thumb-image--floor"></div>
+                    <img src="${MEDIA.floor}" alt="${escapeHtml(`Pôdorys ${floor.name}`)}" loading="lazy" />
+                    <span class="dm-board__thumb-floor-highlight"></span>
                 </div>
                 <span class="dm-board__label">${escapeHtml(floor.name)}</span>
             </div>
             <div class="dm-board__cell dm-board__cell--type" role="cell">${escapeHtml(floor.type)}</div>
             <div class="dm-board__cell dm-board__cell--actions" role="cell">
-                <button class="dm-board__chip" data-dm-modal="draw-coordinates">Otvoriť</button>
-                <button class="dm-board__chip" data-dm-modal="edit-map" data-dm-payload="${floor.id}">Upraviť</button>
-                <button class="dm-board__chip" data-dm-modal="delete-map" data-dm-payload="${floor.id}">Zmazať</button>
+                <button type="button" class="dm-board__chip" data-dm-modal="draw-coordinates" data-dm-payload="${floor.id}">Otvoriť</button>
+                <button type="button" class="dm-board__chip" data-dm-modal="edit-map" data-dm-payload="${floor.id}">Upraviť</button>
+                <button type="button" class="dm-board__chip" data-dm-modal="delete-map" data-dm-payload="${floor.id}">Zmazať</button>
             </div>
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell">
                 <code>${escapeHtml(shortcode)}</code>
@@ -630,7 +969,7 @@ function renderModal(state, data) {
         case 'delete-map':
             return renderConfirmModal();
         case 'draw-coordinates':
-            return renderDrawModal();
+            return renderDrawModal(state, data);
         case 'add-location':
             return renderFormModal('Pridať lokalitu', 'Pridať lokalitu');
         case 'add-type':
@@ -710,30 +1049,69 @@ function renderConfirmModal() {
     `;
 }
 
-function renderDrawModal() {
+function renderDrawModal(state, data) {
+    const payload = state.modal?.payload ?? null;
+    const project = data.projects[0];
+    const floors = project?.floors ?? [];
+    const activeFloor = payload ? floors.find((floor) => floor.id === payload) : floors[0];
+    const floorLabel = activeFloor?.name ?? 'Lokalita';
+    const projectBadge = project && typeof project.badge === 'string' ? project.badge : 'A';
+    const floorBadge = projectBadge.trim().slice(0, 2).toUpperCase() || 'A';
+    const npSorted = floors
+        .filter((floor) => /NP$/i.test(floor.label ?? ''))
+        .sort((a, b) => {
+            const aNum = parseInt(String(a.label).replace(/\D/g, ''), 10) || 0;
+            const bNum = parseInt(String(b.label).replace(/\D/g, ''), 10) || 0;
+            return bNum - aNum;
+        });
+    const npLabels = (npSorted.length > 4 ? npSorted.slice(1, 5) : npSorted.slice(0, 4)).map((floor) => floor.label);
+    const ppLabel = floors.find((floor) => /PP$/i.test(floor.label ?? ''))?.label;
+    const levelLabels = Array.from(new Set(ppLabel ? [...npLabels, ppLabel] : npLabels));
     return `
         <div class="dm-modal-overlay">
-            <div class="dm-modal dm-modal--wide">
-                <header class="dm-modal__header">
+            <div class="dm-modal dm-modal--draw">
+                <header class="dm-modal__header dm-modal__header--center">
                     <h2>Nakresliť súradnice</h2>
                     <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
                 </header>
-                <div class="dm-modal__body">
-                    <div class="dm-draw">
-                        <div class="dm-hero dm-hero--building dm-hero--draw">
-                            <svg viewBox="0 0 640 380" class="dm-draw__overlay" aria-hidden="true">
-                                <polyline points="80,140 480,120 520,210 110,240" fill="rgba(0,200,0,0.16)" stroke="#2dd4bf" stroke-width="6" stroke-linejoin="round"></polyline>
-                                <circle cx="80" cy="140" r="8"></circle>
-                                <circle cx="480" cy="120" r="8"></circle>
-                                <circle cx="520" cy="210" r="8"></circle>
-                                <circle cx="110" cy="240" r="8"></circle>
+                <div class="dm-modal__body dm-modal__body--draw">
+                    <div class="dm-draw" data-dm-draw-root data-dm-floor="${activeFloor ? escapeHtml(activeFloor.id) : ''}" data-dm-floor-name="${escapeHtml(floorLabel)}">
+                        <div class="dm-draw__stage">
+                            <img src="${MEDIA.draw}" alt="Ukážkový objekt na zakreslenie súradníc" class="dm-draw__image" draggable="false" />
+                            <svg class="dm-draw__overlay" viewBox="0 0 ${DRAW_VIEWBOX.width} ${DRAW_VIEWBOX.height}" preserveAspectRatio="xMidYMid slice" data-role="overlay">
+                                <polygon class="dm-draw__shape-fill" data-role="fill" points=""></polygon>
+                                <polyline class="dm-draw__shape-outline" data-role="outline" points=""></polyline>
+                                <polyline class="dm-draw__shape-baseline" data-role="baseline" points=""></polyline>
+                                <g class="dm-draw__handles" data-role="handles"></g>
                             </svg>
+                            <div class="dm-draw__badge">${escapeHtml(floorBadge)}</div>
+                            <div class="dm-draw__cursor" aria-hidden="true">
+                                <img src="${MEDIA.cursor}" alt="" draggable="false" />
+                            </div>
+                            <ul class="dm-draw__levels">
+                                ${levelLabels
+                                    .map(
+                                        (label) => `
+                                            <li class="${activeFloor?.label === label ? 'is-active' : ''}">
+                                                ${escapeHtml(label)}
+                                            </li>
+                                        `,
+                                    )
+                                    .join('')}
+                            </ul>
+                        </div>
+                        <div class="dm-draw__toolbar">
+                            <div class="dm-draw__toolbar-left">
+                                <span class="dm-draw__floor-label">${escapeHtml(floorLabel)}</span>
+                                <span class="dm-draw__hint">Kliknite pre pridanie bodu • potiahnite bod pre úpravu</span>
+                            </div>
+                            <code class="dm-draw__output" data-role="output"></code>
                         </div>
                     </div>
                 </div>
-                <footer class="dm-modal__actions dm-modal__actions--split">
-                    <button class="dm-button dm-button--outline" data-dm-close-modal>Vrátiť zmeny</button>
-                    <button class="dm-button dm-button--dark">Uložiť a zatvoriť</button>
+                <footer class="dm-modal__actions dm-modal__actions--split dm-modal__actions--draw">
+                    <button type="button" class="dm-button dm-button--outline" data-dm-reset-draw>Vrátiť zmeny</button>
+                    <button type="button" class="dm-button dm-button--dark" data-dm-save-draw>Uložiť a zatvoriť</button>
                 </footer>
             </div>
         </div>
@@ -776,6 +1154,7 @@ function createDemoData() {
                 id: '1',
                 name: 'Bytovka',
                 type: 'Bytovka',
+                badge: 'A',
                 floors: [
                     { id: 'floor-1', name: 'Poschodie 1', type: 'Bytovka', label: '1. NP', area: '629.00 m²' },
                     { id: 'floor-2', name: 'Poschodie 2', type: 'Bytovka', label: '2. NP', area: '578.00 m²' },

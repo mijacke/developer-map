@@ -219,6 +219,7 @@
     display: grid;
     place-items: center;
     background: #d8d8df;
+    position: relative;
 }
 
 .dm-board__thumb--floor {
@@ -227,21 +228,27 @@
     border-radius: 16px;
 }
 
-.dm-board__thumb-image {
+.dm-board__thumb img {
     width: 100%;
     height: 100%;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    object-fit: cover;
+    display: block;
 }
 
-.dm-board__thumb-image--project {
-    background-image: linear-gradient(160deg, #2f2f39, #4b4b57);
+.dm-board__thumb--floor img {
+    object-fit: contain;
+    background: #ffffff;
+    padding: 8px;
 }
 
-.dm-board__thumb-image--floor {
-    background-color: #ffffff;
-    background-image: url("media/demo-floorplan-placeholder.svg");
+.dm-board__thumb-floor-highlight {
+    position: absolute;
+    inset: 14px;
+    border-radius: 12px;
+    border: 2px solid rgba(71, 200, 116, 0.9);
+    background: linear-gradient(135deg, rgba(71, 200, 116, 0.28), rgba(71, 200, 116, 0));
+    pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 .dm-board__primary {
@@ -272,6 +279,15 @@
     justify-content: center;
 }
 
+.dm-board__row--floor {
+    background: #f6f6fa;
+    border-color: #d5d5dd;
+}
+
+.dm-board__row--floor .dm-board__cell--main {
+    gap: 18px;
+}
+
 .dm-board__chip {
     border: 1px solid var(--dm-border-strong);
     background: #dcdce3;
@@ -288,6 +304,10 @@
     transform: translateY(-1px);
 }
 
+.dm-board__cell--shortcode {
+    justify-content: flex-end;
+}
+
 .dm-board__cell--shortcode code {
     display: inline-flex;
     align-items: center;
@@ -298,6 +318,8 @@
     font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
     font-size: 15px;
     color: var(--dm-text-muted);
+    white-space: nowrap;
+    user-select: all;
 }
 
 .dm-board__footer {
@@ -667,6 +689,10 @@
     overflow: hidden;
 }
 
+.dm-hero--building {
+    background: url("media/demo-building-placeholder.svg") center / cover no-repeat;
+}
+
 .dm-hero--building::after {
     content: '';
     position: absolute;
@@ -925,7 +951,7 @@
 .dm-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(16, 16, 24, 0.45);
+    background: rgba(18, 18, 26, 0.58);
     display: grid;
     place-items: center;
     padding: 32px;
@@ -952,11 +978,29 @@
     max-width: 960px;
 }
 
+.dm-modal--draw {
+    max-width: 1040px;
+    border-radius: 32px;
+    box-shadow: 0 32px 84px rgba(15, 18, 28, 0.28);
+}
+
 .dm-modal__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 24px 28px 0;
+}
+
+.dm-modal__header--center {
+    justify-content: center;
+    padding: 32px 40px 0;
+    position: relative;
+}
+
+.dm-modal__header--center .dm-modal__close {
+    position: absolute;
+    right: 32px;
+    top: 28px;
 }
 
 .dm-modal__header h2 {
@@ -985,6 +1029,10 @@
     gap: 28px;
 }
 
+.dm-modal__body--draw {
+    padding: 0 40px 28px;
+}
+
 .dm-modal__media {
     min-height: 280px;
 }
@@ -1006,24 +1054,171 @@
     justify-content: space-between;
 }
 
-.dm-draw {
-    position: relative;
-    width: 100%;
-    min-height: 360px;
+.dm-modal__actions--draw {
+    padding: 0 40px 36px;
 }
 
-.dm-hero--draw svg {
+.dm-draw {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.dm-draw__stage {
+    position: relative;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 26px 58px rgba(18, 18, 26, 0.22);
+    border: 1px solid rgba(24, 24, 32, 0.12);
+}
+
+.dm-draw__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    user-select: none;
+    pointer-events: none;
+}
+
+.dm-draw__overlay {
     position: absolute;
     inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
 }
 
-.dm-draw__overlay polyline {
-    fill: rgba(59, 130, 246, 0.15);
-    stroke: #22c55e;
+.dm-draw__shape-fill {
+    fill: rgba(72, 198, 116, 0.26);
 }
 
-.dm-draw__overlay circle {
-    fill: #0ea5e9;
+.dm-draw__shape-outline {
+    fill: none;
+    stroke: #32d26e;
+    stroke-width: 12;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.dm-draw__shape-baseline {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.9);
+    stroke-width: 6;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.dm-draw__handles circle {
+    fill: #10121a;
+    stroke: #ffffff;
+    stroke-width: 4;
+    cursor: grab;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.dm-draw__handles circle:is(:hover, .is-active, :focus-visible) {
+    transform: scale(1.12);
+    box-shadow: 0 0 0 6px rgba(50, 210, 110, 0.24);
+}
+
+.dm-draw__handles circle.is-active {
+    cursor: grabbing;
+}
+
+.dm-draw__badge {
+    position: absolute;
+    right: 32px;
+    top: 28px;
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    background: rgba(103, 57, 29, 0.94);
+    color: #f9eee3;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: 0.02em;
+    pointer-events: none;
+}
+
+.dm-draw__levels {
+    position: absolute;
+    left: 24px;
+    top: 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 12px;
+}
+
+.dm-draw__levels li {
+    min-width: 88px;
+    padding: 8px 14px;
+    border-radius: 14px;
+    background: rgba(247, 241, 237, 0.92);
+    color: #7b4121;
+    font-weight: 600;
+    text-align: center;
+    font-size: 17px;
+    box-shadow: 0 6px 16px rgba(24, 24, 32, 0.12);
+}
+
+.dm-draw__levels li.is-active {
+    background: #7b4121;
+    color: #fef9f6;
+}
+
+.dm-draw__cursor {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    pointer-events: none;
+    transform: translate(-9999px, -9999px);
+}
+
+.dm-draw__cursor img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.dm-draw__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    padding: 0 6px;
+}
+
+.dm-draw__toolbar-left {
+    display: flex;
+    gap: 20px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+.dm-draw__floor-label {
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.dm-draw__hint {
+    font-size: 14px;
+    color: var(--dm-text-muted);
+}
+
+.dm-draw__output {
+    background: #11131d;
+    color: #e5e9ff;
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 14px;
+    min-width: 260px;
+    text-align: right;
+    white-space: nowrap;
+    overflow-x: auto;
 }
 
 @media (max-width: 960px) {
@@ -1069,6 +1264,18 @@
 
     .dm-row__shortcode {
         grid-area: shortcode;
+    }
+
+    .dm-draw__toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .dm-draw__output {
+        min-width: 0;
+        width: 100%;
+        text-align: left;
     }
 }
 

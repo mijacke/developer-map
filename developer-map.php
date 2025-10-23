@@ -36,14 +36,14 @@ function dm_register_assets(): void
         DM_PLUGIN_STYLE_HANDLE,
         $base_url . 'dm.css',
         [],
-        DM_PLUGIN_VERSION
+        $css_ver
     );
 
     wp_register_script(
         DM_PLUGIN_SCRIPT_HANDLE,
         $base_url . 'dm.js',
         [],
-        DM_PLUGIN_VERSION,
+        $js_ver,
         true
     );
 
