@@ -15,6 +15,11 @@
     --dm-shadow-sm: 0 16px 40px rgba(22, 22, 29, 0.08);
     --dm-shadow-md: 0 28px 60px rgba(22, 22, 29, 0.12);
 
+    /* Dynamic theme colors (loaded from localStorage) */
+    --dm-button-color: #7c3aed;
+    --dm-heading-color: #111827;
+    --dm-content-text-color: #6b7280;
+
     position: relative;
     display: flex;
     justify-content: center;

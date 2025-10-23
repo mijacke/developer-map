@@ -3,7 +3,7 @@ import { escapeHtml } from '../utils/html.js';
 
 export function renderModal(state, data) {
     if (!state.modal) return '';
-    const { type } = state.modal;
+    const { type, payload } = state.modal;
     switch (type) {
         case 'add-map':
             return renderFormModal('Pridať mapu', 'Pridať mapu');
@@ -21,6 +21,8 @@ export function renderModal(state, data) {
             return renderSimpleModal('Pridať stav', renderSimpleForm('Nový stav'));
         case 'add-blueprint':
             return renderSimpleModal('Pridať pôdorys', renderSimpleForm('Názov pôdorysu'));
+        case 'edit-color':
+            return renderColorModal(data, payload);
         default:
             return renderSimpleModal('Info', `<p>Funkcia <strong>${escapeHtml(type)}</strong> je pripravená na implementáciu.</p>`);
     }
@@ -187,5 +189,47 @@ function renderSimpleForm(placeholder) {
                 <input type="text" />
             </label>
         </form>
+    `;
+}
+
+function renderColorModal(data, payload) {
+    const colorId = payload || 'color-1';
+    const color = data.colors.find((c) => c.id === colorId) || data.colors[0];
+    
+    return `
+        <div class="dm-modal-overlay">
+            <div class="dm-modal dm-modal--narrow">
+                <header class="dm-modal__header">
+                    <h2>Upraviť farbu</h2>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                </header>
+                <div class="dm-modal__body">
+                    <form class="dm-form">
+                        <label class="dm-field">
+                            <span>${escapeHtml(color.label)}</span>
+                            <input 
+                                type="color" 
+                                value="${escapeHtml(color.value)}" 
+                                data-dm-color-input="${escapeHtml(color.id)}"
+                                style="width: 100%; height: 60px; border-radius: 12px; border: 1px solid var(--dm-border); cursor: pointer;"
+                            />
+                        </label>
+                        <label class="dm-field">
+                            <span>HEX kód</span>
+                            <input 
+                                type="text" 
+                                value="${escapeHtml(color.value)}" 
+                                data-dm-color-text="${escapeHtml(color.id)}"
+                                placeholder="#000000"
+                            />
+                        </label>
+                    </form>
+                </div>
+                <footer class="dm-modal__actions dm-modal__actions--split">
+                    <button class="dm-button dm-button--outline" data-dm-close-modal>Zrušiť</button>
+                    <button class="dm-button dm-button--dark" data-dm-save-color="${escapeHtml(color.id)}">Uložiť</button>
+                </footer>
+            </div>
+        </div>
     `;
 }

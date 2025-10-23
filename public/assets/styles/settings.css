@@ -13,6 +13,7 @@
 .dm-settings__header h1 {
     margin: 0;
     font-size: 32px;
+    color: var(--dm-heading-color);
 }
 
 .dm-settings__tabs {
@@ -30,7 +31,7 @@
     padding: 8px 20px;
     border-radius: 999px;
     font-weight: 600;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
     cursor: pointer;
 }
 

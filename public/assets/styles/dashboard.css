@@ -6,7 +6,7 @@
 
 .dm-dashboard__back {
     align-self: flex-start;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
 }
 
 .dm-dashboard__hero {
@@ -18,11 +18,12 @@
 .dm-dashboard__title h1 {
     margin: 0 0 6px;
     font-size: 32px;
+    color: var(--dm-heading-color);
 }
 
 .dm-dashboard__title p {
     margin: 0;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
 }
 
 .dm-dashboard__media {
@@ -71,7 +72,7 @@
 .dm-dashboard__table th {
     text-align: left;
     font-size: 14px;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
     padding: 12px 8px;
 }
 

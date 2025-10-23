@@ -146,7 +146,7 @@
 
 .dm-draw__hint {
     font-size: 14px;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
 }
 
 .dm-draw__output {

@@ -20,6 +20,54 @@ export function initDeveloperMap(options) {
 
     const data = createDemoData();
 
+    // Load colors from localStorage
+    function loadColors() {
+        try {
+            const stored = localStorage.getItem('dm-colors');
+            if (stored) {
+                const colors = JSON.parse(stored);
+                return colors;
+            }
+        } catch (err) {
+            console.warn('[Developer Map] Failed to load colors from localStorage', err);
+        }
+        return null;
+    }
+
+    // Apply colors to CSS custom properties
+    function applyColors(colors) {
+        if (!colors || !Array.isArray(colors)) return;
+        
+        const colorMap = {
+            'Farba tlačidiel': '--dm-button-color',
+            'Farba nadpisov': '--dm-heading-color',
+            'Farba obsahových textov': '--dm-content-text-color',
+        };
+
+        colors.forEach((color) => {
+            const varName = colorMap[color.label];
+            if (varName && color.value) {
+                root.style.setProperty(varName, color.value);
+            }
+        });
+    }
+
+    // Save colors to localStorage
+    function saveColors(colors) {
+        try {
+            localStorage.setItem('dm-colors', JSON.stringify(colors));
+        } catch (err) {
+            console.warn('[Developer Map] Failed to save colors to localStorage', err);
+        }
+    }
+
+    // Initialize colors
+    const savedColors = loadColors();
+    if (savedColors) {
+        data.colors = savedColors;
+    }
+    applyColors(data.colors);
+
     const state = {
         view: APP_VIEWS.MAPS,
         mapSection: MAP_SECTIONS.LIST,
@@ -132,6 +180,47 @@ export function initDeveloperMap(options) {
                 }
             });
         }
+
+        // Color picker sync
+        const colorInputs = root.querySelectorAll('[data-dm-color-input]');
+        colorInputs.forEach((input) => {
+            const colorId = input.getAttribute('data-dm-color-input');
+            const textInput = root.querySelector(`[data-dm-color-text="${colorId}"]`);
+            
+            if (textInput) {
+                input.addEventListener('input', (event) => {
+                    textInput.value = event.target.value;
+                });
+                
+                textInput.addEventListener('input', (event) => {
+                    const value = event.target.value.trim();
+                    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+                        input.value = value;
+                    }
+                });
+            }
+        });
+
+        // Save color button
+        const saveColorButtons = root.querySelectorAll('[data-dm-save-color]');
+        saveColorButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const colorId = button.getAttribute('data-dm-save-color');
+                const colorInput = root.querySelector(`[data-dm-color-input="${colorId}"]`);
+                
+                if (colorInput) {
+                    const newValue = colorInput.value;
+                    const colorIndex = data.colors.findIndex((c) => c.id === colorId);
+                    
+                    if (colorIndex !== -1) {
+                        data.colors[colorIndex].value = newValue;
+                        saveColors(data.colors);
+                        applyColors(data.colors);
+                        setState({ modal: null });
+                    }
+                }
+            });
+        });
     }
 
     function enhanceDrawModal() {

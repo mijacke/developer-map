@@ -140,7 +140,7 @@ function renderSettingsColors(data) {
                                     ${item.label}
                                 </div>
                                 <div class="dm-settings__item-actions">
-                                    <button class="dm-chip" data-dm-modal="edit-color">Upraviť</button>
+                                    <button class="dm-chip" data-dm-modal="edit-color" data-dm-payload="${item.id}">Upraviť</button>
                                 </div>
                             </div>
                         `,

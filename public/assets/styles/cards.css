@@ -28,12 +28,13 @@
 
 .dm-card__list h3 {
     margin: 0 0 12px;
+    color: var(--dm-heading-color);
 }
 
 .dm-simple-list {
     margin: 0;
     padding-left: 20px;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
 }
 
 .dm-table {
@@ -47,7 +48,7 @@
     grid-template-columns: minmax(320px, 1.8fr) 0.6fr 1fr 0.9fr;
     gap: 18px;
     font-weight: 600;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
     padding: 0 12px;
 }
 
@@ -134,7 +135,7 @@
 
 .dm-row__type {
     font-weight: 600;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
 }
 
 .dm-row__actions {
@@ -160,7 +161,7 @@
 .dm-row__shortcode {
     font-family: 'JetBrains Mono', 'Courier New', monospace;
     font-size: 13px;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
     background: #fafafb;
     padding: 10px 12px;
     border-radius: 8px;
@@ -183,7 +184,7 @@
 }
 
 .dm-button--dark {
-    background: #16161d;
+    background: var(--dm-button-color);
     color: #fff;
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
 }
@@ -199,17 +200,19 @@
 }
 
 .dm-button--dark:hover {
-    background: #0c0c12;
+    background: var(--dm-button-color);
+    filter: brightness(0.9);
 }
 
 .dm-section-head h2 {
     margin: 0;
     font-size: 24px;
+    color: var(--dm-heading-color);
 }
 
 .dm-section-head p {
     margin: 6px 0 0;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
 }
 
 .dm-placeholder-grid {
@@ -267,6 +270,7 @@
 .dm-form h3 {
     margin: 0;
     font-size: 22px;
+    color: var(--dm-heading-color);
 }
 
 .dm-form__grid {
@@ -297,7 +301,7 @@
 }
 
 .dm-field small {
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
     font-size: 12px;
 }
 
@@ -314,5 +318,5 @@
     padding: 36px 12px;
     text-align: center;
     font-weight: 600;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
 }

@@ -24,7 +24,7 @@
 
 .dm-logo__by {
     font-size: 13px;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
 }
 
 .dm-header__search input {
@@ -37,7 +37,7 @@
 }
 
 .dm-header__search input::placeholder {
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
 }
 
 .dm-header__links {
@@ -57,7 +57,7 @@
 
 .dm-link-button:disabled {
     cursor: not-allowed;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
     opacity: 0.6;
 }
 
@@ -99,7 +99,7 @@
     padding: 16px 28px;
     border-radius: 16px;
     font-weight: 600;
-    color: var(--dm-text-muted);
+    color: var(--dm-content-text-color);
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
