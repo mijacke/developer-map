@@ -60,11 +60,24 @@
 }
 
 .dm-modal__close {
-    border: none;
-    background: transparent;
-    font-size: 32px;
+    border: none !important;
+    background: transparent !important;
+    font-size: 32px !important;
     line-height: 1;
     cursor: pointer;
+    color: var(--dm-text) !important;
+    transition: color 0.15s ease !important;
+}
+
+.dm-modal__close:hover {
+    color: var(--dm-text-muted) !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.dm-modal__close:focus-visible {
+    outline: 2px solid var(--dm-border-strong) !important;
+    outline-offset: 2px !important;
 }
 
 .dm-modal__body {

@@ -77,12 +77,12 @@
 }
 
 .dm-topbar__link {
-    border: none;
-    background: transparent;
+    border: none !important;
+    background: transparent !important;
     font-weight: 600;
-    color: var(--dm-text);
+    color: var(--dm-text) !important;
     cursor: pointer;
-    padding: 8px 0;
+    padding: 8px 0 !important;
     position: relative;
     transition: color 0.15s ease;
 }
@@ -90,6 +90,7 @@
 .dm-topbar__link:hover {
     color: var(--dm-text) !important;
     background: transparent !important;
+    border: none !important;
 }
 
 .dm-topbar__link::after {
@@ -108,7 +109,7 @@
 }
 
 .dm-topbar__link.is-active::after {
-    background: var(--dm-text);
+    background: var(--dm-text) !important;
 }
 
 .dm-topbar__link:disabled,

@@ -58,10 +58,17 @@
 .dm-dashboard__actions input,
 
 .dm-dashboard__actions select {
-    border-radius: 10px;
-    border: 1px solid var(--dm-border);
-    padding: 10px 12px;
-    background: #f6f6f9;
+    border-radius: 10px !important;
+    border: 1px solid var(--dm-border) !important;
+    padding: 10px 12px !important;
+    background: #f6f6f9 !important;
+}
+
+.dm-dashboard__actions input:focus,
+.dm-dashboard__actions select:focus {
+    outline: 2px solid var(--dm-border-strong) !important;
+    outline-offset: 2px !important;
+    border: 1px solid var(--dm-border) !important;
 }
 
 .dm-dashboard__table {
@@ -82,9 +89,15 @@
 }
 
 .dm-table-link {
-    background: transparent;
-    border: none;
-    color: #2563eb;
-    font-weight: 600;
+    background: transparent !important;
+    border: none !important;
+    color: var(--dm-text) !important;
+    font-weight: 600 !important;
     cursor: pointer;
+}
+
+.dm-table-link:hover {
+    color: var(--dm-text-muted) !important;
+    background: transparent !important;
+    border: none !important;
 }

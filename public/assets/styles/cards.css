@@ -144,18 +144,19 @@
     }
 
     .dm-chip {
-        border: none;
-        border-radius: 8px;
-        padding: 8px 14px;
-        background: #ededf1;
-        color: #222;
-        font-weight: 600;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 8px 14px !important;
+        background: #ededf1 !important;
+        color: #222 !important;
+        font-weight: 600 !important;
         cursor: pointer;
-        transition: transform 0.12s ease;
+        transition: transform 0.12s ease !important;
     }
 
     .dm-chip:hover {
-        background: #e0e0e5;
+        background: #e0e0e5 !important;
+        border: none !important;
     }
 
     .dm-row__shortcode {

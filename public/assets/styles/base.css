@@ -46,3 +46,15 @@
     font: inherit;
     color: inherit;
 }
+
+/* Override WordPress admin and browser default focus/hover styles */
+#dm-root.dm-root *:focus {
+    outline-color: var(--dm-border-strong) !important;
+    box-shadow: 0 0 0 0 transparent !important;
+}
+
+#dm-root.dm-root *:focus-visible {
+    outline: 2px solid var(--dm-border-strong) !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+}

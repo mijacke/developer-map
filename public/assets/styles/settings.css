@@ -31,23 +31,25 @@
 }
 
 .dm-settings__tab {
-    border: none;
-    background: transparent;
-    padding: 8px 20px;
-    border-radius: 999px;
-    font-weight: 600;
-    color: var(--dm-content-text-color);
+    border: none !important;
+    background: transparent !important;
+    padding: 8px 20px !important;
+    border-radius: 999px !important;
+    font-weight: 600 !important;
+    color: var(--dm-content-text-color) !important;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease !important;
 }
 
 .dm-settings__tab:hover {
-    background: #f8f8f9;
+    background: #f8f8f9 !important;
+    border: none !important;
 }
 
 .dm-settings__tab.is-active {
-    background: #f1f1f4;
-    color: var(--dm-text);
+    background: #f1f1f4 !important;
+    color: var(--dm-text) !important;
+    border: none !important;
 }
 
 .dm-settings__surface {

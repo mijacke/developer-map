@@ -96,12 +96,13 @@ function renderProjectRow(project, shortcode) {
                 <div class="dm-board__thumb dm-board__thumb--project dm-board__thumb--clickable" aria-hidden="true" data-dm-project="${project.id}" role="button" tabindex="0" aria-label="${escapeHtml(`Otvoriť projekt ${project.name}`)}">
                     <img src="${MEDIA.building}" alt="${escapeHtml(`Náhľad projektu ${project.name}`)}" loading="lazy" />
                 </div>
-                <button type="button" class="dm-board__primary" data-dm-project="${project.id}">${escapeHtml(project.name)}</button>
+                <span class="dm-board__label">${escapeHtml(project.name)}</span>
             </div>
             <div class="dm-board__cell dm-board__cell--type" role="cell">${escapeHtml(project.type)}</div>
             <div class="dm-board__cell dm-board__cell--actions" role="cell">
-                ${renderActionButton('open', `Otvoriť projekt ${project.name}`, {
-                    'data-dm-project': project.id,
+                ${renderActionButton('open', `Zobraziť projekt ${project.name}`, {
+                    'data-dm-modal': 'draw-coordinates',
+                    'data-dm-payload': project.id,
                 })}
                 ${renderActionButton('edit', `Upraviť projekt ${project.name}`, {
                     'data-dm-modal': 'edit-map',
