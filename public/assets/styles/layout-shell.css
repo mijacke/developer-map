@@ -98,7 +98,7 @@
 }
 
 .dm-topbar__link:hover::after {
-    background: var(--dm-text);
+    background: var(--dm-border-strong);
 }
 
 .dm-topbar__link.is-active::after {

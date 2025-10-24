@@ -73,7 +73,7 @@
 }
 
 .dm-link-button:hover::after {
-    background: #999;
+    background: var(--dm-border-strong);
 }
 
 .dm-page {
@@ -104,6 +104,10 @@
     transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.dm-subnav__button:hover {
+    background: #fafafa;
+}
+
 .dm-subnav__button.is-active {
     background: #f2f2f8;
     color: var(--dm-text);
@@ -111,7 +115,7 @@
 }
 
 .dm-subnav__button:focus-visible {
-    outline: 2px solid var(--dm-action);
+    outline: 2px solid var(--dm-border-strong);
     outline-offset: 2px;
 }
 

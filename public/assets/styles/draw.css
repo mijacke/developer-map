@@ -57,8 +57,8 @@
 }
 
 .dm-draw__handles circle:is(:hover, .is-active, :focus-visible) {
-    transform: scale(1.12);
-    box-shadow: 0 0 0 6px rgba(50, 210, 110, 0.24);
+    transform: scale(1.08);
+    box-shadow: 0 0 0 4px rgba(22, 22, 29, 0.15);
 }
 
 .dm-draw__handles circle.is-active {

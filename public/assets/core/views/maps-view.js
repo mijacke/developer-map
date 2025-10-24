@@ -151,6 +151,30 @@ function renderFloorRow(floor, shortcode) {
     `;
 }
 
+function renderFormPlaceholder(title) {
+    return `
+        <div class="dm-form-placeholder">
+            <div class="dm-form-placeholder__header">
+                <h3>${escapeHtml(title)}</h3>
+            </div>
+            <div class="dm-form-placeholder__fields">
+                <div class="dm-form-placeholder__field">
+                    <div class="dm-form-placeholder__label"></div>
+                    <div class="dm-form-placeholder__input"></div>
+                </div>
+                <div class="dm-form-placeholder__field">
+                    <div class="dm-form-placeholder__label"></div>
+                    <div class="dm-form-placeholder__input"></div>
+                </div>
+                <div class="dm-form-placeholder__field">
+                    <div class="dm-form-placeholder__label"></div>
+                    <div class="dm-form-placeholder__input"></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function renderFloorsContent(data) {
     const project = data.projects[0];
     return `
