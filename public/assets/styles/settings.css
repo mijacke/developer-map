@@ -2,6 +2,11 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
+    background: var(--dm-surface);
+    border-radius: var(--dm-radius-lg);
+    border: 1px solid var(--dm-border);
+    padding: 32px 36px 36px;
+    box-shadow: 0 4px 16px rgba(22, 22, 29, 0.06);
 }
 
 .dm-settings__header {
