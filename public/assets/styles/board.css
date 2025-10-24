@@ -82,12 +82,31 @@
     place-items: center;
     background: #d8d8df;
     position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dm-board__thumb--clickable {
+    cursor: pointer;
+}
+
+.dm-board__thumb--clickable:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 24px rgba(22, 22, 29, 0.15);
+}
+
+.dm-board__thumb--clickable:focus-visible {
+    outline: 2px solid var(--dm-action);
+    outline-offset: 2px;
 }
 
 .dm-board__thumb--floor {
     width: 76px;
     height: 76px;
     border-radius: 16px;
+}
+
+.dm-board__thumb--floor.dm-board__thumb--clickable:hover {
+    transform: scale(1.12);
 }
 
 .dm-board__thumb img {

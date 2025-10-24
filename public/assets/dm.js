@@ -1,6 +1,7 @@
 /**
  * Developer Map — ES module entry (len pre [devmap] na dev stránke).
  * Dynamicky načíta core/app.js s cache-busting verziou a má bezpečný fallback.
+ * Updated: 2025-10-24 04:45 - Added clickable thumbnails and keyboard support
  */
 
 const ROOT_SELECTOR = '#dm-root[data-dm-app="developer-map"]';
@@ -28,19 +29,33 @@ async function boot() {
   if (booted) return; booted = true;
 
   const root = document.querySelector(ROOT_SELECTOR);
-  if (!(root instanceof HTMLElement)) { console.warn('[DM] root not found'); return; }
+  if (!(root instanceof HTMLElement)) { 
+    console.warn('[DM] root not found'); 
+    return; 
+  }
 
-  if (!runtimeConfig) { console.warn('[DM] missing runtime config'); fallback(root, 'Chýba runtime config'); return; }
+  if (!runtimeConfig) { 
+    console.warn('[DM] missing runtime config'); 
+    fallback(root, 'Chýba runtime config'); 
+    return; 
+  }
 
   try {
     const base = new URL('./', import.meta.url);
     const ver  = runtimeConfig.ver || Date.now();
-    const mod  = await import(new URL(`./core/app.js?ver=${ver}`, base).href);
+    const appUrl = new URL(`./core/app.js?ver=${ver}`, base).href;
+    
+    console.log('[DM] Loading app from:', appUrl);
+    console.log('[DM] Runtime config:', runtimeConfig);
+    
+    const mod  = await import(appUrl);
 
     const init = mod.initDeveloperMap || mod.default;
     if (typeof init !== 'function') throw new Error('initDeveloperMap missing');
 
+    console.log('[DM] App loaded successfully, initializing...');
     init({ root, runtimeConfig });
+    console.log('[DM] App initialized successfully');
   } catch (err) {
     console.error('[DM] app import/init failed:', err);
     fallback(root, 'app.js sa nenačítal – pozri konzolu');

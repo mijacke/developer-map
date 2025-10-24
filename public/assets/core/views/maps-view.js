@@ -93,7 +93,7 @@ function renderProjectRow(project, shortcode) {
     return `
         <div class="dm-board__row dm-board__row--project" role="row">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
-                <div class="dm-board__thumb dm-board__thumb--project" aria-hidden="true">
+                <div class="dm-board__thumb dm-board__thumb--project dm-board__thumb--clickable" aria-hidden="true" data-dm-project="${project.id}" role="button" tabindex="0" aria-label="${escapeHtml(`Otvoriť projekt ${project.name}`)}">
                     <img src="${MEDIA.building}" alt="${escapeHtml(`Náhľad projektu ${project.name}`)}" loading="lazy" />
                 </div>
                 <button type="button" class="dm-board__primary" data-dm-project="${project.id}">${escapeHtml(project.name)}</button>
@@ -123,7 +123,7 @@ function renderFloorRow(floor, shortcode) {
     return `
         <div class="dm-board__row dm-board__row--floor" role="row">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
-                <div class="dm-board__thumb dm-board__thumb--floor" aria-hidden="true">
+                <div class="dm-board__thumb dm-board__thumb--floor dm-board__thumb--clickable" aria-hidden="true" data-dm-modal="draw-coordinates" data-dm-payload="${floor.id}" role="button" tabindex="0" aria-label="${escapeHtml(`Zobraziť lokalitu ${floor.name}`)}">
                     <img src="${MEDIA.floor}" alt="${escapeHtml(`Pôdorys ${floor.name}`)}" loading="lazy" />
                     <span class="dm-board__thumb-floor-highlight"></span>
                 </div>

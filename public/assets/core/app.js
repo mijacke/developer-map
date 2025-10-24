@@ -141,6 +141,17 @@ export function initDeveloperMap(options) {
             });
         });
 
+        // Add keyboard support for clickable thumbnails
+        const clickableThumbs = root.querySelectorAll('.dm-board__thumb--clickable');
+        clickableThumbs.forEach((thumb) => {
+            thumb.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    thumb.click();
+                }
+            });
+        });
+
         const modalTriggers = root.querySelectorAll('[data-dm-modal]');
         modalTriggers.forEach((button) => {
             button.addEventListener('click', (event) => {
