@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-24 18:05:55 */
+/* Generated: 2025-10-24 22:14:50 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -139,6 +139,12 @@
     cursor: pointer;
     padding: 8px 0;
     position: relative;
+    transition: color 0.15s ease;
+}
+
+.dm-topbar__link:hover {
+    color: var(--dm-text) !important;
+    background: transparent !important;
 }
 
 .dm-topbar__link::after {
@@ -153,7 +159,7 @@
 }
 
 .dm-topbar__link:hover::after {
-    background: var(--dm-border-strong);
+    background: var(--dm-border-strong) !important;
 }
 
 .dm-topbar__link.is-active::after {
@@ -355,6 +361,11 @@
     color: var(--dm-text);
     text-align: left;
     cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.dm-board__primary:hover {
+    color: var(--dm-text-muted);
 }
 
 .dm-board__label {
@@ -1083,6 +1094,11 @@
     font-weight: 600;
     color: var(--dm-content-text-color);
     cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dm-settings__tab:hover {
+    background: #f8f8f9;
 }
 
 .dm-settings__tab.is-active {

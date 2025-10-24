@@ -84,6 +84,12 @@
     cursor: pointer;
     padding: 8px 0;
     position: relative;
+    transition: color 0.15s ease;
+}
+
+.dm-topbar__link:hover {
+    color: var(--dm-text) !important;
+    background: transparent !important;
 }
 
 .dm-topbar__link::after {
@@ -98,7 +104,7 @@
 }
 
 .dm-topbar__link:hover::after {
-    background: var(--dm-border-strong);
+    background: var(--dm-border-strong) !important;
 }
 
 .dm-topbar__link.is-active::after {

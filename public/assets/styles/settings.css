@@ -33,6 +33,11 @@
     font-weight: 600;
     color: var(--dm-content-text-color);
     cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dm-settings__tab:hover {
+    background: #f8f8f9;
 }
 
 .dm-settings__tab.is-active {

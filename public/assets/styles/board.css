@@ -141,6 +141,11 @@
     color: var(--dm-text);
     text-align: left;
     cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.dm-board__primary:hover {
+    color: var(--dm-text-muted);
 }
 
 .dm-board__label {
