@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-25 00:59:33 */
+/* Generated: 2025-10-25 01:12:20 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -290,6 +290,7 @@
     border: 1px solid #d2d2dc;
     background: #f7f7f9;
     box-shadow: 0 10px 28px rgba(22, 22, 29, 0.06);
+    overflow: visible;
 }
 
 .dm-board__row--project {
@@ -303,7 +304,7 @@
     align-items: center;
     gap: clamp(12px, 2vw, 24px);
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .dm-board__thumb {
@@ -317,7 +318,8 @@
     place-items: center;
     background: #d8d8df;
     position: relative;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, z-index 0s 0s;
+    z-index: 1;
 }
 
 .dm-board__thumb--clickable {
@@ -325,8 +327,10 @@
 }
 
 .dm-board__thumb--clickable:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(22, 22, 29, 0.12);
+    transform: scale(1.8);
+    box-shadow: 0 16px 48px rgba(22, 22, 29, 0.3);
+    z-index: 100;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, z-index 0s 0s;
 }
 
 .dm-board__thumb--clickable:focus-visible {
@@ -341,7 +345,8 @@
 }
 
 .dm-board__thumb--floor.dm-board__thumb--clickable:hover {
-    transform: scale(1.05);
+    transform: scale(1.8);
+    box-shadow: 0 16px 48px rgba(22, 22, 29, 0.3);
 }
 
 .dm-board__thumb img {

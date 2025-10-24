@@ -92,18 +92,27 @@ function dm_render_dashboard_shortcode(): string
     // This prevents WordPress theme/plugin conflicts
     $critical_css = '
         /* Force hover effects even if theme overrides */
+        #dm-root.dm-root .dm-board__row {
+            overflow: visible !important;
+        }
+        #dm-root.dm-root .dm-board__cell--main {
+            overflow: visible !important;
+        }
         #dm-root.dm-root .dm-board__thumb {
-            transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, z-index 0s 0s !important;
+            z-index: 1 !important;
         }
         #dm-root.dm-root .dm-board__thumb--clickable {
             cursor: pointer !important;
         }
         #dm-root.dm-root .dm-board__thumb--clickable:hover {
-            transform: scale(1.1) !important;
-            box-shadow: 0 8px 24px rgba(22, 22, 29, 0.15) !important;
+            transform: scale(1.8) !important;
+            box-shadow: 0 16px 48px rgba(22, 22, 29, 0.3) !important;
+            z-index: 100 !important;
         }
         #dm-root.dm-root .dm-board__thumb--floor.dm-board__thumb--clickable:hover {
-            transform: scale(1.12) !important;
+            transform: scale(1.8) !important;
+            box-shadow: 0 16px 48px rgba(22, 22, 29, 0.3) !important;
         }
         /* Ensure color variables are used */
         #dm-root.dm-root .dm-topbar__title,
