@@ -21,8 +21,8 @@
 
 .dm-board__row {
     display: grid;
-    grid-template-columns: minmax(360px, 0.95fr) 180px 220px 280px;
-    gap: 24px;
+    grid-template-columns: minmax(200px, 2fr) minmax(80px, 0.8fr) minmax(120px, 1fr) minmax(180px, 1.2fr);
+    gap: clamp(12px, 2vw, 24px);
     align-items: center;
 }
 
@@ -68,13 +68,15 @@
 .dm-board__cell--main {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: clamp(12px, 2vw, 24px);
+    min-width: 0;
+    overflow: hidden;
 }
 
 .dm-board__thumb {
     flex: none;
-    width: 92px;
-    height: 92px;
+    width: clamp(60px, 8vw, 92px);
+    height: clamp(60px, 8vw, 92px);
     border-radius: 18px;
     overflow: hidden;
     border: 1px solid var(--dm-border);
@@ -100,8 +102,8 @@
 }
 
 .dm-board__thumb--floor {
-    width: 76px;
-    height: 76px;
+    width: clamp(50px, 7vw, 76px);
+    height: clamp(50px, 7vw, 76px);
     border-radius: 16px;
 }
 
@@ -133,25 +135,36 @@
 }
 
 .dm-board__label {
-    font-size: 20px;
+    font-size: clamp(16px, 1.8vw, 20px);
     font-weight: 600;
     color: var(--dm-text);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
 }
 
 .dm-board__cell--type {
+    font-size: clamp(13px, 1.5vw, 16px);
     font-weight: 600;
     color: var(--dm-content-text-color);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    min-width: 0;
 }
 
 .dm-board__cell--actions {
-    display: inline-flex;
-    gap: 18px;
+    display: flex;
+    gap: clamp(8px, 1.5vw, 18px);
     justify-content: center;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .dm-icon-button {
-    width: 48px !important;
-    height: 48px !important;
+    width: clamp(40px, 4vw, 48px) !important;
+    height: clamp(40px, 4vw, 48px) !important;
+    min-width: clamp(40px, 4vw, 48px);
+    flex-shrink: 0;
     border-radius: 14px !important;
     border: 1px solid #c7c8d3 !important;
     background: #d9d9e2 !important;
@@ -197,21 +210,26 @@
 
 .dm-board__cell--shortcode {
     justify-content: flex-end;
+    overflow: hidden;
 }
 
 .dm-board__cell--shortcode code {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 274px;
-    padding: 14px 18px;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: clamp(10px, 1.2vw, 14px) clamp(12px, 1.5vw, 18px);
     border-radius: 16px;
     border: 1px solid #bfc0cb;
     background: rgba(217, 217, 223, 0.74);
     font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
-    font-size: 15px;
+    font-size: clamp(11px, 1.3vw, 15px);
     color: var(--dm-content-text-color);
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     user-select: all;
 }
 

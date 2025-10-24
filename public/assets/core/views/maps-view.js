@@ -98,8 +98,8 @@ function renderProjectRow(project, shortcode) {
                 </div>
                 <span class="dm-board__label">${escapeHtml(project.name)}</span>
             </div>
-            <div class="dm-board__cell dm-board__cell--type" role="cell">${escapeHtml(project.type)}</div>
-            <div class="dm-board__cell dm-board__cell--actions" role="cell">
+            <div class="dm-board__cell dm-board__cell--type" role="cell" data-label="Typ:">${escapeHtml(project.type)}</div>
+            <div class="dm-board__cell dm-board__cell--actions" role="cell" data-label="Akcie:">
                 ${renderActionButton('open', `Zobraziť projekt ${project.name}`, {
                     'data-dm-modal': 'draw-coordinates',
                     'data-dm-payload': project.id,
@@ -113,7 +113,7 @@ function renderProjectRow(project, shortcode) {
                     'data-dm-payload': project.id,
                 })}
             </div>
-            <div class="dm-board__cell dm-board__cell--shortcode" role="cell">
+            <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
                 <code>${escapeHtml(shortcode)}</code>
             </div>
         </div>
@@ -130,8 +130,8 @@ function renderFloorRow(floor, shortcode) {
                 </div>
                 <span class="dm-board__label">${escapeHtml(floor.name)}</span>
             </div>
-            <div class="dm-board__cell dm-board__cell--type" role="cell">${escapeHtml(floor.type)}</div>
-            <div class="dm-board__cell dm-board__cell--actions" role="cell">
+            <div class="dm-board__cell dm-board__cell--type" role="cell" data-label="Typ:">${escapeHtml(floor.type)}</div>
+            <div class="dm-board__cell dm-board__cell--actions" role="cell" data-label="Akcie:">
                 ${renderActionButton('open', `Zobraziť lokalitu ${floor.name}`, {
                     'data-dm-modal': 'draw-coordinates',
                     'data-dm-payload': floor.id,
@@ -145,7 +145,7 @@ function renderFloorRow(floor, shortcode) {
                     'data-dm-payload': floor.id,
                 })}
             </div>
-            <div class="dm-board__cell dm-board__cell--shortcode" role="cell">
+            <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
                 <code>${escapeHtml(shortcode)}</code>
             </div>
         </div>
