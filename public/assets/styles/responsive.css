@@ -86,16 +86,11 @@
         justify-content: flex-start;
     }
 
-    .dm-board__cell--shortcode code {
+    /* Len pre riadky ktoré NIE SÚ child - parent a floor riadky */
+    .dm-board__row:not(.dm-board__row--child) .dm-board__cell--shortcode code {
         width: 100%;
         font-size: clamp(9px, 1.1vw, 12px);
         padding: clamp(6px, 0.8vw, 10px) clamp(8px, 1vw, 12px);
-    }
-
-    /* Child riadky musia mať rovnakú veľkosť shortcode ako parent */
-    .dm-board__row--child .dm-board__cell--shortcode code {
-        font-size: clamp(11px, 1.3vw, 15px);
-        padding: clamp(10px, 1.2vw, 14px) clamp(12px, 1.5vw, 18px);
     }
 
     .dm-draw__toolbar {

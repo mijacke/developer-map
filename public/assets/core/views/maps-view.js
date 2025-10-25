@@ -141,7 +141,7 @@ function renderProjectRow(project, shortcode, floors = []) {
             </div>
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
                 <code>
-                    ${escapeHtml(shortcode)}
+                    <span>${escapeHtml(shortcode)}</span>
                     <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(shortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
                         <span class="dm-copy-button__icon" aria-hidden="true">${HEADER_ICONS.copy}</span>
                     </button>
@@ -190,7 +190,7 @@ function renderFloorRow(floor, shortcode) {
             </div>
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
                 <code>
-                    ${escapeHtml(shortcode)}
+                    <span>${escapeHtml(shortcode)}</span>
                     <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(shortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
                         <span class="dm-copy-button__icon" aria-hidden="true">${HEADER_ICONS.copy}</span>
                     </button>

@@ -254,7 +254,7 @@
 
 .dm-board__cell--shortcode {
     justify-content: flex-end;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     align-items: center;
     gap: 0;
@@ -263,7 +263,7 @@
 .dm-board__cell--shortcode code {
     display: inline-flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     min-width: 0;
     flex: 1;
     max-width: 100%;
@@ -274,11 +274,17 @@
     font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
     font-size: clamp(11px, 1.3vw, 15px);
     color: var(--dm-content-text-color);
+    gap: 12px;
+    overflow: visible;
+}
+
+.dm-board__cell--shortcode code > span:first-child {
+    flex: 1;
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     user-select: all;
-    gap: 12px;
 }
 
 .dm-board__cell--shortcode code:focus-visible {
