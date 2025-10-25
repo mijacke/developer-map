@@ -6,8 +6,6 @@ export const APP_VIEWS = {
 
 export const MAP_SECTIONS = {
     LIST: 'list',
-    FLOORS: 'floors',
-    BLUEPRINTS: 'blueprints',
 };
 
 export const SETTINGS_SECTIONS = {

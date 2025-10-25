@@ -29,43 +29,164 @@ export function renderModal(state, data) {
 }
 
 function renderFormModal(title, cta, includeImage = false) {
+    const addIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus-icon lucide-circle-plus"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>';
+    const infoIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>';
+    
     return `
         <div class="dm-modal-overlay">
             <div class="dm-modal">
                 <header class="dm-modal__header">
-                    <h2>${title}</h2>
+                    <div class="dm-modal__header-left">
+                        ${addIcon}
+                        <h2>${title}</h2>
+                    </div>
                     <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
                 </header>
                 <div class="dm-modal__body ${includeImage ? 'dm-modal__body--with-media' : ''}">
-                    ${includeImage ? '<div class="dm-modal__media dm-hero dm-hero--building"></div>' : ''}
-                    <form class="dm-modal__form">
-                        <div class="dm-form__grid">
-                            <label class="dm-field">
-                                <span>Nadradené</span>
-                                <select><option>Bytovka</option></select>
-                            </label>
-                            <label class="dm-field">
-                                <span>Typ *</span>
-                                <select><option>Pozemok</option></select>
-                            </label>
-                            <label class="dm-field">
-                                <span>Názov *</span>
-                                <input type="text" value="1" />
-                                <small>max 100 znakov</small>
-                            </label>
-                            <label class="dm-field">
-                                <span>Označenie *</span>
-                                <input type="text" value="l1" />
-                                <small>max 5 znakov</small>
-                            </label>
-                            <label class="dm-field">
-                                <span>URL *</span>
-                                <input type="url" placeholder="https://" />
-                                <small>max 100 znakov</small>
-                            </label>
+                    ${includeImage ? `
+                        <div class="dm-modal__media-wrapper">
+                            <div class="dm-modal__media dm-hero dm-hero--building"></div>
+                            <button type="button" class="dm-modal__upload-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                Nahrať obrázok
+                            </button>
                         </div>
-                        <div class="dm-modal__actions">
-                            <button type="button" class="dm-button dm-button--dark">${cta}</button>
+                    ` : ''}
+                    <form class="dm-modal__form">
+                        <div class="dm-modal__form-layout">
+                            <div class="dm-upload-card">
+                                <div class="dm-upload-card__dropzone">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+                                        <path d="M7 10V9C7 6.23858 9.23858 4 12 4C14.7614 4 17 6.23858 17 9V10C19.2091 10 21 11.7909 21 14C21 15.4806 20.1956 16.8084 19 17.5M7 10C4.79086 10 3 11.7909 3 14C3 15.4806 3.8044 16.8084 5 17.5M7 10C7.43285 10 7.84965 10.0688 8.24006 10.1959M12 12V21M12 12L15 15M12 12L9 15" stroke="#5a3bff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                    <p>Browse file to upload!</p>
+                                </div>
+                                <label for="dm-modal-upload" class="dm-upload-card__footer">
+                                    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M15.331 6H8.5v20h15V14.154h-8.169z"></path>
+                                        <path d="M18.153 6h-.009v5.342H23.5v-.002z"></path>
+                                    </svg>
+                                    <p>Not selected file</p>
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M5.16565 10.1534C5.07629 8.99181 5.99473 8 7.15975 8H16.8402C18.0053 8 18.9237 8.9918 18.8344 10.1534L18.142 19.1534C18.0619 20.1954 17.193 21 16.1479 21H7.85206C6.80699 21 5.93811 20.1954 5.85795 19.1534L5.16565 10.1534Z" stroke="currentColor" stroke-width="2"></path>
+                                        <path d="M19.5 5H4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                        <path d="M10 3C10 2.44772 10.4477 2 11 2H13C13.5523 2 14 2.44772 14 3V5H10V3Z" stroke="currentColor" stroke-width="2"></path>
+                                    </svg>
+                                </label>
+                                <input id="dm-modal-upload" type="file" class="dm-upload-card__input" />
+                            </div>
+                            <div class="dm-modal__form-fields">
+                                <div class="dm-form__grid">
+                                    <label class="dm-field">
+                                        <span class="dm-field__label">
+                                            Nadradená
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Vyberte nadradenú mapu">${infoIcon}</button>
+                                        </span>
+                                        <select>
+                                            <option value="">Žiadna nadradená mapa</option>
+                                            <option>Bytovka</option>
+                                            <option>Obchodné centrum</option>
+                                        </select>
+                                    </label>
+                                    <label class="dm-field">
+                                        <span class="dm-field__label">
+                                            Východzí zoom <span class="dm-field__required">*</span>
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Východzie priblíženie mapy pri načítaní">${infoIcon}</button>
+                                        </span>
+                                        <input type="number" placeholder="1.0" step="0.1" min="0.1" max="5.0" />
+                                    </label>
+                                    <label class="dm-field">
+                                        <span class="dm-field__label">
+                                            Typ <span class="dm-field__required">*</span>
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Typ nehnuteľnosti alebo objektu">${infoIcon}</button>
+                                        </span>
+                                        <select>
+                                            <option value="">Vyberte typ</option>
+                                            <option>Pozemok</option>
+                                            <option>Byt</option>
+                                            <option>Dom</option>
+                                            <option>Kancelária</option>
+                                        </select>
+                                    </label>
+                                    <label class="dm-field">
+                                        <span class="dm-field__label">
+                                            Šírka mapy <span class="dm-field__required">*</span>
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Šírka obrázku mapy v pixeloch">${infoIcon}</button>
+                                        </span>
+                                        <input type="number" placeholder="1600" step="1" />
+                                    </label>
+                                    <label class="dm-field">
+                                        <span class="dm-field__label">
+                                            Názov <span class="dm-field__required">*</span>
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Názov mapy alebo lokality">${infoIcon}</button>
+                                        </span>
+                                        <input type="text" placeholder="Napr. Byt 1.01" />
+                                        <small>max 100 znakov</small>
+                                    </label>
+                                    <label class="dm-field">
+                                        <span class="dm-field__label">
+                                            Výška mapy <span class="dm-field__required">*</span>
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Výška obrázku mapy v pixeloch">${infoIcon}</button>
+                                        </span>
+                                        <input type="number" placeholder="900" step="1" />
+                                    </label>
+                                    <label class="dm-field">
+                                        <span class="dm-field__label">
+                                            Minimálny zoom <span class="dm-field__required">*</span>
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Minimálne možné oddialenie mapy">${infoIcon}</button>
+                                        </span>
+                                        <input type="number" placeholder="0.5" step="0.1" min="0.1" max="5.0" />
+                                    </label>
+                                    <label class="dm-field">
+                                        <span class="dm-field__label">
+                                            Hrúbka ohraničenia <span class="dm-field__required">*</span>
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Šírka čiary ohraničenia lokality v pixeloch">${infoIcon}</button>
+                                        </span>
+                                        <input type="number" placeholder="2" step="1" min="1" max="10" />
+                                    </label>
+                                    <label class="dm-field">
+                                        <span class="dm-field__label">
+                                            Maximálny zoom <span class="dm-field__required">*</span>
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Maximálne možné priblíženie mapy">${infoIcon}</button>
+                                        </span>
+                                        <input type="number" placeholder="3.0" step="0.1" min="0.1" max="5.0" />
+                                    </label>
+                                    <label class="dm-field">
+                                        <span class="dm-field__label">
+                                            Prehľadnosť ohraničenia <span class="dm-field__required">*</span>
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Priehľadnosť čiary ohraničenia (0-100%)">${infoIcon}</button>
+                                        </span>
+                                        <input type="number" placeholder="100" step="1" min="0" max="100" />
+                                    </label>
+                                    <label class="dm-field dm-field--full">
+                                        <span class="dm-field__label">
+                                            Prehľadnosť pozadia <span class="dm-field__required">*</span>
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Priehľadnosť výplne lokality (0-100%)">${infoIcon}</button>
+                                        </span>
+                                        <input type="number" placeholder="40" step="1" min="0" max="100" />
+                                    </label>
+                                    <label class="dm-field dm-field--span-2">
+                                        <span class="dm-field__label">
+                                            Smer
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Smer orientácie objektu">${infoIcon}</button>
+                                        </span>
+                                        <input type="text" placeholder="Napr. Sever, Juh, Východ, Západ" />
+                                    </label>
+                                    <label class="dm-field dm-field--span-2">
+                                        <span class="dm-field__label">
+                                            Uhol
+                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Uhol natočenia objektu v stupňoch">${infoIcon}</button>
+                                        </span>
+                                        <input type="text" placeholder="Napr. 90°, 180°, 270°" />
+                                    </label>
+                                </div>
+                                <div class="dm-modal__actions">
+                                    <button type="button" class="dm-button dm-button--dark">
+                                        ${addIcon}
+                                        ${cta}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>

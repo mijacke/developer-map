@@ -107,16 +107,6 @@ export function initDeveloperMap(options) {
             });
         });
 
-        const subnavButtons = root.querySelectorAll('[data-dm-section]');
-        subnavButtons.forEach((button) => {
-            button.addEventListener('click', (event) => {
-                const target = event.currentTarget;
-                const section = target.getAttribute('data-dm-section');
-                if (!section) return;
-                setState({ mapSection: section });
-            });
-        });
-
         const settingsNavButtons = root.querySelectorAll('[data-dm-settings]');
         settingsNavButtons.forEach((button) => {
             button.addEventListener('click', (event) => {

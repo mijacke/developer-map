@@ -186,10 +186,24 @@
     }
 
     .dm-button--dark {
-        background: #d5d5dc;
-        color: var(--dm-text);
-        border: 2px solid var(--dm-border-strong);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(107, 114, 128, 0.06);
+        color: var(--dm-content-text-color);
+        border: 1px solid rgba(107, 114, 128, 0.2);
+        border-radius: 16px;
+        padding: 10px 18px;
+        font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
+        font-size: 15px;
+        font-weight: 500;
         box-shadow: 0 4px 12px rgba(22, 22, 29, 0.12);
+    }
+
+    .dm-button--dark svg {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
     }
 
     .dm-button--outline {
@@ -203,7 +217,8 @@
     }
 
     .dm-button--dark:hover {
-        background: #c5c5cd;
+        background: rgba(107, 114, 128, 0.12);
+        border-color: rgba(107, 114, 128, 0.3);
     }
 
     .dm-section-head h2 {

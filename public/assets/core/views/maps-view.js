@@ -15,29 +15,15 @@ export function renderMapsView(state, data) {
                     <h1>Developer Map</h1>
                     <p>${subtitle}</p>
                 </div>
-                <nav class="dm-subnav" role="tablist" aria-label="Sekcie máp">
-                    ${renderSubnavButton('Zoznam', MAP_SECTIONS.LIST, state.mapSection)}
-                    ${renderSubnavButton('Poschodia', MAP_SECTIONS.FLOORS, state.mapSection)}
-                    ${renderSubnavButton('Pôdorysy', MAP_SECTIONS.BLUEPRINTS, state.mapSection)}
-                </nav>
             </header>
             <div class="dm-main-surface__content">
-                ${state.mapSection === MAP_SECTIONS.LIST ? renderMapList(data, state) : ''}
-                ${state.mapSection === MAP_SECTIONS.FLOORS ? renderFloorsContent(data, state) : ''}
-                ${state.mapSection === MAP_SECTIONS.BLUEPRINTS ? renderBlueprintsContent(data, state) : ''}
+                ${renderMapList(data, state)}
             </div>
         </section>
     `;
 }
 
-function renderSubnavButton(label, section, activeSection) {
-    const isActive = section === activeSection;
-    return `
-        <button type="button" class="dm-subnav__button${isActive ? ' is-active' : ''}" data-dm-section="${section}" role="tab" aria-selected="${isActive}">
-            ${escapeHtml(label)}
-        </button>
-    `;
-}
+
 
 const ACTION_ICONS = {
     open: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-waypoints-icon lucide-waypoints"><circle cx="12" cy="4.5" r="2.5"/><path d="m10.2 6.3-3.9 3.9"/><circle cx="4.5" cy="12" r="2.5"/><path d="M7 12h10"/><circle cx="19.5" cy="12" r="2.5"/><path d="m13.8 17.7 3.9-3.9"/><circle cx="12" cy="19.5" r="2.5"/></svg>',
@@ -101,7 +87,10 @@ function renderMapList(data, state) {
                 }).join('')}
             </div>
             <div class="dm-board__footer">
-                <button class="dm-board__cta" data-dm-modal="add-map">Pridať mapu</button>
+                <button class="dm-board__cta" data-dm-modal="add-map">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus-icon lucide-circle-plus"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                    Pridať mapu
+                </button>
             </div>
         </div>
     `;
@@ -200,81 +189,8 @@ function renderFloorRow(floor, shortcode) {
     `;
 }
 
-function renderFormPlaceholder(title) {
-    return `
-        <div class="dm-form-placeholder">
-            <div class="dm-form-placeholder__header">
-                <h3>${escapeHtml(title)}</h3>
-            </div>
-            <div class="dm-form-placeholder__fields">
-                <div class="dm-form-placeholder__field">
-                    <div class="dm-form-placeholder__label"></div>
-                    <div class="dm-form-placeholder__input"></div>
-                </div>
-                <div class="dm-form-placeholder__field">
-                    <div class="dm-form-placeholder__label"></div>
-                    <div class="dm-form-placeholder__input"></div>
-                </div>
-                <div class="dm-form-placeholder__field">
-                    <div class="dm-form-placeholder__label"></div>
-                    <div class="dm-form-placeholder__input"></div>
-                </div>
-            </div>
-        </div>
-    `;
-}
 
-function renderFloorsContent(data) {
-    const project = data.projects[0];
-    return `
-        <div class="dm-card dm-card--wide">
-            <header class="dm-section-head">
-                <h2>Pridať lokalitu</h2>
-                <p>Spravujte poschodia a ich detailné zobrazenia.</p>
-            </header>
-            <div class="dm-placeholder-grid">
-                <div class="dm-placeholder-grid__preview">
-                    <div class="dm-hero dm-hero--building"></div>
-                </div>
-                <div class="dm-placeholder-grid__form">
-                    ${renderFormPlaceholder('Pridať lokalitu')}
-                </div>
-            </div>
-            <footer class="dm-card__footer">
-                <button class="dm-button dm-button--outline" data-dm-modal="draw-coordinates">Nakresliť súradnice</button>
-                <button class="dm-button dm-button--primary" data-dm-modal="add-location">Pridať mapu</button>
-            </footer>
-            <div class="dm-card__list">
-                <h3>Zoznam poschodí</h3>
-                <ul class="dm-simple-list">
-                    ${project.floors.map((floor) => `<li>${floor.name}</li>`).join('')}
-                </ul>
-            </div>
-        </div>
-    `;
-}
 
-function renderBlueprintsContent() {
-    return `
-        <div class="dm-card dm-card--wide">
-            <header class="dm-section-head">
-                <h2>Pôdorysy projektu</h2>
-                <p>Spravujte podklady a masky pre jednotlivé typy nehnuteľností.</p>
-            </header>
-            <div class="dm-blueprint-placeholder">
-                <div class="dm-blueprint-placeholder__sheet">
-                    <span>Pôdorys A1</span>
-                </div>
-                <div class="dm-blueprint-placeholder__sheet">
-                    <span>Pôdorys B2</span>
-                </div>
-                <div class="dm-blueprint-placeholder__sheet">
-                    <span>Pôdorys C3</span>
-                </div>
-            </div>
-            <footer class="dm-card__footer">
-                <button class="dm-button dm-button--primary" data-dm-modal="add-blueprint">Pridať pôdorys</button>
-            </footer>
-        </div>
-    `;
-}
+
+
+
