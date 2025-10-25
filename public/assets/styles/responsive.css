@@ -226,6 +226,7 @@
 
     .dm-board__cell--shortcode code {
         width: 100%;
+        flex: 1;
         font-size: clamp(10px, 2.5vw, 12px);
         padding: clamp(8px, 2vw, 10px) clamp(10px, 2.2vw, 12px);
         white-space: normal;
@@ -233,6 +234,13 @@
         line-height: 1.5;
         text-align: left;
         justify-content: flex-start;
+    }
+
+    .dm-copy-button {
+        width: clamp(38px, 8vw, 42px);
+        height: clamp(38px, 8vw, 42px);
+        min-width: clamp(38px, 8vw, 42px);
+        align-self: flex-start;
     }
 
     .dm-icon-button {
@@ -258,6 +266,26 @@
 }
 
 @media (max-width: 480px) {
+    .dm-topbar__search-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .dm-topbar__search input {
+        padding-left: 48px;
+        font-size: 14px;
+    }
+
+    .dm-topbar__link-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .dm-topbar__link {
+        font-size: 14px;
+        gap: 6px;
+    }
+
     .dm-board__row {
         padding: 16px;
         gap: 14px;

@@ -188,6 +188,33 @@ export function initDeveloperMap(options) {
             });
         });
 
+        // Copy to clipboard functionality
+        const copyButtons = root.querySelectorAll('[data-dm-copy]');
+        copyButtons.forEach((button) => {
+            button.addEventListener('click', async (event) => {
+                event.preventDefault();
+                const textToCopy = button.getAttribute('data-dm-copy');
+                
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    
+                    // Visual feedback
+                    const originalContent = button.innerHTML;
+                    button.innerHTML = '<span class="dm-copy-button__icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8L6.5 11.5L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg></span>';
+                    button.style.background = '#d4f4dd';
+                    button.style.borderColor = '#90ee90';
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalContent;
+                        button.style.background = '';
+                        button.style.borderColor = '';
+                    }, 1500);
+                } catch (err) {
+                    console.error('Failed to copy text:', err);
+                }
+            });
+        });
+
         const modalTriggers = root.querySelectorAll('[data-dm-modal]');
         modalTriggers.forEach((button) => {
             button.addEventListener('click', (event) => {

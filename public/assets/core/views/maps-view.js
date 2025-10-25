@@ -40,9 +40,17 @@ function renderSubnavButton(label, section, activeSection) {
 }
 
 const ACTION_ICONS = {
-    open: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path d="M5 5H13V13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M5 13L13 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>',
-    edit: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path d="M3.25 12.75V14.75H5.25L12.58 7.42L10.58 5.42L3.25 12.75Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.58 4.42L13.58 6.42" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg>',
-    delete: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path d="M4.5 5.5H13.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path><path d="M6.25 5.5V4.6C6.25 4.04 6.7 3.5 7.36 3.5H10.64C11.3 3.5 11.75 4.04 11.75 4.6V5.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path><path d="M6 5.5L6.5 14C6.54 14.58 7 15.05 7.58 15.05H10.42C11 15.05 11.46 14.58 11.5 14L12 5.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path><path d="M7.75 8.25L8 12.3" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"></path><path d="M10.25 8.25L10 12.3" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"></path></svg>',
+    open: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-waypoints-icon lucide-waypoints"><circle cx="12" cy="4.5" r="2.5"/><path d="m10.2 6.3-3.9 3.9"/><circle cx="4.5" cy="12" r="2.5"/><path d="M7 12h10"/><circle cx="19.5" cy="12" r="2.5"/><path d="m13.8 17.7 3.9-3.9"/><circle cx="12" cy="19.5" r="2.5"/></svg>',
+    edit: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>',
+    delete: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+};
+
+const HEADER_ICONS = {
+    list: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-filter-icon lucide-list-filter"><path d="M2 5h20"/><path d="M6 12h12"/><path d="M9 19h6"/></svg>',
+    type: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-filter-icon lucide-list-filter"><path d="M2 5h20"/><path d="M6 12h12"/><path d="M9 19h6"/></svg>',
+    actions: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-filter-icon lucide-list-filter"><path d="M2 5h20"/><path d="M6 12h12"/><path d="M9 19h6"/></svg>',
+    embed: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-filter-icon lucide-list-filter"><path d="M2 5h20"/><path d="M6 12h12"/><path d="M9 19h6"/></svg>',
+    copy: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>',
 };
 
 function renderActionButton(type, label, attributes = {}) {
@@ -59,6 +67,17 @@ function renderActionButton(type, label, attributes = {}) {
     `;
 }
 
+function renderColumnHeader(label, iconKey, extraClass = '') {
+    const iconMarkup = HEADER_ICONS[iconKey] ?? '';
+    const classNames = `dm-board__cell dm-board__cell--head${extraClass ? ' ' + extraClass : ''}`;
+    return `
+        <div class="${classNames}" role="columnheader">
+            <span class="dm-board__header-icon" aria-hidden="true">${iconMarkup}</span>
+            <span>${escapeHtml(label)}</span>
+        </div>
+    `;
+}
+
 function renderMapList(data, state) {
     const projects = data.projects ?? [];
     const filterTerm = state.searchTerm.trim().toLowerCase();
@@ -67,10 +86,10 @@ function renderMapList(data, state) {
         <div class="dm-board dm-board--list">
             <div class="dm-board__table" role="table" aria-label="Zoznam máp">
                 <div class="dm-board__head" role="row">
-                    <div class="dm-board__cell dm-board__cell--head" role="columnheader">Zoznam</div>
-                    <div class="dm-board__cell dm-board__cell--head" role="columnheader">Typ</div>
-                    <div class="dm-board__cell dm-board__cell--head dm-board__cell--head-actions" role="columnheader">Akcie</div>
-                    <div class="dm-board__cell dm-board__cell--head" role="columnheader">Vloženie na web</div>
+                    ${renderColumnHeader('Zoznam', 'list')}
+                    ${renderColumnHeader('Typ', 'type')}
+                    ${renderColumnHeader('Akcie', 'actions', 'dm-board__cell--head-actions')}
+                    ${renderColumnHeader('Vloženie na web', 'embed')}
                 </div>
                 ${projects.map((project) => {
                     const shortcode = `[fuudobre_map map_id="${project.id}"]`;
@@ -122,6 +141,9 @@ function renderProjectRow(project, shortcode, floors = []) {
             </div>
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
                 <code>${escapeHtml(shortcode)}</code>
+                <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(shortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
+                    <span class="dm-copy-button__icon" aria-hidden="true">${HEADER_ICONS.copy}</span>
+                </button>
             </div>
             ${floorsCount > 0 ? `
                 <button type="button" class="dm-board__toggle" data-dm-toggle="${project.id}" aria-expanded="false" aria-label="Rozbaliť poschodia">
@@ -166,6 +188,9 @@ function renderFloorRow(floor, shortcode) {
             </div>
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
                 <code>${escapeHtml(shortcode)}</code>
+                <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(shortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
+                    <span class="dm-copy-button__icon" aria-hidden="true">${HEADER_ICONS.copy}</span>
+                </button>
             </div>
         </div>
     `;
