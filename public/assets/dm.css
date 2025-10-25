@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-25 04:56:56 */
+/* Generated: 2025-10-25 05:43:53 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -27,9 +27,9 @@
 
     position: relative;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     min-height: 100vh;
-    padding: 56px 0 88px;
+    padding: 16px;
     background: var(--dm-bg);
     font-family: 'Inter', 'Segoe UI', sans-serif;
     font-size: 16px;
@@ -67,9 +67,9 @@
 /* === layout-shell.css === */
 .dm-app {
     width: 100%;
-    max-width: 1352px;
-    margin: 0 auto;
-    padding: 0 32px;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: 48px;
@@ -469,9 +469,9 @@
     height: clamp(40px, 4vw, 48px) !important;
     min-width: clamp(40px, 4vw, 48px);
     flex-shrink: 0;
-    border-radius: 14px !important;
+    border-radius: 50% !important;
     border: 1px solid #c7c8d3 !important;
-    background: #d9d9e2 !important;
+    background: #ffffff !important;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -497,7 +497,7 @@
 }
 
 .dm-icon-button:hover {
-    background: #e5e5ea !important;
+    background: #f5f5f5 !important;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(22, 22, 29, 0.12) !important;
     border: 1px solid #c7c8d3 !important;
@@ -509,13 +509,13 @@
 }
 
 .dm-icon-button--delete {
-    background: #ffe5e5 !important;
+    background: #ffffff !important;
     border-color: #ffb8b8 !important;
     color: #d32f2f !important;
 }
 
 .dm-icon-button--delete:hover {
-    background: #ffcccc !important;
+    background: #fff5f5 !important;
     border-color: #ff9999 !important;
     color: #b71c1c !important;
 }
@@ -537,20 +537,20 @@
     overflow: hidden;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 0;
 }
 
 .dm-board__cell--shortcode code {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     min-width: 0;
     flex: 1;
     max-width: 100%;
     padding: clamp(10px, 1.2vw, 14px) clamp(12px, 1.5vw, 18px);
     border-radius: 16px;
-    border: 1px solid #bfc0cb;
-    background: rgba(217, 217, 223, 0.74);
+    border: 1px solid rgba(107, 114, 128, 0.2);
+    background: rgba(107, 114, 128, 0.06);
     font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
     font-size: clamp(11px, 1.3vw, 15px);
     color: var(--dm-content-text-color);
@@ -558,22 +558,33 @@
     overflow: hidden;
     text-overflow: ellipsis;
     user-select: all;
+    gap: 12px;
+}
+
+.dm-board__cell--shortcode code:focus-visible {
+    outline: 2px solid var(--dm-border-strong) !important;
+    outline-offset: 2px !important;
+    border-color: rgba(107, 114, 128, 0.2) !important;
+    background: rgba(107, 114, 128, 0.06) !important;
 }
 
 .dm-copy-button {
     flex-shrink: 0;
-    width: clamp(36px, 3.5vw, 42px);
-    height: clamp(36px, 3.5vw, 42px);
-    min-width: clamp(36px, 3.5vw, 42px);
-    border-radius: 12px;
-    border: 1px solid #c7c8d3;
-    background: #e8e8ef;
+    width: clamp(28px, 3vw, 32px);
+    height: clamp(28px, 3vw, 32px);
+    min-width: clamp(28px, 3vw, 32px);
+    border-radius: 50%;
+    border: none !important;
+    background: transparent !important;
+    color: inherit !important;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
     padding: 0;
+    opacity: 0.7;
+    box-shadow: none !important;
 }
 
 .dm-copy-button__icon {
@@ -584,26 +595,38 @@
 }
 
 .dm-copy-button__icon svg {
-    width: 16px;
-    height: 16px;
+    width: clamp(14px, 1.5vw, 16px);
+    height: clamp(14px, 1.5vw, 16px);
     display: block;
 }
 
 .dm-copy-button:hover {
-    background: #d4d4e0;
-    border-color: #a8a9b8;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(22, 22, 29, 0.12);
+    background: rgba(107, 114, 128, 0.1) !important;
+    opacity: 1;
+    transform: scale(1.1);
+    color: inherit !important;
+    border-color: transparent !important;
+}
+
+.dm-copy-button.is-copied {
+    opacity: 1;
+    background: rgba(107, 114, 128, 0.15) !important;
+    color: inherit !important;
+    border-color: transparent !important;
 }
 
 .dm-copy-button:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(22, 22, 29, 0.1);
+    transform: scale(0.95);
+    background: rgba(107, 114, 128, 0.12) !important;
+    color: inherit !important;
+    border-color: transparent !important;
 }
 
 .dm-copy-button:focus-visible {
-    outline: 2px solid var(--dm-border-strong);
-    outline-offset: 2px;
+    outline: 2px solid var(--dm-border-strong) !important;
+    outline-offset: 2px !important;
+    border-radius: 50%;
+    background: rgba(107, 114, 128, 0.1) !important;
 }
 
 .dm-board__footer {
@@ -1806,6 +1829,12 @@
         font-size: clamp(10px, 1.2vw, 13px);
         padding: clamp(8px, 1vw, 12px) clamp(10px, 1.2vw, 14px);
     }
+
+    /* Child riadky musia mať rovnakú veľkosť shortcode ako parent */
+    .dm-board__row--child .dm-board__cell--shortcode code {
+        font-size: clamp(11px, 1.3vw, 15px);
+        padding: clamp(10px, 1.2vw, 14px) clamp(12px, 1.5vw, 18px);
+    }
 }
 
 @media (max-width: 960px) {
@@ -1888,6 +1917,12 @@
         padding: clamp(6px, 0.8vw, 10px) clamp(8px, 1vw, 12px);
     }
 
+    /* Child riadky musia mať rovnakú veľkosť shortcode ako parent */
+    .dm-board__row--child .dm-board__cell--shortcode code {
+        font-size: clamp(11px, 1.3vw, 15px);
+        padding: clamp(10px, 1.2vw, 14px) clamp(12px, 1.5vw, 18px);
+    }
+
     .dm-draw__toolbar {
         flex-direction: column;
         align-items: flex-start;
@@ -1903,11 +1938,11 @@
 
 @media (max-width: 720px) {
     #dm-root.dm-root {
-        padding: 18px;
+        padding: 12px;
     }
 
     .dm-app {
-        padding: 0 12px;
+        padding: 0;
         gap: 32px;
     }
 
@@ -2030,14 +2065,13 @@
         word-break: break-all;
         line-height: 1.5;
         text-align: left;
-        justify-content: flex-start;
+        justify-content: space-between;
     }
 
     .dm-copy-button {
-        width: clamp(38px, 8vw, 42px);
-        height: clamp(38px, 8vw, 42px);
-        min-width: clamp(38px, 8vw, 42px);
-        align-self: flex-start;
+        width: clamp(28px, 7vw, 32px);
+        height: clamp(28px, 7vw, 32px);
+        min-width: clamp(28px, 7vw, 32px);
     }
 
     .dm-icon-button {

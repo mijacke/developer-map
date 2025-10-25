@@ -140,10 +140,12 @@ function renderProjectRow(project, shortcode, floors = []) {
                 })}
             </div>
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
-                <code>${escapeHtml(shortcode)}</code>
-                <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(shortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
-                    <span class="dm-copy-button__icon" aria-hidden="true">${HEADER_ICONS.copy}</span>
-                </button>
+                <code>
+                    ${escapeHtml(shortcode)}
+                    <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(shortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
+                        <span class="dm-copy-button__icon" aria-hidden="true">${HEADER_ICONS.copy}</span>
+                    </button>
+                </code>
             </div>
             ${floorsCount > 0 ? `
                 <button type="button" class="dm-board__toggle" data-dm-toggle="${project.id}" aria-expanded="false" aria-label="Rozbaliť poschodia">
@@ -187,10 +189,12 @@ function renderFloorRow(floor, shortcode) {
                 })}
             </div>
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
-                <code>${escapeHtml(shortcode)}</code>
-                <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(shortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
-                    <span class="dm-copy-button__icon" aria-hidden="true">${HEADER_ICONS.copy}</span>
-                </button>
+                <code>
+                    ${escapeHtml(shortcode)}
+                    <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(shortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
+                        <span class="dm-copy-button__icon" aria-hidden="true">${HEADER_ICONS.copy}</span>
+                    </button>
+                </code>
             </div>
         </div>
     `;

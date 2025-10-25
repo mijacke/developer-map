@@ -22,9 +22,9 @@
 
     position: relative;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     min-height: 100vh;
-    padding: 56px 0 88px;
+    padding: 16px;
     background: var(--dm-bg);
     font-family: 'Inter', 'Segoe UI', sans-serif;
     font-size: 16px;
