@@ -298,8 +298,6 @@
 
     .dm-field {
         position: relative;
-        display: flex;
-        flex-direction: column;
     }
 
     .dm-field__input {
@@ -310,40 +308,33 @@
         font-size: 1rem;
         color: var(--dm-text);
         transition: border 150ms cubic-bezier(0.4,0,0.2,1);
-        order: 1;
     }
 
     .dm-field__label {
         position: absolute;
         left: 15px;
-        top: 0;
         color: #6a6a76;
         pointer-events: none;
         transform: translateY(1rem);
         transition: 150ms cubic-bezier(0.4,0,0.2,1);
-        font-weight: 500;
-        font-size: 14px;
-        background: transparent;
-        padding: 0;
-        order: 2;
-        display: flex;
-        align-items: center;
-        gap: 4px;
     }
 
     .dm-field__required {
         color: #f43f5e;
-        font-weight: 600;
     }
 
-    .dm-field__input:focus,
-    .dm-field__input:valid {
+    .dm-field input:focus,
+    .dm-field input:valid,
+    .dm-field select:focus,
+    .dm-field select:valid {
         outline: none;
         border: 1.5px solid #1a73e8;
     }
 
-    .dm-field__input:focus ~ .dm-field__label,
-    .dm-field__input:valid ~ .dm-field__label {
+    .dm-field input:focus ~ label,
+    .dm-field input:valid ~ label,
+    .dm-field select:focus ~ label,
+    .dm-field select:valid ~ label {
         transform: translateY(-50%) scale(0.8);
         background-color: var(--dm-surface);
         padding: 0 .2em;

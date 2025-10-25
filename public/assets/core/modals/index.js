@@ -311,6 +311,7 @@ function renderColorModal(data, payload) {
                                 type="color" 
                                 value="${escapeHtml(color.value)}" 
                                 data-dm-color-input="${escapeHtml(color.id)}"
+                                autocomplete="off"
                                 class="dm-field__input dm-field__input--color"
                                 required
                             />

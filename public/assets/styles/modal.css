@@ -310,8 +310,6 @@
 
 .dm-modal__form .dm-field {
     position: relative;
-    display: flex;
-    flex-direction: column;
 }
 
 .dm-modal__form .dm-field__input {
@@ -323,30 +321,19 @@
     font-size: 1rem;
     color: var(--dm-text);
     transition: border 150ms cubic-bezier(0.4,0,0.2,1);
-    order: 1;
 }
 
 .dm-modal__form .dm-field__label {
     position: absolute;
     left: 15px;
-    top: 0;
     color: #6a6a76;
     pointer-events: none;
     transform: translateY(1rem);
     transition: 150ms cubic-bezier(0.4,0,0.2,1);
-    font-weight: 500;
-    font-size: 15px;
-    background: transparent;
-    padding: 0;
-    order: 2;
-    display: flex;
-    align-items: center;
-    gap: 4px;
 }
 
 .dm-modal__form .dm-field__required {
     color: #f43f5e;
-    font-weight: 600;
 }
 
 .dm-modal__form .dm-field__info {
@@ -380,14 +367,18 @@
     transform: translateY(-50%) scale(1.1);
 }
 
-.dm-modal__form .dm-field__input:focus,
-.dm-modal__form .dm-field__input:valid {
+.dm-modal__form input:focus,
+.dm-modal__form input:valid,
+.dm-modal__form select:focus,
+.dm-modal__form select:valid {
     outline: none;
     border: 1.5px solid #1a73e8;
 }
 
-.dm-modal__form .dm-field__input:focus ~ .dm-field__label,
-.dm-modal__form .dm-field__input:valid ~ .dm-field__label {
+.dm-modal__form input:focus ~ label,
+.dm-modal__form input:valid ~ label,
+.dm-modal__form select:focus ~ label,
+.dm-modal__form select:valid ~ label {
     transform: translateY(-50%) scale(0.8);
     background-color: var(--dm-surface);
     padding: 0 .2em;
