@@ -44,6 +44,7 @@
     border: 1px solid #cfd0d9;
     border-radius: 24px;
     padding: 24px 32px;
+    padding-right: 72px; /* Rovnaký padding ako parent/child riadky pre zarovnanie stĺpcov */
 }
 
 .dm-board__head .dm-board__cell--head-actions {

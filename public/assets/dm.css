@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-25 02:04:55 */
+/* Generated: 2025-10-25 03:41:42 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -277,6 +277,7 @@
     border: 1px solid #cfd0d9;
     border-radius: 24px;
     padding: 24px 32px;
+    padding-right: 72px; /* Rovnaký padding ako parent/child riadky pre zarovnanie stĺpcov */
 }
 
 .dm-board__head .dm-board__cell--head-actions {
@@ -588,12 +589,14 @@
     padding-top: 20px;
 }
 
-/* Odsadenie pre deti (výrazné odsadenie doprava) */
+/* Styling pre child riadky - bez posúvania obsahu */
 .dm-board__row--child {
-    margin-left: 40px; /* Celý riadok posunutý doprava */
     background: #fafafc;
     border-color: #dcdce6;
     margin-bottom: 0;
+    margin-left: 72px; /* Odsadenie detí od rodiča */
+    padding-right: 72px; /* Rovnaký padding ako parent pre zarovnanie stĺpcov */
+    border-left: 4px solid #c7d2fe; /* Vizuálna indikácia hierarchie bez posúvania obsahu */
 }
 
 .dm-board__row--child:last-child {
