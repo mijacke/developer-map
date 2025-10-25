@@ -82,21 +82,22 @@ function renderFormModal(title, cta, includeImage = false) {
                                     <div class="dm-form__column">
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Vyberte nadradenú mapu">${infoIcon}</button>
-                                            <select required class="dm-field__input">
-                                                <option value="">Žiadna nadradená mapa</option>
-                                                <option>Bytovka</option>
-                                                <option>Obchodné centrum</option>
+                                            <select required autocomplete="off" class="dm-field__input" data-dm-select>
+                                                <option value="">Nadradená</option>
+                                                <option value="none">Žiadna</option>
+                                                <option value="bytovka">Bytovka</option>
+                                                <option value="centrum">Obchodné centrum</option>
                                             </select>
                                             <label class="dm-field__label">Nadradená<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Typ nehnuteľnosti alebo objektu">${infoIcon}</button>
-                                            <select required class="dm-field__input">
-                                                <option value="">Vyberte typ</option>
-                                                <option>Pozemok</option>
-                                                <option>Byt</option>
-                                                <option>Dom</option>
-                                                <option>Kancelária</option>
+                                            <select required autocomplete="off" class="dm-field__input" data-dm-select>
+                                                <option value="">Typ</option>
+                                                <option value="pozemok">Pozemok</option>
+                                                <option value="byt">Byt</option>
+                                                <option value="dom">Dom</option>
+                                                <option value="kancelaria">Kancelária</option>
                                             </select>
                                             <label class="dm-field__label">Typ<span class="dm-field__required">*</span></label>
                                         </div>
