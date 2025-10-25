@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-25 12:56:21 */
+/* Generated: 2025-10-25 13:44:05 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -1693,7 +1693,7 @@
     display: grid;
     grid-template-columns: 384px 1fr;
     gap: 48px;
-    align-items: stretch;
+    align-items: start;
 }
 
 .dm-modal__body--draw {
@@ -1705,11 +1705,14 @@
     flex-direction: column;
     align-items: stretch;
     gap: 20px;
+    height: auto;
+    max-height: 400px;
 }
 
 .dm-modal__media {
     position: relative;
-    min-height: 320px;
+    height: 280px;
+    flex-shrink: 0;
     border-radius: 28px;
     border: 2px dashed rgba(118, 110, 198, 0.28);
     background: linear-gradient(160deg, rgba(243, 242, 252, 0.96), rgba(236, 234, 250, 0.88));
@@ -2551,3 +2554,4 @@
         padding: 6px 8px;
     }
 }
+
