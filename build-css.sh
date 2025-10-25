@@ -15,6 +15,7 @@ for file in \
     styles/base.css \
     styles/layout-shell.css \
     styles/board.css \
+    styles/hierarchy.css \
     styles/page.css \
     styles/cards.css \
     styles/dashboard.css \

@@ -2,18 +2,17 @@ import { MAP_SECTIONS, MEDIA } from '../constants.js';
 import { escapeHtml } from '../utils/html.js';
 
 export function renderMapsView(state, data) {
-    const project = data.projects[0] ?? null;
-    const floorsCount = project?.floors?.length ?? 0;
-    const floorLabel = floorsCount === 1 ? 'lokalita' : floorsCount >= 2 && floorsCount <= 4 ? 'lokality' : 'lokalít';
-    const subtitle = project
-        ? `${escapeHtml(project.type)} • ${floorsCount} ${floorLabel}`
+    const projectsCount = data.projects?.length ?? 0;
+    const totalFloors = data.projects?.reduce((sum, p) => sum + (p.floors?.length ?? 0), 0) ?? 0;
+    const subtitle = projectsCount > 0
+        ? `${projectsCount} ${projectsCount === 1 ? 'projekt' : projectsCount <= 4 ? 'projekty' : 'projektov'} • ${totalFloors} ${totalFloors === 1 ? 'lokalita' : totalFloors <= 4 ? 'lokality' : 'lokalít'}`
         : 'Spravujte developerské projekty a ich mapy.';
 
     return `
         <section class="dm-main-surface">
             <header class="dm-main-surface__header">
                 <div class="dm-main-surface__title">
-                    <h1>${project ? escapeHtml(project.name) : 'Developer Map'}</h1>
+                    <h1>Developer Map</h1>
                     <p>${subtitle}</p>
                 </div>
                 <nav class="dm-subnav" role="tablist" aria-label="Sekcie máp">
@@ -61,14 +60,8 @@ function renderActionButton(type, label, attributes = {}) {
 }
 
 function renderMapList(data, state) {
-    const project = data.projects[0];
-    const floors = project.floors ?? [];
-    const shortcode = `[fuudobre_map map_id="${project.id}"]`;
-
+    const projects = data.projects ?? [];
     const filterTerm = state.searchTerm.trim().toLowerCase();
-    const filteredFloors = filterTerm
-        ? floors.filter((floor) => `${floor.name} ${floor.type}`.toLowerCase().includes(filterTerm))
-        : floors;
 
     return `
         <div class="dm-board dm-board--list">
@@ -79,8 +72,14 @@ function renderMapList(data, state) {
                     <div class="dm-board__cell dm-board__cell--head dm-board__cell--head-actions" role="columnheader">Akcie</div>
                     <div class="dm-board__cell dm-board__cell--head" role="columnheader">Vloženie na web</div>
                 </div>
-                ${renderProjectRow(project, shortcode)}
-                ${filteredFloors.map((floor) => renderFloorRow(floor, shortcode)).join('')}
+                ${projects.map((project) => {
+                    const shortcode = `[fuudobre_map map_id="${project.id}"]`;
+                    const floors = project.floors ?? [];
+                    const filteredFloors = filterTerm
+                        ? floors.filter((floor) => `${floor.name} ${floor.type}`.toLowerCase().includes(filterTerm))
+                        : floors;
+                    return renderProjectRow(project, shortcode, filteredFloors);
+                }).join('')}
             </div>
             <div class="dm-board__footer">
                 <button class="dm-board__cta" data-dm-modal="add-map">Pridať mapu</button>
@@ -89,14 +88,22 @@ function renderMapList(data, state) {
     `;
 }
 
-function renderProjectRow(project, shortcode) {
+function renderProjectRow(project, shortcode, floors = []) {
+    const floorsCount = floors.length;
+    const toggleIcon = `
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+    `;
+    
     return `
-        <div class="dm-board__row dm-board__row--project" role="row">
+        <div class="dm-board__row dm-board__row--project dm-board__row--parent" role="row" data-dm-parent-id="${project.id}">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
                 <div class="dm-board__thumb dm-board__thumb--project dm-board__thumb--clickable" aria-hidden="true" data-dm-project="${project.id}" role="button" tabindex="0" aria-label="${escapeHtml(`Otvoriť projekt ${project.name}`)}">
                     <img src="${MEDIA.building}" alt="${escapeHtml(`Náhľad projektu ${project.name}`)}" loading="lazy" />
                 </div>
                 <span class="dm-board__label">${escapeHtml(project.name)}</span>
+                ${floorsCount > 0 ? `<span class="dm-board__children-count">${floorsCount}</span>` : ''}
             </div>
             <div class="dm-board__cell dm-board__cell--type" role="cell" data-label="Typ:">${escapeHtml(project.type)}</div>
             <div class="dm-board__cell dm-board__cell--actions" role="cell" data-label="Akcie:">
@@ -116,13 +123,25 @@ function renderProjectRow(project, shortcode) {
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
                 <code>${escapeHtml(shortcode)}</code>
             </div>
+            ${floorsCount > 0 ? `
+                <button type="button" class="dm-board__toggle" data-dm-toggle="${project.id}" aria-expanded="false" aria-label="Rozbaliť poschodia">
+                    <span class="dm-board__toggle-icon">${toggleIcon}</span>
+                </button>
+            ` : ''}
         </div>
+        ${floorsCount > 0 ? `
+            <div class="dm-board__children" data-dm-children="${project.id}">
+                <div class="dm-board__children-inner">
+                    ${floors.map((floor) => renderFloorRow(floor, shortcode)).join('')}
+                </div>
+            </div>
+        ` : ''}
     `;
 }
 
 function renderFloorRow(floor, shortcode) {
     return `
-        <div class="dm-board__row dm-board__row--floor" role="row">
+        <div class="dm-board__row dm-board__row--floor dm-board__row--child" role="row" data-dm-child-id="${floor.id}">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
                 <div class="dm-board__thumb dm-board__thumb--floor dm-board__thumb--clickable" aria-hidden="true" data-dm-modal="draw-coordinates" data-dm-payload="${floor.id}" role="button" tabindex="0" aria-label="${escapeHtml(`Zobraziť lokalitu ${floor.name}`)}">
                     <img src="${MEDIA.floor}" alt="${escapeHtml(`Pôdorys ${floor.name}`)}" loading="lazy" />

@@ -141,6 +141,42 @@ export function initDeveloperMap(options) {
             });
         });
 
+        // Hierarchické rozbaľovanie/zabaľovanie
+        const toggleButtons = root.querySelectorAll('[data-dm-toggle]');
+        toggleButtons.forEach((button) => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const parentId = button.getAttribute('data-dm-toggle');
+                const parentRow = root.querySelector(`[data-dm-parent-id="${parentId}"]`);
+                const childrenContainer = root.querySelector(`[data-dm-children="${parentId}"]`);
+                
+                if (!parentRow || !childrenContainer) return;
+                
+                const isExpanded = parentRow.classList.contains('is-expanded');
+                
+                // Toggle expanded state
+                if (isExpanded) {
+                    parentRow.classList.remove('is-expanded');
+                    button.setAttribute('aria-expanded', 'false');
+                    button.setAttribute('aria-label', 'Rozbaliť poschodia');
+                } else {
+                    parentRow.classList.add('is-expanded');
+                    button.setAttribute('aria-expanded', 'true');
+                    button.setAttribute('aria-label', 'Zabaliť poschodia');
+                }
+            });
+            
+            // Keyboard support pre toggle button
+            button.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    button.click();
+                }
+            });
+        });
+
         // Add keyboard support for clickable thumbnails
         const clickableThumbs = root.querySelectorAll('.dm-board__thumb--clickable');
         clickableThumbs.forEach((thumb) => {
