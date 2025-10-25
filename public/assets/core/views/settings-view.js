@@ -62,7 +62,7 @@ function renderSettingsOverview() {
                             <div class="dm-settings__item">
                                 <span>${row.label}</span>
                                 <div class="dm-settings__item-actions">
-                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-settings="${row.target}" aria-label="Upraviť ${row.label}" title="Upraviť ${row.label}">
+                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-settings="${row.target}" aria-label="Upraviť ${row.label}" title="Upraviť">
                                         <span class="dm-icon-button__icon" aria-hidden="true">${row.icon}</span>
                                     </button>
                                 </div>

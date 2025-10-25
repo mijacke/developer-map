@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-25 05:48:22 */
+/* Generated: 2025-10-25 05:58:24 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -62,6 +62,55 @@
     outline: 2px solid var(--dm-border-strong) !important;
     outline-offset: 2px !important;
     box-shadow: none !important;
+}
+
+/* Modern tooltip styles */
+#dm-root.dm-root [data-dm-title] {
+    position: relative;
+}
+
+#dm-root.dm-root [data-dm-title]:hover::after {
+    content: attr(data-dm-title);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 12px;
+    background: rgba(22, 22, 29, 0.95);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: dm-tooltip-fade-in 0.15s ease-out;
+}
+
+#dm-root.dm-root [data-dm-title]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(22, 22, 29, 0.95);
+    pointer-events: none;
+    z-index: 1000;
+    animation: dm-tooltip-fade-in 0.15s ease-out;
+}
+
+@keyframes dm-tooltip-fade-in {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }
 
 /* === layout-shell.css === */

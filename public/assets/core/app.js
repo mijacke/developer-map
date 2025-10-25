@@ -293,6 +293,25 @@ export function initDeveloperMap(options) {
                 }
             });
         });
+
+        // Disable default browser tooltips
+        const elementsWithTitle = root.querySelectorAll('[title]');
+        elementsWithTitle.forEach((element) => {
+            const originalTitle = element.getAttribute('title');
+            
+            element.addEventListener('mouseenter', () => {
+                element.setAttribute('data-dm-title', originalTitle);
+                element.removeAttribute('title');
+            });
+            
+            element.addEventListener('mouseleave', () => {
+                const storedTitle = element.getAttribute('data-dm-title');
+                if (storedTitle) {
+                    element.setAttribute('title', storedTitle);
+                    element.removeAttribute('data-dm-title');
+                }
+            });
+        });
     }
 
     function enhanceDrawModal() {

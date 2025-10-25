@@ -126,15 +126,15 @@ function renderProjectRow(project, shortcode, floors = []) {
             </div>
             <div class="dm-board__cell dm-board__cell--type" role="cell" data-label="Typ:">${escapeHtml(project.type)}</div>
             <div class="dm-board__cell dm-board__cell--actions" role="cell" data-label="Akcie:">
-                ${renderActionButton('open', `Zobraziť projekt ${project.name}`, {
+                ${renderActionButton('open', 'Lokality', {
                     'data-dm-modal': 'draw-coordinates',
                     'data-dm-payload': project.id,
                 })}
-                ${renderActionButton('edit', `Upraviť projekt ${project.name}`, {
+                ${renderActionButton('edit', 'Upraviť', {
                     'data-dm-modal': 'edit-map',
                     'data-dm-payload': project.id,
                 })}
-                ${renderActionButton('delete', `Zmazať projekt ${project.name}`, {
+                ${renderActionButton('delete', 'Zmazať', {
                     'data-dm-modal': 'delete-map',
                     'data-dm-payload': project.id,
                 })}
