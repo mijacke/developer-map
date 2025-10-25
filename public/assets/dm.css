@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-25 05:58:24 */
+/* Generated: 2025-10-25 06:08:15 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -779,6 +779,7 @@
     transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     margin-bottom: 0;
+    margin-top: -20px; /* Zruší margin-bottom od parent riadku */
 }
 
 .dm-board__row--parent.is-expanded + .dm-board__children {
@@ -822,7 +823,7 @@
     border-color: #c2c2cf;
     box-shadow: 0 20px 32px rgba(22, 22, 29, 0.08);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-bottom: 20px;
+    margin-bottom: 20px; /* Medzera pre projekty bez detí a posledný projekt */
     padding-right: 72px; /* Priestor pre toggle button vpravo */
 }
 
