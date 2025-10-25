@@ -59,6 +59,23 @@
     box-shadow: none !important;
 }
 
+/* Force remove all outlines and shadows from form inputs */
+#dm-root.dm-root input:focus,
+#dm-root.dm-root input:focus-visible,
+#dm-root.dm-root select:focus,
+#dm-root.dm-root select:focus-visible,
+#dm-root.dm-root textarea:focus,
+#dm-root.dm-root textarea:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+#dm-root.dm-root .dm-field__input:focus,
+#dm-root.dm-root .dm-field__input:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
 /* Modern tooltip styles */
 #dm-root.dm-root [data-dm-title] {
     position: relative;

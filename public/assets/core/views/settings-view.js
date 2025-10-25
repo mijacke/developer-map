@@ -203,31 +203,33 @@ function renderFormPlaceholder(title) {
         <div class="dm-form">
             <h3>${title}</h3>
             <div class="dm-form__grid">
-                <label class="dm-field">
-                    <span>Nadradené</span>
-                    <select>
+                <div class="dm-field">
+                    <select required class="dm-field__input">
                         <option>Bytovka</option>
                     </select>
-                </label>
-                <label class="dm-field">
-                    <span>Typ *</span>
-                    <select><option>Pozemok</option></select>
-                </label>
-                <label class="dm-field">
-                    <span>Názov *</span>
-                    <input type="text" value="1" />
+                    <label class="dm-field__label">Nadradené</label>
+                </div>
+                <div class="dm-field">
+                    <select required class="dm-field__input">
+                        <option>Pozemok</option>
+                    </select>
+                    <label class="dm-field__label">Typ<span class="dm-field__required">*</span></label>
+                </div>
+                <div class="dm-field">
+                    <input required type="text" value="1" autocomplete="off" class="dm-field__input" />
+                    <label class="dm-field__label">Názov<span class="dm-field__required">*</span></label>
                     <small>max 100 znakov</small>
-                </label>
-                <label class="dm-field">
-                    <span>Označenie *</span>
-                    <input type="text" value="l1" />
+                </div>
+                <div class="dm-field">
+                    <input required type="text" value="l1" autocomplete="off" class="dm-field__input" />
+                    <label class="dm-field__label">Označenie<span class="dm-field__required">*</span></label>
                     <small>max 5 znakov</small>
-                </label>
-                <label class="dm-field">
-                    <span>URL *</span>
-                    <input type="url" placeholder="https://" />
+                </div>
+                <div class="dm-field">
+                    <input required type="url" autocomplete="off" class="dm-field__input" />
+                    <label class="dm-field__label">URL<span class="dm-field__required">*</span></label>
                     <small>max 100 znakov</small>
-                </label>
+                </div>
             </div>
         </div>
     `;
