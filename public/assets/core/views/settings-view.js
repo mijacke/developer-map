@@ -1,17 +1,24 @@
 import { SETTINGS_SECTIONS } from '../constants.js';
 
+const ICONS = {
+    edit: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>',
+    delete: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+    back: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>',
+};
+
 export function renderSettingsView(state, data) {
+    const showBackButton = state.settingsSection !== SETTINGS_SECTIONS.OVERVIEW;
+    
     return `
         <section class="dm-settings">
             <header class="dm-settings__header">
-                <h1>Nastavenia</h1>
-                <nav class="dm-settings__tabs">
-                    ${renderSettingsTab('Prehľad', SETTINGS_SECTIONS.OVERVIEW, state.settingsSection)}
-                    ${renderSettingsTab('Typy', SETTINGS_SECTIONS.TYPES, state.settingsSection)}
-                    ${renderSettingsTab('Stavy', SETTINGS_SECTIONS.STATUSES, state.settingsSection)}
-                    ${renderSettingsTab('Farby', SETTINGS_SECTIONS.COLORS, state.settingsSection)}
-                    ${renderSettingsTab('Fonty', SETTINGS_SECTIONS.FONTS, state.settingsSection)}
-                </nav>
+                ${showBackButton ? `
+                    <button type="button" class="dm-settings__back" data-dm-settings="${SETTINGS_SECTIONS.OVERVIEW}">
+                        <span class="dm-settings__back-icon">${ICONS.back}</span>
+                        <span>Späť na prehľad</span>
+                    </button>
+                ` : ''}
+                <h1>${getSectionTitle(state.settingsSection)}</h1>
             </header>
             <div class="dm-settings__surface">
                 ${state.settingsSection === SETTINGS_SECTIONS.OVERVIEW ? renderSettingsOverview() : ''}
@@ -24,24 +31,30 @@ export function renderSettingsView(state, data) {
     `;
 }
 
-function renderSettingsTab(label, section, active) {
-    const isActive = section === active;
-    return `
-        <button type="button" class="dm-settings__tab ${isActive ? 'is-active' : ''}" data-dm-settings="${section}">
-            ${label}
-        </button>
-    `;
+function getSectionTitle(section) {
+    switch (section) {
+        case SETTINGS_SECTIONS.TYPES:
+            return 'Typy';
+        case SETTINGS_SECTIONS.STATUSES:
+            return 'Stavy';
+        case SETTINGS_SECTIONS.COLORS:
+            return 'Základné farby mapy';
+        case SETTINGS_SECTIONS.FONTS:
+            return 'Font písma';
+        default:
+            return 'Nastavenia';
+    }
 }
 
 function renderSettingsOverview() {
     const rows = [
-        { label: 'Typ', actions: ['Otvoriť', 'Upraviť'], target: SETTINGS_SECTIONS.TYPES },
-        { label: 'Stav', actions: ['Otvoriť', 'Upraviť'], target: SETTINGS_SECTIONS.STATUSES },
-        { label: 'Základné farby mapy', actions: ['Otvoriť', 'Upraviť'], target: SETTINGS_SECTIONS.COLORS },
+        { label: 'Typ', icon: ICONS.edit, target: SETTINGS_SECTIONS.TYPES },
+        { label: 'Stav', icon: ICONS.edit, target: SETTINGS_SECTIONS.STATUSES },
+        { label: 'Základné farby mapy', icon: ICONS.edit, target: SETTINGS_SECTIONS.COLORS },
     ];
     return `
         <div class="dm-card dm-card--settings">
-            <h2>Nastavenia</h2>
+            <h2>Prehľad nastavení</h2>
             <div class="dm-settings__list">
                 ${rows
                     .map(
@@ -49,15 +62,9 @@ function renderSettingsOverview() {
                             <div class="dm-settings__item">
                                 <span>${row.label}</span>
                                 <div class="dm-settings__item-actions">
-                                    ${row.actions
-                                        .map(
-                                            (action) => `
-                                                <button class="dm-chip" data-dm-settings="${row.target}">
-                                                    ${action}
-                                                </button>
-                                            `,
-                                        )
-                                        .join('')}
+                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-settings="${row.target}" aria-label="Upraviť ${row.label}" title="Upraviť ${row.label}">
+                                        <span class="dm-icon-button__icon" aria-hidden="true">${row.icon}</span>
+                                    </button>
                                 </div>
                             </div>
                         `,
@@ -82,8 +89,12 @@ function renderSettingsTypes(data) {
                                     ${item.label}
                                 </div>
                                 <div class="dm-settings__item-actions">
-                                    <button class="dm-chip" data-dm-modal="delete-type">Zmazať</button>
-                                    <button class="dm-chip" data-dm-modal="edit-type">Upraviť</button>
+                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-type" aria-label="Upraviť ${item.label}" title="Upraviť">
+                                        <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.edit}</span>
+                                    </button>
+                                    <button type="button" class="dm-icon-button dm-icon-button--delete" data-dm-modal="delete-type" aria-label="Zmazať ${item.label}" title="Zmazať">
+                                        <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.delete}</span>
+                                    </button>
                                 </div>
                             </div>
                         `,
@@ -111,8 +122,12 @@ function renderSettingsStatuses(data) {
                                     ${item.label}
                                 </div>
                                 <div class="dm-settings__item-actions">
-                                    <button class="dm-chip" data-dm-modal="delete-status">Zmazať</button>
-                                    <button class="dm-chip" data-dm-modal="edit-status">Upraviť</button>
+                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-status" aria-label="Upraviť ${item.label}" title="Upraviť">
+                                        <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.edit}</span>
+                                    </button>
+                                    <button type="button" class="dm-icon-button dm-icon-button--delete" data-dm-modal="delete-status" aria-label="Zmazať ${item.label}" title="Zmazať">
+                                        <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.delete}</span>
+                                    </button>
                                 </div>
                             </div>
                         `,
@@ -140,7 +155,9 @@ function renderSettingsColors(data) {
                                     ${item.label}
                                 </div>
                                 <div class="dm-settings__item-actions">
-                                    <button class="dm-chip" data-dm-modal="edit-color" data-dm-payload="${item.id}">Upraviť</button>
+                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-color" data-dm-payload="${item.id}" aria-label="Upraviť ${item.label}" title="Upraviť">
+                                        <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.edit}</span>
+                                    </button>
                                 </div>
                             </div>
                         `,
@@ -162,7 +179,9 @@ function renderSettingsFonts(data) {
                             <div class="dm-settings__item">
                                 <span>${item.label}</span>
                                 <div class="dm-settings__item-actions">
-                                    <button class="dm-chip" data-dm-modal="edit-font">Upraviť</button>
+                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-font" aria-label="Upraviť ${item.label}" title="Upraviť">
+                                        <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.edit}</span>
+                                    </button>
                                 </div>
                             </div>
                         `,

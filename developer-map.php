@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Developer Map
  * Description: Administrátorský dashboard načítaný výhradne cez shortcode [devmap] na stránke /devtest-9kq7wza3.
- * Version: 0.2.2
+ * Version: 0.2.3
  * Author: Mario
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('DM_PLUGIN_VERSION', '0.2.3');
+define('DM_PLUGIN_VERSION', '0.2.4');
 define('DM_DEV_PAGE_SLUG', 'devtest-9kq7wza3');
 define('DM_PLUGIN_STYLE_HANDLE', 'developer-map-style');
 define('DM_PLUGIN_SCRIPT_HANDLE', 'developer-map-script');
@@ -38,9 +38,12 @@ function dm_register_assets(): void
         $base_path . 'core/data.js',
         $base_path . 'core/layout/header.js',
         $base_path . 'core/views/maps-view.js',
+        $base_path . 'core/views/settings-view.js',
+        $base_path . 'core/views/dashboard-view.js',
         $base_path . 'styles/base.css',
         $base_path . 'styles/board.css',
         $base_path . 'styles/layout-shell.css',
+        $base_path . 'styles/settings.css',
     ];
 
     $version = DM_PLUGIN_VERSION; // Start with plugin version

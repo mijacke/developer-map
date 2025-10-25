@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-25 04:11:04 */
+/* Generated: 2025-10-25 04:56:56 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -1425,35 +1425,38 @@
     color: var(--dm-heading-color);
 }
 
-.dm-settings__tabs {
+.dm-settings__back {
     display: inline-flex;
-    gap: 12px;
-    background: var(--dm-surface);
-    border: 1px solid var(--dm-border);
-    border-radius: 999px;
-    padding: 6px;
-}
-
-.dm-settings__tab {
+    align-items: center;
+    gap: 8px;
     border: none !important;
     background: transparent !important;
-    padding: 8px 20px !important;
-    border-radius: 999px !important;
+    padding: 8px 12px 8px 8px !important;
+    border-radius: 8px !important;
     font-weight: 600 !important;
     color: var(--dm-content-text-color) !important;
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease !important;
+    align-self: flex-start;
+    margin-bottom: 8px;
 }
 
-.dm-settings__tab:hover {
+.dm-settings__back:hover {
     background: #f8f8f9 !important;
-    border: none !important;
+    color: var(--dm-text) !important;
 }
 
-.dm-settings__tab.is-active {
-    background: #f1f1f4 !important;
-    color: var(--dm-text) !important;
-    border: none !important;
+.dm-settings__back-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+}
+
+.dm-settings__back-icon svg {
+    width: 20px;
+    height: 20px;
 }
 
 .dm-settings__surface {
