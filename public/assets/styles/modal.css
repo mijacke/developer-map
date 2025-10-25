@@ -323,6 +323,18 @@
     transition: border 150ms cubic-bezier(0.4,0,0.2,1);
 }
 
+/* Remove number input spinners */
+.dm-modal__form input[type="number"]::-webkit-outer-spin-button,
+.dm-modal__form input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.dm-modal__form input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
 .dm-modal__form .dm-field__label {
     position: absolute;
     left: 15px;
@@ -352,7 +364,7 @@
     border: none;
     background: transparent;
     color: #5a3bff;
-    cursor: pointer;
+    cursor: help;
     transition: transform 0.18s ease;
     z-index: 10;
 }
@@ -360,30 +372,103 @@
 .dm-modal__form .dm-field__info svg {
     width: 18px;
     height: 18px;
+    pointer-events: none;
 }
 
-.dm-modal__form .dm-field__info:hover,
-.dm-modal__form .dm-field__info:focus-visible {
-    background: transparent;
-    transform: translateY(-50%) scale(1.1);
+/* Custom tooltip for field info */
+.dm-modal__form .dm-field__info::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 14px;
+    background: rgba(22, 22, 29, 0.96);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    border-radius: 10px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dm-modal__form .dm-field__info::after {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(22, 22, 29, 0.96);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 10000;
+}
+
+.dm-modal__form .dm-field__info:hover::before,
+.dm-modal__form .dm-field__info:hover::after {
+    opacity: 1;
+}
+
+/* Position tooltip to the right if it would overflow left edge */
+.dm-modal__form .dm-form__column:first-child .dm-field__info::before {
+    left: 0;
+    transform: translateX(0);
+}
+
+.dm-modal__form .dm-form__column:first-child .dm-field__info::after {
+    left: 20px;
+    transform: translateX(0);
+}
+
+/* Position tooltip to the left if it would overflow right edge */
+.dm-modal__form .dm-form__column:last-child .dm-field__info::before {
+    left: auto;
+    right: 0;
+    transform: translateX(0);
+}
+
+.dm-modal__form .dm-form__column:last-child .dm-field__info::after {
+    left: auto;
+    right: 20px;
+    transform: translateX(0);
 }
 
 .dm-modal__form input:focus,
-.dm-modal__form input:valid,
+.dm-modal__form input:valid {
+    outline: none;
+    border: 1.5px solid #1a73e8;
+}
+
 .dm-modal__form select:focus,
-.dm-modal__form select:valid {
+.dm-modal__form select:valid,
+.dm-modal__form .dm-field--select-open .dm-field__input {
     outline: none;
     border: 1.5px solid #1a73e8;
 }
 
 .dm-modal__form input:focus ~ label,
-.dm-modal__form input:valid ~ label,
-.dm-modal__form select:focus ~ label,
-.dm-modal__form select:valid ~ label {
+.dm-modal__form input:valid ~ label {
     transform: translateY(-50%) scale(0.8);
     background-color: var(--dm-surface);
     padding: 0 .2em;
     color: #2196f3;
+}
+
+/* Pre select elementy - presun label hore hned pri focus (kliknutí), aj bez valid hodnoty */
+.dm-modal__form select:focus ~ label,
+.dm-modal__form select:valid ~ label,
+.dm-modal__form .dm-field--select-open .dm-field__label {
+    transform: translateY(-50%) scale(0.8) !important;
+    background-color: var(--dm-surface) !important;
+    padding: 0 .2em !important;
+    color: #2196f3 !important;
 }
 
 .dm-modal__form select.dm-field__input {

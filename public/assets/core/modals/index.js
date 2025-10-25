@@ -81,7 +81,7 @@ function renderFormModal(title, cta, includeImage = false) {
                                 <div class="dm-form__grid">
                                     <div class="dm-form__column">
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Vyberte nadradenú mapu">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Vyberte nadradenú mapu" data-tooltip="Vyberte nadradenú mapu">${infoIcon}</button>
                                             <select required autocomplete="off" class="dm-field__input" data-dm-select>
                                                 <option value="" disabled selected hidden></option>
                                                 <option value="none">Žiadna</option>
@@ -91,7 +91,7 @@ function renderFormModal(title, cta, includeImage = false) {
                                             <label class="dm-field__label">Nadradená<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Typ nehnuteľnosti alebo objektu">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Typ nehnuteľnosti alebo objektu" data-tooltip="Typ nehnuteľnosti alebo objektu">${infoIcon}</button>
                                             <select required autocomplete="off" class="dm-field__input" data-dm-select>
                                                 <option value="" disabled selected hidden></option>
                                                 <option value="pozemok">Pozemok</option>
@@ -102,61 +102,61 @@ function renderFormModal(title, cta, includeImage = false) {
                                             <label class="dm-field__label">Typ<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Názov mapy alebo lokality">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Názov mapy alebo lokality" data-tooltip="Názov mapy alebo lokality">${infoIcon}</button>
                                             <input required type="text" autocomplete="off" class="dm-field__input">
                                             <label class="dm-field__label">Názov<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Minimálne možné oddialenie mapy">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Minimálne možné oddialenie mapy" data-tooltip="Minimálne možné oddialenie mapy">${infoIcon}</button>
                                             <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input">
                                             <label class="dm-field__label">Minimálny zoom<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Maximálne možné priblíženie mapy">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Maximálne možné priblíženie mapy" data-tooltip="Maximálne možné priblíženie mapy">${infoIcon}</button>
                                             <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input">
                                             <label class="dm-field__label">Maximálny zoom<span class="dm-field__required">*</span></label>
                                         </div>
                                     </div>
                                     <div class="dm-form__column">
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Východzie priblíženie mapy pri načítaní">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Východzie priblíženie mapy pri načítaní" data-tooltip="Východzie priblíženie mapy pri načítaní">${infoIcon}</button>
                                             <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input">
                                             <label class="dm-field__label">Východzí zoom<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Šírka obrázku mapy v pixeloch">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Šírka obrázku mapy v pixeloch" data-tooltip="Šírka obrázku mapy v pixeloch">${infoIcon}</button>
                                             <input required type="number" step="1" autocomplete="off" class="dm-field__input">
                                             <label class="dm-field__label">Šírka mapy<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Výška obrázku mapy v pixeloch">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Výška obrázku mapy v pixeloch" data-tooltip="Výška obrázku mapy v pixeloch">${infoIcon}</button>
                                             <input required type="number" step="1" autocomplete="off" class="dm-field__input">
                                             <label class="dm-field__label">Výška mapy<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Šírka čiary ohraničenia lokality v pixeloch">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Šírka čiary ohraničenia lokality v pixeloch" data-tooltip="Šírka čiary ohraničenia lokality v pixeloch">${infoIcon}</button>
                                             <input required type="number" step="1" min="1" max="10" autocomplete="off" class="dm-field__input">
                                             <label class="dm-field__label">Hrúbka ohraničenia<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Priehľadnosť čiary ohraničenia (0-100%)">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Priehľadnosť čiary ohraničenia (0-100%)" data-tooltip="Priehľadnosť čiary ohraničenia (0-100%)">${infoIcon}</button>
                                             <input required type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input">
                                             <label class="dm-field__label">Prehľadnosť ohraničenia<span class="dm-field__required">*</span></label>
                                         </div>
                                     </div>
                                     <div class="dm-form__column">
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Priehľadnosť výplne lokality (0-100%)">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Priehľadnosť výplne lokality (0-100%)" data-tooltip="Priehľadnosť výplne lokality (0-100%)">${infoIcon}</button>
                                             <input required type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input">
                                             <label class="dm-field__label">Prehľadnosť pozadia<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Smer orientácie objektu">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Smer orientácie objektu" data-tooltip="Smer orientácie objektu">${infoIcon}</button>
                                             <input required type="text" autocomplete="off" class="dm-field__input">
                                             <label class="dm-field__label">Smer<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Uhol natočenia objektu v stupňoch">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Uhol natočenia objektu v stupňoch" data-tooltip="Uhol natočenia objektu v stupňoch">${infoIcon}</button>
                                             <input required type="text" autocomplete="off" class="dm-field__input">
                                             <label class="dm-field__label">Uhol<span class="dm-field__required">*</span></label>
                                         </div>
