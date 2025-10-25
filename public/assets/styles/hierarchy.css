@@ -1,0 +1,168 @@
+/* Hierarchické rozbaľovacie menu pre WordPress plugin */
+
+/* Toggle button pre rozbaľovanie/zabaľovanie - úplne vpravo mimo grid systému */
+.dm-board__toggle {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid #bbbbc7 !important;
+    background: transparent !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    z-index: 10;
+}
+
+.dm-board__toggle:hover,
+.dm-board__toggle:focus,
+.dm-board__toggle:active {
+    background: transparent !important;
+    border-color: #8a8a97 !important;
+    transform: translateY(-50%) scale(1.05) !important;
+    box-shadow: none !important;
+}
+
+.dm-board__toggle:active {
+    transform: translateY(-50%) scale(0.98) !important;
+}
+
+/* Ikona šípky */
+.dm-board__toggle-icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: rotate(0deg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dm-board__toggle-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+    fill: none;
+}
+
+/* Otočenie šípky keď je rozbalené */
+.dm-board__row--parent.is-expanded .dm-board__toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Container pre deti */
+.dm-board__children {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    margin-bottom: 0;
+}
+
+.dm-board__row--parent.is-expanded + .dm-board__children {
+    grid-template-rows: 1fr;
+    margin-bottom: 20px;
+}
+
+.dm-board__children-inner {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-top: 0;
+    opacity: 0;
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding-top 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dm-board__row--parent.is-expanded + .dm-board__children .dm-board__children-inner {
+    opacity: 1;
+    padding-top: 20px;
+}
+
+/* Styling pre child riadky - bez posúvania obsahu */
+.dm-board__row--child {
+    background: #fafafc;
+    border-color: #dcdce6;
+    margin-bottom: 0;
+    margin-left: 72px; /* Odsadenie detí od rodiča */
+    padding-right: 72px; /* Rovnaký padding ako parent pre zarovnanie stĺpcov */
+    border-left: 4px solid #c7d2fe; /* Vizuálna indikácia hierarchie bez posúvania obsahu */
+}
+
+.dm-board__row--child:last-child {
+    margin-bottom: 0;
+}
+
+/* Rodičovský riadok */
+.dm-board__row--parent {
+    position: relative;
+    background: #ffffff;
+    border-color: #c2c2cf;
+    box-shadow: 0 20px 32px rgba(22, 22, 29, 0.08);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 20px;
+    padding-right: 72px; /* Priestor pre toggle button vpravo */
+}
+
+.dm-board__row--parent:hover {
+    box-shadow: 0 24px 40px rgba(22, 22, 29, 0.12);
+    transform: translateY(-1px);
+}
+
+.dm-board__row--parent.is-expanded {
+    margin-bottom: 0;
+}
+
+/* Styling pre prvého a posledného potomka */
+.dm-board__children .dm-board__row--child:first-child {
+    margin-top: 0;
+}
+
+.dm-board__children .dm-board__row--child:last-child {
+    border-bottom-left-radius: 24px;
+    border-bottom-right-radius: 24px;
+}
+
+/* Fokus stavy pre prístupnosť */
+.dm-board__toggle:focus-visible {
+    outline: 2px solid var(--dm-border-strong);
+    outline-offset: 2px;
+}
+
+/* Animácia pre počet detí */
+.dm-board__children-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 12px;
+    background: #e0e0e8;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4a4a56;
+    margin-left: 12px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responzívne úpravy */
+@media (max-width: 768px) {
+    .dm-board__row--child {
+        margin-left: 24px; /* Celý riadok posunutý doprava na mobil */
+    }
+    
+    .dm-board__toggle {
+        width: 32px;
+        height: 32px;
+    }
+}
