@@ -83,7 +83,7 @@ function renderFormModal(title, cta, includeImage = false) {
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Vyberte nadradenú mapu">${infoIcon}</button>
                                             <select required autocomplete="off" class="dm-field__input" data-dm-select>
-                                                <option value="">Nadradená</option>
+                                                <option value="" disabled selected hidden></option>
                                                 <option value="none">Žiadna</option>
                                                 <option value="bytovka">Bytovka</option>
                                                 <option value="centrum">Obchodné centrum</option>
@@ -93,7 +93,7 @@ function renderFormModal(title, cta, includeImage = false) {
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Informácie o poli" title="Typ nehnuteľnosti alebo objektu">${infoIcon}</button>
                                             <select required autocomplete="off" class="dm-field__input" data-dm-select>
-                                                <option value="">Typ</option>
+                                                <option value="" disabled selected hidden></option>
                                                 <option value="pozemok">Pozemok</option>
                                                 <option value="byt">Byt</option>
                                                 <option value="dom">Dom</option>

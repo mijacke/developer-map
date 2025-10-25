@@ -78,6 +78,9 @@ export function initDeveloperMap(options) {
         runtimeConfig,
     };
 
+    let customSelectControllers = [];
+    let customSelectDocEventsBound = false;
+
     root.dataset.dmHydrated = '1';
     root.classList.add('dm-root');
 
@@ -90,6 +93,7 @@ export function initDeveloperMap(options) {
     function render() {
         root.innerHTML = [renderAppShell(state, data), renderModal(state, data)].join('');
         attachEventHandlers();
+        enhanceSelects();
         enhanceDrawModal();
     }
 
@@ -302,6 +306,320 @@ export function initDeveloperMap(options) {
                 }
             });
         });
+    }
+
+    function enhanceSelects() {
+        customSelectControllers = customSelectControllers.filter((controller) => {
+            return controller.select.isConnected && controller.wrapper.isConnected;
+        });
+
+        const selects = root.querySelectorAll('[data-dm-select]');
+        if (!selects.length) {
+            return;
+        }
+
+        selects.forEach((select) => {
+            if (customSelectControllers.some((controller) => controller.select === select)) {
+                return;
+            }
+
+            const field = select.closest('.dm-field');
+            if (!field) {
+                return;
+            }
+
+            const controller = buildCustomSelect(select, field);
+            if (controller) {
+                customSelectControllers.push(controller);
+            }
+        });
+
+        if (!customSelectDocEventsBound && customSelectControllers.length) {
+            document.addEventListener('click', handleSelectDocumentClick);
+            document.addEventListener('keydown', handleSelectDocumentKeydown, true);
+            customSelectDocEventsBound = true;
+        } else if (customSelectDocEventsBound && !customSelectControllers.length) {
+            document.removeEventListener('click', handleSelectDocumentClick);
+            document.removeEventListener('keydown', handleSelectDocumentKeydown, true);
+            customSelectDocEventsBound = false;
+        }
+    }
+
+    function buildCustomSelect(select, field) {
+        if (select.dataset.dmEnhanced === '1' || !select.options.length) {
+            return null;
+        }
+
+        const label = field.querySelector('.dm-field__label');
+        const labelText = label ? label.textContent.trim() : '';
+
+        if (label && !label.id) {
+            label.id = `dm-field-label-${Math.random().toString(36).slice(2, 9)}`;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'dm-select';
+
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'dm-select__trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+        if (label && label.id) {
+            trigger.setAttribute('aria-labelledby', label.id);
+        } else if (labelText) {
+            trigger.setAttribute('aria-label', labelText);
+        }
+
+        const valueEl = document.createElement('span');
+        valueEl.className = 'dm-select__value';
+
+        const iconEl = document.createElement('span');
+        iconEl.className = 'dm-select__icon';
+        iconEl.innerHTML = '<svg width="16" height="10" viewBox="0 0 16 10" fill="none" aria-hidden="true"><path d="M2 2L8 8L14 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+
+        trigger.append(valueEl, iconEl);
+        wrapper.appendChild(trigger);
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dm-select__dropdown';
+
+        const list = document.createElement('ul');
+        list.className = 'dm-select__list';
+        list.setAttribute('role', 'listbox');
+
+        const dropdownId = select.id ? `${select.id}-dropdown` : `dm-select-${Math.random().toString(36).slice(2, 9)}`;
+        list.id = dropdownId;
+        trigger.setAttribute('aria-controls', dropdownId);
+
+        dropdown.appendChild(list);
+        wrapper.appendChild(dropdown);
+
+        select.insertAdjacentElement('afterend', wrapper);
+        select.setAttribute('data-dm-enhanced', '1');
+        select.classList.add('dm-select__native');
+        select.setAttribute('aria-hidden', 'true');
+        select.tabIndex = -1;
+        field.classList.add('dm-field--select');
+
+        const optionItems = [];
+        valueEl.innerHTML = '&nbsp;';
+
+        Array.from(select.options).forEach((option) => {
+            if (option.hidden) {
+                return;
+            }
+
+            const optionEl = document.createElement('li');
+            optionEl.className = 'dm-select__option';
+            optionEl.setAttribute('role', 'option');
+            optionEl.dataset.value = option.value;
+            optionEl.textContent = option.textContent;
+
+            if (option.disabled) {
+                optionEl.classList.add('is-disabled');
+                optionEl.setAttribute('aria-disabled', 'true');
+            }
+
+            list.appendChild(optionEl);
+            optionItems.push({ option, el: optionEl });
+        });
+
+        const controller = {
+            select,
+            field,
+            wrapper,
+            trigger,
+            dropdown,
+            list,
+            valueEl,
+            placeholderMarkup: '&nbsp;',
+            options: optionItems,
+        };
+
+        updateSelectDisplay(controller);
+
+        trigger.addEventListener('click', () => toggleSelect(controller));
+        trigger.addEventListener('keydown', (event) => handleTriggerKeydown(event, controller));
+        trigger.addEventListener('blur', () => {
+            window.setTimeout(() => {
+                if (!wrapper.contains(document.activeElement)) {
+                    closeSelect(controller);
+                }
+            }, 0);
+        });
+
+        list.addEventListener('mousedown', (event) => {
+            const optionEl = event.target.closest('.dm-select__option');
+            if (optionEl && !optionEl.classList.contains('is-disabled')) {
+                event.preventDefault();
+            }
+        });
+
+        list.addEventListener('click', (event) => {
+            const optionEl = event.target.closest('.dm-select__option');
+            if (!optionEl || optionEl.classList.contains('is-disabled')) {
+                return;
+            }
+            setSelectValue(controller, optionEl.dataset.value, { focusTrigger: true });
+        });
+
+        select.addEventListener('change', () => updateSelectDisplay(controller));
+
+        return controller;
+    }
+
+    function toggleSelect(controller) {
+        if (controller.wrapper.classList.contains('dm-select--open')) {
+            closeSelect(controller);
+        } else {
+            openSelect(controller);
+        }
+    }
+
+    function openSelect(controller) {
+        closeAllSelects(controller);
+        controller.wrapper.classList.add('dm-select--open');
+        controller.field.classList.add('dm-field--select-open');
+        controller.trigger.setAttribute('aria-expanded', 'true');
+        controller.trigger.focus({ preventScroll: true });
+    }
+
+    function closeSelect(controller) {
+        if (!controller.wrapper.classList.contains('dm-select--open')) {
+            return;
+        }
+        controller.wrapper.classList.remove('dm-select--open');
+        controller.field.classList.remove('dm-field--select-open');
+        controller.trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function closeAllSelects(except) {
+        customSelectControllers.forEach((controller) => {
+            if (controller !== except) {
+                closeSelect(controller);
+            }
+        });
+    }
+
+    function setSelectValue(controller, value, options = {}) {
+        const { closeDropdown = true, focusTrigger = false } = options;
+        const optionItem = controller.options.find((item) => item.option.value === value && !item.option.hidden);
+        if (!optionItem || optionItem.option.disabled) {
+            return;
+        }
+
+        if (controller.select.value !== value) {
+            controller.select.value = value;
+            controller.select.dispatchEvent(new Event('input', { bubbles: true }));
+            controller.select.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+            updateSelectDisplay(controller);
+        }
+
+        if (closeDropdown) {
+            closeSelect(controller);
+        }
+        if (focusTrigger) {
+            controller.trigger.focus({ preventScroll: true });
+        }
+    }
+
+    function updateSelectDisplay(controller) {
+        const { select, valueEl, placeholderMarkup, wrapper, options, field } = controller;
+        const currentValue = select.value;
+        const activeOption = options.find((item) => item.option.value === currentValue && !item.option.hidden && !item.option.disabled);
+
+        if (activeOption) {
+            valueEl.textContent = activeOption.option.textContent;
+        } else {
+            valueEl.innerHTML = placeholderMarkup;
+        }
+
+        const hasValue = Boolean(currentValue);
+        wrapper.classList.toggle('dm-select--has-value', hasValue);
+        wrapper.classList.toggle('dm-select--placeholder', !hasValue);
+        field.classList.toggle('dm-field--select-has-value', hasValue);
+
+        options.forEach((item) => {
+            const isActive = item.option.value === currentValue && !item.option.hidden && !item.option.disabled;
+            item.el.classList.toggle('is-active', isActive);
+            item.el.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+    }
+
+    function handleTriggerKeydown(event, controller) {
+        switch (event.key) {
+            case 'ArrowDown':
+            case 'ArrowUp': {
+                event.preventDefault();
+                if (!controller.wrapper.classList.contains('dm-select--open')) {
+                    openSelect(controller);
+                }
+                const direction = event.key === 'ArrowDown' ? 1 : -1;
+                moveSelectValue(controller, direction);
+                break;
+            }
+            case 'Enter':
+            case ' ': {
+                event.preventDefault();
+                toggleSelect(controller);
+                break;
+            }
+            case 'Escape': {
+                if (controller.wrapper.classList.contains('dm-select--open')) {
+                    event.preventDefault();
+                    closeSelect(controller);
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    function moveSelectValue(controller, direction) {
+        const enabledOptions = controller.options.filter((item) => !item.option.disabled && !item.option.hidden);
+        if (!enabledOptions.length) {
+            return;
+        }
+
+        const currentValue = controller.select.value;
+        let index = enabledOptions.findIndex((item) => item.option.value === currentValue);
+        if (index === -1) {
+            index = direction > 0 ? -1 : 0;
+        }
+        index = (index + direction + enabledOptions.length) % enabledOptions.length;
+        const nextValue = enabledOptions[index].option.value;
+
+        setSelectValue(controller, nextValue, { closeDropdown: false, focusTrigger: false });
+        updateSelectDisplay(controller);
+    }
+
+    function handleSelectDocumentClick(event) {
+        customSelectControllers.forEach((controller) => {
+            if (!controller.wrapper.contains(event.target)) {
+                closeSelect(controller);
+            }
+        });
+    }
+
+    function handleSelectDocumentKeydown(event) {
+        if (event.key !== 'Escape') {
+            return;
+        }
+
+        let closedAny = false;
+        customSelectControllers.forEach((controller) => {
+            if (controller.wrapper.classList.contains('dm-select--open')) {
+                closeSelect(controller);
+                closedAny = true;
+            }
+        });
+
+        if (closedAny) {
+            event.stopPropagation();
+        }
     }
 
     function enhanceDrawModal() {
