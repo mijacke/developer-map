@@ -244,19 +244,16 @@
         min-width: clamp(40px, 9vw, 46px);
     }
 
-    .dm-card,
-    .dm-dashboard__list {
+    .dm-card {
         padding: 22px;
     }
 
-    .dm-dashboard__list-head {
-        flex-direction: column;
-        align-items: stretch;
+    .dm-dashboard__card {
+        padding: 24px 20px;
     }
 
-    .dm-dashboard__actions {
-        width: 100%;
-        flex-wrap: wrap;
+    .dm-dashboard__toolbar {
+        gap: 12px;
     }
 }
 
