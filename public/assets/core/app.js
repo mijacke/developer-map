@@ -107,6 +107,91 @@ export function initDeveloperMap(options) {
         }
     }
 
+    // Load types from localStorage
+    function loadTypes() {
+        try {
+            const stored = localStorage.getItem('dm-types');
+            if (stored) {
+                return JSON.parse(stored);
+            }
+        } catch (err) {
+            console.warn('[Developer Map] Failed to load types from localStorage', err);
+        }
+        return null;
+    }
+
+    // Save types to localStorage
+    function saveTypes(types) {
+        try {
+            localStorage.setItem('dm-types', JSON.stringify(types));
+        } catch (err) {
+            console.warn('[Developer Map] Failed to save types to localStorage', err);
+        }
+    }
+
+    function normaliseTypes() {
+        if (!Array.isArray(data.types)) {
+            data.types = [];
+            return;
+        }
+        let changed = false;
+        data.types = data.types.map((type) => {
+                if (type && typeof type === 'object') {
+                    let nextId = type.id;
+                    if (nextId === null || nextId === undefined) {
+                        nextId = generateId('type');
+                        changed = true;
+                    } else {
+                    const strId = String(nextId).trim();
+                    if (!strId) {
+                        nextId = generateId('type');
+                        changed = true;
+                    } else if (typeof nextId !== 'string' || nextId !== strId) {
+                        nextId = strId;
+                        changed = true;
+                    }
+                }
+                let nextLabel = 'Typ';
+                if (typeof type.label === 'string') {
+                    const trimmed = type.label.trim();
+                    nextLabel = trimmed || 'Typ';
+                    if (trimmed !== type.label) {
+                        changed = true;
+                    }
+                } else if (type.label !== undefined && type.label !== null) {
+                    nextLabel = String(type.label).trim() || 'Typ';
+                    changed = true;
+                }
+                let nextColor = '#7C3AED';
+                if (typeof type.color === 'string') {
+                    const trimmedColor = type.color.trim();
+                    nextColor = trimmedColor || '#7C3AED';
+                    if (trimmedColor !== type.color) {
+                        changed = true;
+                    }
+                } else if (type.color !== undefined && type.color !== null) {
+                    nextColor = String(type.color).trim() || '#7C3AED';
+                    changed = true;
+                }
+                return {
+                    ...type,
+                    id: nextId,
+                    label: nextLabel,
+                    color: nextColor,
+                };
+            }
+            changed = true;
+            return {
+                id: generateId('type'),
+                label: String(type ?? 'Typ'),
+                color: '#7C3AED',
+            };
+        });
+        if (changed) {
+            saveTypes(data.types);
+        }
+    }
+
     // Initialize colors
     const savedColors = loadColors();
     if (savedColors) {
@@ -114,12 +199,22 @@ export function initDeveloperMap(options) {
     }
     applyColors(data.colors);
 
+    // Initialize types
+    const savedTypes = loadTypes();
+    if (savedTypes) {
+        data.types = savedTypes;
+    }
+    normaliseTypes();
+
     // Initialize projects from localStorage
     const savedProjects = loadProjects();
     if (savedProjects) {
         data.projects = savedProjects;
         console.info('[Developer Map] Loaded projects from localStorage', savedProjects.length, 'projects');
     }
+
+    // Clear expanded projects on page load (fresh start)
+    localStorage.removeItem('dm-expanded-projects');
 
     const state = {
         view: APP_VIEWS.MAPS,
@@ -183,14 +278,8 @@ export function initDeveloperMap(options) {
 
         let typeValue = '';
         if (typeSelect) {
-            typeValue = typeSelect.value.trim();
-            if (!typeValue && typeSelect.selectedOptions.length) {
-                const selected = typeSelect.selectedOptions[0];
-                typeValue = selected.value.trim() || selected.textContent.trim();
-            }
-        }
-        if (!typeValue) {
-            typeValue = state.modal?.targetType === 'floor' ? 'Lokalita' : 'Projekt';
+            const selected = typeSelect.value;
+            typeValue = selected ? selected.trim() : '';
         }
 
         let parentId = null;
@@ -207,6 +296,7 @@ export function initDeveloperMap(options) {
             parentId,
             elements: {
                 nameInput,
+                typeSelect,
             },
         };
     }
@@ -220,12 +310,25 @@ export function initDeveloperMap(options) {
         render();
     }
 
-    function openModal(modalType, rawPayload = null) {
+    function openModal(modalType, rawPayload = null, metadata = null) {
         const normalizedType = typeof modalType === 'string' ? modalType : null;
-        const normalizedPayload =
+        let normalizedPayload =
             rawPayload === null || rawPayload === undefined || rawPayload === 'null' || rawPayload === 'undefined'
                 ? null
                 : String(rawPayload);
+        if (normalizedPayload) {
+            normalizedPayload = normalizedPayload.trim();
+            if (!normalizedPayload) {
+                normalizedPayload = null;
+            }
+        }
+
+        const meta = metadata && typeof metadata === 'object' ? metadata : {};
+        const typeLabelHint = typeof meta.typeLabel === 'string' ? meta.typeLabel.trim() : '';
+        const typeIdHint = meta.typeId ? String(meta.typeId) : '';
+        if (!normalizedPayload && typeIdHint) {
+            normalizedPayload = typeIdHint;
+        }
 
         if (!normalizedType) {
             setState({ modal: null });
@@ -287,6 +390,65 @@ export function initDeveloperMap(options) {
                 });
                 return;
             }
+        }
+
+        if (normalizedType === 'edit-type') {
+            if (!normalizedPayload && typeLabelHint) {
+                const labelMatch = data.types.find((type) => String(type.label).trim() === typeLabelHint);
+                if (labelMatch) {
+                    normalizedPayload = String(labelMatch.id);
+                }
+            }
+            if (!normalizedPayload) {
+                console.warn('[Developer Map] Missing type id for edit-type modal. Aborting.');
+                return;
+            }
+
+            const typeItem = data.types.find((type) => String(type.id) === normalizedPayload);
+            if (typeItem) {
+                setState({
+                    modal: {
+                        type: normalizedType,
+                        payload: String(typeItem.id),
+                        itemName: typeItem.label,
+                    },
+                });
+                return;
+            }
+            console.warn('[Developer Map] Type not found in openModal, but continuing with payload:', normalizedPayload);
+        }
+
+        if (normalizedType === 'add-type') {
+            setState({
+                modal: {
+                    type: normalizedType,
+                    payload: null,
+                },
+            });
+            return;
+        }
+
+        if (normalizedType === 'delete-type') {
+            if (!normalizedPayload && typeLabelHint) {
+                const labelMatch = data.types.find((type) => String(type.label).trim() === typeLabelHint);
+                if (labelMatch) {
+                    normalizedPayload = String(labelMatch.id);
+                }
+            }
+            if (!normalizedPayload) {
+                console.warn('[Developer Map] Missing type id for delete-type modal. Aborting.');
+                return;
+            }
+
+            const typeItem = data.types.find((type) => String(type.id) === normalizedPayload);
+            setState({
+                modal: {
+                    type: normalizedType,
+                    payload: typeItem ? String(typeItem.id) : normalizedPayload,
+                    itemName: typeItem?.label ?? typeLabelHint || 'vybraný typ',
+                },
+            });
+            return;
         }
 
         setState({
@@ -449,7 +611,13 @@ export function initDeveloperMap(options) {
                 event.preventDefault();
                 const modal = button.getAttribute('data-dm-modal');
                 const payload = button.getAttribute('data-dm-payload');
-                openModal(modal, payload);
+                const typeLabelAttr = button.getAttribute('data-dm-type-label');
+                const typeIdAttr = button.getAttribute('data-dm-type-id');
+                const metadata = {
+                    typeLabel: typeLabelAttr ? typeLabelAttr.trim() : '',
+                    typeId: typeIdAttr ? typeIdAttr.trim() : '',
+                };
+                openModal(modal, payload, metadata);
             });
         });
 
@@ -485,6 +653,10 @@ export function initDeveloperMap(options) {
 
         if (state.modal && ['add-map', 'edit-map', 'add-location'].includes(state.modal.type)) {
             bindMapModalEvents();
+        }
+
+        if (state.modal && ['add-type', 'edit-type'].includes(state.modal.type)) {
+            bindTypeModalEvents();
         }
 
         // Color picker sync
@@ -531,9 +703,7 @@ export function initDeveloperMap(options) {
         // Confirm delete button
         const confirmDeleteButton = root.querySelector('[data-dm-confirm-delete]');
         if (confirmDeleteButton) {
-            confirmDeleteButton.addEventListener('click', () => {
-                handleDeleteMap();
-            });
+            confirmDeleteButton.addEventListener('click', handleConfirmDelete);
         }
 
         // Disable default browser tooltips
@@ -639,6 +809,31 @@ export function initDeveloperMap(options) {
         reader.readAsDataURL(file);
     }
 
+    function bindTypeModalEvents() {
+        const colorInput = root.querySelector('[data-dm-type-color]');
+        const hexInput = root.querySelector('[data-dm-type-hex]');
+        if (colorInput && hexInput) {
+            colorInput.addEventListener('input', (event) => {
+                if (hexInput) {
+                    hexInput.value = String(event.target.value ?? '').toUpperCase();
+                }
+            });
+
+            hexInput.addEventListener('input', (event) => {
+                const raw = String(event.target.value ?? '').trim();
+                const normalised = raw.startsWith('#') ? raw : `#${raw}`;
+                if (/^#[0-9A-Fa-f]{6}$/.test(normalised)) {
+                    colorInput.value = normalised.toUpperCase();
+                }
+            });
+        }
+
+        const saveButton = root.querySelector('[data-dm-modal-save]');
+        if (saveButton) {
+            saveButton.addEventListener('click', handleModalPrimaryAction);
+        }
+    }
+
     function handleModalPrimaryAction() {
         if (!state.modal) {
             return;
@@ -647,6 +842,8 @@ export function initDeveloperMap(options) {
             handleSaveEditMap();
         } else if (state.modal.type === 'add-map' || state.modal.type === 'add-location') {
             handleSaveAddMap();
+        } else if (state.modal.type === 'add-type' || state.modal.type === 'edit-type') {
+            handleSaveTypeModal();
         }
     }
 
@@ -671,6 +868,10 @@ export function initDeveloperMap(options) {
 
         if (!fields.name) {
             fields.elements.nameInput?.focus();
+            return;
+        }
+        if (!fields.type) {
+            fields.elements.typeSelect?.focus();
             return;
         }
 
@@ -764,6 +965,10 @@ export function initDeveloperMap(options) {
             fields.elements.nameInput?.focus();
             return;
         }
+        if (!fields.type) {
+            fields.elements.typeSelect?.focus();
+            return;
+        }
 
         const { name, type, parentId } = fields;
         const imageData = modalState.imagePreview;
@@ -805,16 +1010,132 @@ export function initDeveloperMap(options) {
         setState({ modal: null, activeProjectId: newActiveProjectId });
     }
 
-    function handleDeleteMap() {
+    function handleSaveTypeModal() {
         const modalState = state.modal;
-        if (!modalState || !modalState.payload) {
+        if (!modalState) {
+            return;
+        }
+
+        const form = root.querySelector('[data-dm-type-form]');
+        const formTypeId = form?.getAttribute('data-dm-type-id') ?? '';
+        const nameInput = root.querySelector('[data-dm-type-name]');
+        const colorInput = root.querySelector('[data-dm-type-color]');
+        const hexInput = root.querySelector('[data-dm-type-hex]');
+
+        const nameValue = nameInput ? nameInput.value.trim() : '';
+        if (!nameValue) {
+            nameInput?.focus();
+            return;
+        }
+
+        const hexRaw = hexInput ? hexInput.value.trim() : colorInput?.value ?? '';
+        const normalisedHex = (() => {
+            if (!hexRaw) return '';
+            const prefixed = hexRaw.startsWith('#') ? hexRaw : `#${hexRaw}`;
+            if (/^#[0-9A-Fa-f]{6}$/.test(prefixed)) {
+                return prefixed.toUpperCase();
+            }
+            return '';
+        })();
+
+        if (!normalisedHex) {
+            if (hexInput) {
+                hexInput.focus();
+                hexInput.select?.();
+            }
+            return;
+        }
+
+        if (colorInput) {
+            colorInput.value = normalisedHex;
+        }
+        if (hexInput) {
+            hexInput.value = normalisedHex;
+        }
+
+        const targetTypeId = modalState.payload || formTypeId || '';
+        const isEditingExisting = (modalState.type === 'edit-type' || Boolean(formTypeId)) && Boolean(targetTypeId);
+
+        if (isEditingExisting) {
+            const typeIndex = data.types.findIndex((item) => String(item.id) === String(targetTypeId));
+            if (typeIndex === -1) {
+                console.warn('[Developer Map] Type not found for editing:', targetTypeId);
+                setState({ modal: null });
+                return;
+            }
+
+            const currentItem = data.types[typeIndex];
+            const previousLabel = currentItem.label;
+            const updatedItem = {
+                ...currentItem,
+                id: currentItem.id,
+                label: nameValue,
+                color: normalisedHex,
+            };
+            data.types.splice(typeIndex, 1, updatedItem);
+
+            if (previousLabel && previousLabel !== nameValue) {
+                data.projects.forEach((project) => {
+                    if (project.type === previousLabel) {
+                        project.type = nameValue;
+                    }
+                    if (Array.isArray(project.floors)) {
+                        project.floors.forEach((floor) => {
+                            if (floor.type === previousLabel) {
+                                floor.type = nameValue;
+                            }
+                        });
+                    }
+                });
+            }
+
+            saveTypes(data.types);
+            saveProjects(data.projects);
             setState({ modal: null });
             return;
         }
 
-        const result = findMapItem(modalState.payload);
+        const newTypeId = generateId('type');
+        data.types.push({
+            id: newTypeId,
+            label: nameValue,
+            color: normalisedHex,
+        });
+
+        saveTypes(data.types);
+        setState({ modal: null });
+    }
+
+    function handleConfirmDelete(event) {
+        if (event) {
+            event.preventDefault();
+        }
+        const button = event?.currentTarget ?? null;
+        const kindAttr = button?.getAttribute('data-dm-delete-kind') ?? '';
+        const targetAttr = button?.getAttribute('data-dm-delete-target') ?? '';
+        const kind = kindAttr || (state.modal?.type === 'delete-type' ? 'type' : state.modal?.type === 'delete-map' ? 'map' : '');
+        const targetId = targetAttr || state.modal?.payload || '';
+
+        if (kind === 'map') {
+            handleDeleteMap(targetId);
+        } else if (kind === 'type') {
+            handleDeleteType(targetId);
+        } else {
+            console.warn('[Developer Map] Unknown delete kind:', kind);
+        }
+    }
+
+    function handleDeleteMap(targetId = null) {
+        const modalState = state.modal;
+        const effectiveId = targetId || modalState?.payload || null;
+        if (!effectiveId) {
+            setState({ modal: null });
+            return;
+        }
+
+        const result = findMapItem(effectiveId);
         if (!result) {
-            console.warn('[Developer Map] Nepodarilo sa nájsť položku pre vymazanie:', modalState.payload);
+            console.warn('[Developer Map] Nepodarilo sa nájsť položku pre vymazanie:', effectiveId);
             setState({ modal: null });
             return;
         }
@@ -842,6 +1163,51 @@ export function initDeveloperMap(options) {
                 setState({ modal: null });
             }
         }
+    }
+
+    function handleDeleteType(targetId = null) {
+        const modalState = state.modal;
+        let effectiveId = targetId || modalState?.payload || null;
+        if (!effectiveId && modalState?.itemName) {
+            const labelMatch = data.types.find((type) => String(type.label).trim() === String(modalState.itemName).trim());
+            if (labelMatch) {
+                effectiveId = String(labelMatch.id);
+            }
+        }
+        if (!effectiveId) {
+            console.warn('[Developer Map] No type ID to delete');
+            setState({ modal: null });
+            return;
+        }
+
+        const typeIndex = data.types.findIndex((type) => String(type.id) === String(effectiveId));
+        if (typeIndex === -1) {
+            console.warn('[Developer Map] Type not found for deletion:', effectiveId);
+            setState({ modal: null });
+            return;
+        }
+
+        const [removedType] = data.types.splice(typeIndex, 1);
+        saveTypes(data.types);
+
+        if (removedType?.label) {
+            const removedLabel = removedType.label;
+            data.projects.forEach((project) => {
+                if (project.type === removedLabel) {
+                    project.type = '';
+                }
+                if (Array.isArray(project.floors)) {
+                    project.floors.forEach((floor) => {
+                        if (floor.type === removedLabel) {
+                            floor.type = '';
+                        }
+                    });
+                }
+            });
+            saveProjects(data.projects);
+        }
+
+        setState({ modal: null });
     }
 
     function enhanceSelects() {

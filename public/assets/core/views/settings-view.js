@@ -1,4 +1,5 @@
 import { SETTINGS_SECTIONS } from '../constants.js';
+import { escapeHtml } from '../utils/html.js';
 
 const ICONS = {
     edit: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>',
@@ -89,10 +90,10 @@ function renderSettingsTypes(data) {
                                     ${item.label}
                                 </div>
                                 <div class="dm-settings__item-actions">
-                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-type" aria-label="Upraviť ${item.label}" title="Upraviť">
+                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-type" data-dm-payload="${escapeHtml(String(item.id))}" data-dm-type-id="${escapeHtml(String(item.id))}" data-dm-type-label="${escapeHtml(item.label)}" aria-label="Upraviť ${escapeHtml(item.label)}" title="Upraviť">
                                         <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.edit}</span>
                                     </button>
-                                    <button type="button" class="dm-icon-button dm-icon-button--delete" data-dm-modal="delete-type" aria-label="Zmazať ${item.label}" title="Zmazať">
+                                    <button type="button" class="dm-icon-button dm-icon-button--delete" data-dm-modal="delete-type" data-dm-payload="${escapeHtml(String(item.id))}" data-dm-type-id="${escapeHtml(String(item.id))}" data-dm-type-label="${escapeHtml(item.label)}" aria-label="Zmazať ${escapeHtml(item.label)}" title="Zmazať">
                                         <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.delete}</span>
                                     </button>
                                 </div>

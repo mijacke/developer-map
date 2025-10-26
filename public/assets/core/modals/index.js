@@ -16,7 +16,11 @@ export function renderModal(state, data) {
         case 'add-location':
             return renderFormModal('Pridať lokalitu', 'Pridať lokalitu', data, payload ?? null, state.modal);
         case 'add-type':
-            return renderSimpleModal('Pridať typ', renderSimpleForm('Nový typ'));
+            return renderTypeModal('Pridať typ', 'Pridať typ', data, null, state.modal);
+        case 'edit-type':
+            return renderTypeModal('Upraviť typ', 'Uložiť zmeny', data, payload, state.modal);
+        case 'delete-type':
+            return renderConfirmModal(state);
         case 'add-status':
             return renderSimpleModal('Pridať stav', renderSimpleForm('Nový stav'));
         case 'add-blueprint':
@@ -98,18 +102,18 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
 
     const typeOptionsSource = Array.isArray(data.types) ? data.types : [];
     const resolvedType = editItem?.type ?? '';
-    const hasResolvedType = resolvedType
+    const resolvedTypeInList = resolvedType
         ? typeOptionsSource.some((option) => option.label === resolvedType)
         : false;
-    const extendedTypeOptions = hasResolvedType
-        ? typeOptionsSource
-        : resolvedType
-            ? [{ id: 'current', label: resolvedType }, ...typeOptionsSource]
-            : typeOptionsSource;
-    const typeOptions = extendedTypeOptions
+    const selectTypeValue = resolvedTypeInList ? resolvedType : '';
+    const typePlaceholderSelected = selectTypeValue ? '' : ' selected';
+    const typePlaceholderLabel = typeOptionsSource.length
+        ? 'Vyberte typ'
+        : 'Najprv pridajte typ v nastaveniach';
+    const typeOptions = typeOptionsSource
         .map((option) => {
             const value = option.label;
-            const isSelected = resolvedType === value;
+            const isSelected = selectTypeValue === value;
             return `<option value="${escapeHtml(value)}"${isSelected ? ' selected' : ''}>${escapeHtml(option.label)}</option>`;
         })
         .join('');
@@ -151,7 +155,7 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Vyberte nadradenú mapu" data-tooltip="Vyberte nadradenú mapu">${infoIcon}</button>
                                             <select required autocomplete="off" class="dm-field__input" data-dm-select data-dm-field="parent"${parentSelectAttrs}>
-                                                <option value="" disabled${placeholderSelected} hidden></option>
+                                                <option value="" disabled${placeholderSelected} hidden>${escapeHtml('Vyberte nadradenú')}</option>
                                                 <option value="none"${noneSelected}>Žiadna</option>
                                                 ${parentOptions}
                                             </select>
@@ -160,7 +164,7 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Typ nehnuteľnosti alebo objektu" data-tooltip="Typ nehnuteľnosti alebo objektu">${infoIcon}</button>
                                             <select required autocomplete="off" class="dm-field__input" data-dm-select data-dm-field="map-type">
-                                                <option value="" disabled${resolvedType ? '' : ' selected'} hidden></option>
+                                                <option value="" disabled${typePlaceholderSelected} hidden>${escapeHtml(typePlaceholderLabel)}</option>
                                                 ${typeOptions}
                                             </select>
                                             <label class="dm-field__label">Typ<span class="dm-field__required">*</span></label>
@@ -240,8 +244,82 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
     `;
 }
 
+function renderTypeModal(title, cta, data, itemId = null, modalState = null) {
+    const saveIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>';
+    const plusIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus-icon lucide-circle-plus"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>';
+    const types = Array.isArray(data.types) ? data.types : [];
+    const targetId = itemId || modalState?.payload || '';
+    const editItem = targetId ? types.find((type) => String(type.id) === String(targetId)) ?? null : null;
+    const typeId = editItem?.id ?? targetId ?? '';
+
+    const defaultColor = '#7c3aed';
+    const nameValue = modalState?.name ?? modalState?.itemName ?? editItem?.label ?? '';
+    const colorValue = modalState?.color ?? editItem?.color ?? defaultColor;
+    const hexValue = typeof colorValue === 'string' && colorValue.startsWith('#') ? colorValue : `#${String(colorValue || '').replace(/^#+/, '')}`;
+
+    return `
+        <div class="dm-modal-overlay">
+            <div class="dm-modal dm-modal--narrow">
+                <header class="dm-modal__header">
+                    <h2>${title}</h2>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                </header>
+                <div class="dm-modal__body">
+                    <form class="dm-form" data-dm-type-form${typeId ? ` data-dm-type-id="${escapeHtml(typeId)}"` : ''}>
+                        <div class="dm-field">
+                            <input 
+                                required 
+                                type="text" 
+                                autocomplete="off" 
+                                class="dm-field__input"
+                                value="${escapeHtml(nameValue)}"
+                                data-dm-type-name
+                            />
+                            <label class="dm-field__label">Názov typu<span class="dm-field__required">*</span></label>
+                        </div>
+                        <div class="dm-field">
+                            <input 
+                                type="color" 
+                                value="${escapeHtml(hexValue)}" 
+                                autocomplete="off"
+                                class="dm-field__input dm-field__input--color"
+                                data-dm-type-color
+                                required
+                            />
+                            <label class="dm-field__label">Farba</label>
+                        </div>
+                        <div class="dm-field">
+                            <input 
+                                type="text" 
+                                value="${escapeHtml(hexValue)}"
+                                autocomplete="off"
+                                class="dm-field__input"
+                                data-dm-type-hex
+                                required
+                            />
+                            <label class="dm-field__label">HEX kód<span class="dm-field__required">*</span></label>
+                        </div>
+                    </form>
+                </div>
+                <footer class="dm-modal__actions dm-modal__actions--split">
+                    <button class="dm-button dm-button--outline" data-dm-close-modal>Zrušiť</button>
+                    <button class="dm-button dm-button--dark" data-dm-modal-save>
+                        <span class="dm-button__icon" aria-hidden="true">${editItem ? saveIcon : plusIcon}</span>
+                        ${cta}
+                    </button>
+                </footer>
+            </div>
+        </div>
+    `;
+}
+
 function renderConfirmModal(state) {
     const itemName = state?.modal?.itemName || 'túto položku';
+    const deleteKind = state?.modal?.type === 'delete-type' ? 'type' : state?.modal?.type === 'delete-map' ? 'map' : '';
+    const deleteTarget = state?.modal?.payload ?? '';
+    const confirmAttributes = deleteKind
+        ? ` data-dm-delete-kind="${escapeHtml(deleteKind)}" data-dm-delete-target="${escapeHtml(String(deleteTarget))}"`
+        : '';
     return `
         <div class="dm-modal-overlay">
             <div class="dm-modal dm-modal--narrow">
@@ -254,7 +332,7 @@ function renderConfirmModal(state) {
                 </div>
                 <footer class="dm-modal__actions dm-modal__actions--split">
                     <button class="dm-button dm-button--outline" data-dm-close-modal>Zrušiť</button>
-                    <button class="dm-button dm-button--dark" data-dm-confirm-delete>Vymazať</button>
+                    <button class="dm-button dm-button--dark" data-dm-confirm-delete${confirmAttributes}>Vymazať</button>
                 </footer>
             </div>
         </div>
