@@ -34,11 +34,14 @@ function resolveStatus(floor, statuses) {
         return { label: 'Neznáme', variant: 'unknown' };
     }
 
-    const statusById = floor.statusId
+    // Try to find status by ID
+    const statusById = floor.statusId && statuses?.length > 0
         ? statuses.find((status) => String(status.id) === String(floor.statusId))
         : null;
-    const label = floor.statusLabel ?? floor.status ?? statusById?.label ?? 'Neznáme';
-    const hasExplicitStatus = Boolean(floor.statusId || floor.status || floor.statusLabel);
+    
+    // Get label from various sources
+    const label = statusById?.label ?? floor.statusLabel ?? floor.status ?? 'Neznáme';
+    const hasExplicitStatus = Boolean(statusById || floor.status || floor.statusLabel);
     const normalized = slugifyStatus(label);
 
     return {
@@ -51,7 +54,7 @@ function renderDashboardAction(type, modal, payload, label) {
     const iconMarkup = ACTION_ICONS[type] ?? '';
     const attributes = [
         'type="button"',
-        `class="dm-dashboard__action dm-dashboard__action--${type}"`,
+        `class="dm-icon-button dm-icon-button--${escapeHtml(type)}"`,
         `aria-label="${escapeHtml(label)}"`,
         `title="${escapeHtml(label)}"`,
         modal ? `data-dm-modal="${escapeHtml(modal)}"` : '',
@@ -62,7 +65,7 @@ function renderDashboardAction(type, modal, payload, label) {
 
     return `
         <button ${attributes}>
-            <span class="dm-dashboard__action-icon" aria-hidden="true">${iconMarkup}</span>
+            <span class="dm-icon-button__icon" aria-hidden="true">${iconMarkup}</span>
         </button>
     `;
 }
@@ -79,6 +82,10 @@ export function renderDashboardView(state, data) {
     const project = data.projects.find((item) => item.id === state.activeProjectId) ?? data.projects[0];
     const floors = project?.floors ?? [];
     const statuses = data.statuses ?? [];
+    
+    // Debug: log statuses
+    console.log('[Dashboard] Statuses:', statuses);
+    console.log('[Dashboard] First floor statusId:', floors[0]?.statusId);
 
     const tableRows =
         floors.length > 0
@@ -96,27 +103,25 @@ export function renderDashboardView(state, data) {
                             <td role="cell" data-label="Cena">${safeText(floor.price)}</td>
                             <td role="cell" data-label="Prenájom">${safeText(floor.rent)}</td>
                             <td role="cell" data-label="Stav">${renderStatusBadge(status)}</td>
-                            <td role="cell" data-label="Akcie">
-                                <div class="dm-dashboard__row-actions">
-                                    ${renderDashboardAction(
-                                        'open',
-                                        'draw-coordinates',
-                                        floor.id,
-                                        `Zobraziť lokalitu ${floor.name}`,
-                                    )}
-                                    ${renderDashboardAction(
-                                        'edit',
-                                        'edit-map',
-                                        floor.id,
-                                        `Upraviť lokalitu ${floor.name}`,
-                                    )}
-                                    ${renderDashboardAction(
-                                        'delete',
-                                        'delete-map',
-                                        floor.id,
-                                        `Zmazať lokalitu ${floor.name}`,
-                                    )}
-                                </div>
+                            <td role="cell" data-label="Akcie" class="dm-dashboard__cell--actions">
+                                ${renderDashboardAction(
+                                    'open',
+                                    'draw-coordinates',
+                                    floor.id,
+                                    `Zobraziť lokalitu ${floor.name}`,
+                                )}
+                                ${renderDashboardAction(
+                                    'edit',
+                                    'edit-map',
+                                    floor.id,
+                                    `Upraviť lokalitu ${floor.name}`,
+                                )}
+                                ${renderDashboardAction(
+                                    'delete',
+                                    'delete-map',
+                                    floor.id,
+                                    `Zmazať lokalitu ${floor.name}`,
+                                )}
                             </td>
                         </tr>
                     `;
@@ -124,10 +129,12 @@ export function renderDashboardView(state, data) {
                   .join('')
             : `
                 <tr role="row" class="dm-dashboard__empty-row">
-                    <td role="cell" colspan="8">
-                        <div class="dm-dashboard__empty-state">
-                            <p>V tomto projekte zatiaľ nie sú žiadne lokality.</p>
-                            <button type="button" class="dm-dashboard__add dm-dashboard__add--ghost" data-dm-modal="add-location">
+                    <td role="cell" colspan="8" class="dm-dashboard__empty-cell">
+                        <div class="dm-dashboard__empty-state" role="group" aria-label="Žiadne lokality">
+                            <span class="dm-dashboard__empty-icon" aria-hidden="true">${TOOLBAR_ICONS.plus}</span>
+                            <h3>Žiadne lokality</h3>
+                            <p>V tomto projekte zatiaľ nie sú žiadne lokality. Pridajte prvú, aby sa zobrazila v prehľade.</p>
+                            <button type="button" class="dm-dashboard__add dm-dashboard__add--ghost dm-dashboard__empty-action" data-dm-modal="add-location">
                                 <span class="dm-dashboard__add-icon" aria-hidden="true">${TOOLBAR_ICONS.plus}</span>
                                 Pridať prvú lokalitu
                             </button>
