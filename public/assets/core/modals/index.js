@@ -6,15 +6,15 @@ export function renderModal(state, data) {
     const { type, payload } = state.modal;
     switch (type) {
         case 'add-map':
-            return renderFormModal('Pridať mapu', 'Pridať mapu', data, null);
+            return renderFormModal('Pridať mapu', 'Pridať mapu', data, null, state.modal);
         case 'edit-map':
-            return renderFormModal('Upraviť mapu', 'Uložiť zmeny', data, payload);
+            return renderFormModal('Upraviť mapu', 'Uložiť zmeny', data, payload, state.modal);
         case 'delete-map':
-            return renderConfirmModal();
+            return renderConfirmModal(state);
         case 'draw-coordinates':
             return renderDrawModal(state, data);
         case 'add-location':
-            return renderFormModal('Pridať lokalitu', 'Pridať lokalitu', data, null);
+            return renderFormModal('Pridať lokalitu', 'Pridať lokalitu', data, payload ?? null, state.modal);
         case 'add-type':
             return renderSimpleModal('Pridať typ', renderSimpleForm('Nový typ'));
         case 'add-status':
@@ -28,7 +28,7 @@ export function renderModal(state, data) {
     }
 }
 
-function renderFormModal(title, cta, data, itemId = null) {
+function renderFormModal(title, cta, data, itemId = null, modalState = null) {
     const plusIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus-icon lucide-circle-plus"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>';
     const infoIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>';
     const arrowIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right-icon lucide-arrow-right"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
@@ -37,30 +37,82 @@ function renderFormModal(title, cta, data, itemId = null) {
     
     // Zisti položku, ktorú upravujeme (project alebo floor)
     let editItem = null;
-    let imageUrl = null;
-    if (isEdit && itemId && data) {
-        // Najprv skús nájsť v projektoch
-        editItem = data.projects?.find(p => p.id === itemId);
-        
-        // Ak nie je projekt, skús nájsť vo floor-och
-        if (!editItem) {
-            for (const project of (data.projects || [])) {
-                const floor = project.floors?.find(f => f.id === itemId);
+    let editParent = null;
+    let editType = null;
+    const projects = Array.isArray(data.projects) ? data.projects : [];
+
+    if (itemId && projects.length) {
+        editItem = projects.find((project) => project.id === itemId) ?? null;
+        if (editItem) {
+            editType = 'project';
+        } else {
+            for (const project of projects) {
+                const floor = project.floors?.find((f) => f.id === itemId);
                 if (floor) {
                     editItem = floor;
+                    editParent = project;
+                    editType = 'floor';
                     break;
                 }
             }
         }
-        
-        // Ak má položka obrázok, použi ho
-        if (editItem && editItem.image) {
-            imageUrl = editItem.image;
-        } else if (editItem && editItem.id) {
-            // Ak nemá vlastný obrázok, použi placeholder podľa typu
-            imageUrl = MEDIA.building; // Môžeš tu použiť rôzne obrázky podľa typu
-        }
     }
+
+    const selectedPreview = modalState?.imagePreview ?? null;
+    let imageUrl = selectedPreview || (editItem?.image ?? null);
+    if (!imageUrl && isEdit) {
+        imageUrl = editType === 'floor' ? MEDIA.floor : MEDIA.building;
+    }
+
+    const uploadLabel = isEdit ? 'Zmeniť obrázok' : 'Nahrať obrázok';
+
+    const targetContext = modalState?.targetType ?? editType ?? 'project';
+    const canChangeParent = !isEdit || targetContext === 'floor';
+    const parentSelectAttrs = canChangeParent ? '' : ' disabled aria-disabled="true"';
+
+    const resolvedParentValue = (() => {
+        if (modalState && Object.prototype.hasOwnProperty.call(modalState, 'parentId')) {
+            if (modalState.parentId === null || modalState.parentId === undefined || modalState.parentId === '') {
+                return 'none';
+            }
+            return String(modalState.parentId);
+        }
+        if (editType === 'floor' && editParent) {
+            return String(editParent.id);
+        }
+        return 'none';
+    })();
+
+    const parentOptions = projects
+        .map((project) => {
+            const value = String(project.id);
+            const isSelected = resolvedParentValue === value;
+            return `<option value="${escapeHtml(value)}"${isSelected ? ' selected' : ''}>${escapeHtml(project.name)}</option>`;
+        })
+        .join('');
+
+    const placeholderSelected = resolvedParentValue === '' ? ' selected' : '';
+    const noneSelected = resolvedParentValue === 'none' ? ' selected' : '';
+
+    const resolvedName = editItem?.name ?? '';
+
+    const typeOptionsSource = Array.isArray(data.types) ? data.types : [];
+    const resolvedType = editItem?.type ?? '';
+    const hasResolvedType = resolvedType
+        ? typeOptionsSource.some((option) => option.label === resolvedType)
+        : false;
+    const extendedTypeOptions = hasResolvedType
+        ? typeOptionsSource
+        : resolvedType
+            ? [{ id: 'current', label: resolvedType }, ...typeOptionsSource]
+            : typeOptionsSource;
+    const typeOptions = extendedTypeOptions
+        .map((option) => {
+            const value = option.label;
+            const isSelected = resolvedType === value;
+            return `<option value="${escapeHtml(value)}"${isSelected ? ' selected' : ''}>${escapeHtml(option.label)}</option>`;
+        })
+        .join('');
     
     return `
         <div class="dm-modal-overlay">
@@ -78,7 +130,7 @@ function renderFormModal(title, cta, data, itemId = null) {
                             <div class="dm-upload-card">
                                 ${imageUrl ? `
                                     <div class="dm-upload-card__preview">
-                                        <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(editItem?.name || 'Obrázok mapy')}" />
+                                        <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(resolvedName || 'Obrázok mapy')}" />
                                     </div>
                                 ` : `
                                     <div class="dm-upload-card__dropzone">
@@ -89,37 +141,33 @@ function renderFormModal(title, cta, data, itemId = null) {
                                 `}
                                 <label for="dm-modal-upload" class="dm-upload-card__footer">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-icon lucide-upload"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
-                                    <p>Nahrať obrázok</p>
+                                    <p>${uploadLabel}</p>
                                 </label>
-                                <input id="dm-modal-upload" type="file" class="dm-upload-card__input" />
+                                <input id="dm-modal-upload" type="file" accept="image/*" class="dm-upload-card__input" />
                             </div>
                             <div class="dm-modal__form-fields">
                                 <div class="dm-form__grid">
                                     <div class="dm-form__column">
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Vyberte nadradenú mapu" data-tooltip="Vyberte nadradenú mapu">${infoIcon}</button>
-                                            <select required autocomplete="off" class="dm-field__input" data-dm-select>
-                                                <option value="" disabled selected hidden></option>
-                                                <option value="none">Žiadna</option>
-                                                <option value="bytovka">Bytovka</option>
-                                                <option value="centrum">Obchodné centrum</option>
+                                            <select required autocomplete="off" class="dm-field__input" data-dm-select data-dm-field="parent"${parentSelectAttrs}>
+                                                <option value="" disabled${placeholderSelected} hidden></option>
+                                                <option value="none"${noneSelected}>Žiadna</option>
+                                                ${parentOptions}
                                             </select>
                                             <label class="dm-field__label">Nadradená<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Typ nehnuteľnosti alebo objektu" data-tooltip="Typ nehnuteľnosti alebo objektu">${infoIcon}</button>
-                                            <select required autocomplete="off" class="dm-field__input" data-dm-select>
-                                                <option value="" disabled selected hidden></option>
-                                                <option value="pozemok">Pozemok</option>
-                                                <option value="byt">Byt</option>
-                                                <option value="dom">Dom</option>
-                                                <option value="kancelaria">Kancelária</option>
+                                            <select required autocomplete="off" class="dm-field__input" data-dm-select data-dm-field="map-type">
+                                                <option value="" disabled${resolvedType ? '' : ' selected'} hidden></option>
+                                                ${typeOptions}
                                             </select>
                                             <label class="dm-field__label">Typ<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Názov mapy alebo lokality" data-tooltip="Názov mapy alebo lokality">${infoIcon}</button>
-                                            <input required type="text" autocomplete="off" class="dm-field__input">
+                                            <input required type="text" autocomplete="off" class="dm-field__input" data-dm-field="name" value="${escapeHtml(resolvedName)}">
                                             <label class="dm-field__label">Názov<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
@@ -179,7 +227,7 @@ function renderFormModal(title, cta, data, itemId = null) {
                                     </div>
                                 </div>
                                 <div class="dm-modal__actions">
-                                    <button type="button" class="dm-button dm-button--dark">
+                                    <button type="button" class="dm-button dm-button--dark" data-dm-modal-save>
                                         ${isEdit ? `${cta} ${arrowIcon}` : `${plusIcon} ${cta}`}
                                     </button>
                                 </div>
@@ -192,7 +240,8 @@ function renderFormModal(title, cta, data, itemId = null) {
     `;
 }
 
-function renderConfirmModal() {
+function renderConfirmModal(state) {
+    const itemName = state?.modal?.itemName || 'túto položku';
     return `
         <div class="dm-modal-overlay">
             <div class="dm-modal dm-modal--narrow">
@@ -201,11 +250,11 @@ function renderConfirmModal() {
                     <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
                 </header>
                 <div class="dm-modal__body">
-                    <p>Naozaj chcete vymazať túto položku?</p>
+                    <p>Naozaj chcete vymazať <strong>${escapeHtml(itemName)}</strong>?</p>
                 </div>
                 <footer class="dm-modal__actions dm-modal__actions--split">
                     <button class="dm-button dm-button--outline" data-dm-close-modal>Zrušiť</button>
-                    <button class="dm-button dm-button--dark">Vymazať</button>
+                    <button class="dm-button dm-button--dark" data-dm-confirm-delete>Vymazať</button>
                 </footer>
             </div>
         </div>

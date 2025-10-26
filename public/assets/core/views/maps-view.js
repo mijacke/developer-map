@@ -103,12 +103,13 @@ function renderProjectRow(project, shortcode, floors = []) {
             <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
     `;
+    const projectImage = project.image ?? MEDIA.building;
     
     return `
         <div class="dm-board__row dm-board__row--project dm-board__row--parent" role="row" data-dm-parent-id="${project.id}">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
                 <div class="dm-board__thumb dm-board__thumb--project dm-board__thumb--clickable" aria-hidden="true" data-dm-project="${project.id}" role="button" tabindex="0" aria-label="${escapeHtml(`Otvoriť projekt ${project.name}`)}">
-                    <img src="${MEDIA.building}" alt="${escapeHtml(`Náhľad projektu ${project.name}`)}" loading="lazy" />
+                    <img src="${escapeHtml(projectImage)}" alt="${escapeHtml(`Náhľad projektu ${project.name}`)}" loading="lazy" />
                 </div>
                 <span class="dm-board__label">${escapeHtml(project.name)}</span>
                 ${floorsCount > 0 ? `<span class="dm-board__children-count">${floorsCount}</span>` : ''}
@@ -153,11 +154,12 @@ function renderProjectRow(project, shortcode, floors = []) {
 }
 
 function renderFloorRow(floor, shortcode) {
+    const floorImage = floor.image ?? MEDIA.floor;
     return `
         <div class="dm-board__row dm-board__row--floor dm-board__row--child" role="row" data-dm-child-id="${floor.id}">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
                 <div class="dm-board__thumb dm-board__thumb--floor dm-board__thumb--clickable" aria-hidden="true" data-dm-modal="draw-coordinates" data-dm-payload="${floor.id}" role="button" tabindex="0" aria-label="${escapeHtml(`Zobraziť lokalitu ${floor.name}`)}">
-                    <img src="${MEDIA.floor}" alt="${escapeHtml(`Pôdorys ${floor.name}`)}" loading="lazy" />
+                    <img src="${escapeHtml(floorImage)}" alt="${escapeHtml(`Pôdorys ${floor.name}`)}" loading="lazy" />
                     <span class="dm-board__thumb-floor-highlight"></span>
                 </div>
                 <span class="dm-board__label">${escapeHtml(floor.name)}</span>
@@ -188,8 +190,6 @@ function renderFloorRow(floor, shortcode) {
         </div>
     `;
 }
-
-
 
 
 

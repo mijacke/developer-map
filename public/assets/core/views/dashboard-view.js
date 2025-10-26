@@ -53,9 +53,9 @@ export function renderDashboardView(state, data) {
                                         <td>${floor.name.replace('Poschodie ', '')}</td>
                                         <td>${floor.area}</td>
                                         <td>
-                                            <button class="dm-table-link" data-dm-modal="edit-map">Upraviť</button>
+                                            <button class="dm-table-link" data-dm-modal="edit-map" data-dm-payload="${floor.id}">Upraviť</button>
                                             <span>|</span>
-                                            <button class="dm-table-link" data-dm-modal="delete-map">Odstrániť</button>
+                                            <button class="dm-table-link" data-dm-modal="delete-map" data-dm-payload="${floor.id}">Odstrániť</button>
                                         </td>
                                     </tr>
                                 `,

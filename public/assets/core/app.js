@@ -1,4 +1,4 @@
-import { APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX, DEFAULT_DRAW_POINTS } from './constants.js';
+import { APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX, DEFAULT_DRAW_POINTS, MEDIA } from './constants.js';
 import { createDemoData } from './data.js';
 import { renderAppShell } from './layout/app-shell.js';
 import { renderModal } from './modals/index.js';
@@ -61,12 +61,65 @@ export function initDeveloperMap(options) {
         }
     }
 
+    // Load expanded projects from localStorage
+    function loadExpandedProjects() {
+        try {
+            const stored = localStorage.getItem('dm-expanded-projects');
+            if (stored) {
+                return JSON.parse(stored);
+            }
+        } catch (err) {
+            console.warn('[Developer Map] Failed to load expanded projects from localStorage', err);
+        }
+        return [];
+    }
+
+    // Save expanded projects to localStorage
+    function saveExpandedProjects(expandedIds) {
+        try {
+            localStorage.setItem('dm-expanded-projects', JSON.stringify(expandedIds));
+        } catch (err) {
+            console.warn('[Developer Map] Failed to save expanded projects to localStorage', err);
+        }
+    }
+
+    // Load projects (maps) from localStorage
+    function loadProjects() {
+        try {
+            const stored = localStorage.getItem('dm-projects');
+            if (stored) {
+                const projects = JSON.parse(stored);
+                return projects;
+            }
+        } catch (err) {
+            console.warn('[Developer Map] Failed to load projects from localStorage', err);
+        }
+        return null;
+    }
+
+    // Save projects (maps) to localStorage
+    function saveProjects(projects) {
+        try {
+            localStorage.setItem('dm-projects', JSON.stringify(projects));
+            console.info('[Developer Map] Projects saved to localStorage', projects.length, 'projects');
+        } catch (err) {
+            console.warn('[Developer Map] Failed to save projects to localStorage', err);
+        }
+    }
+
     // Initialize colors
     const savedColors = loadColors();
     if (savedColors) {
         data.colors = savedColors;
     }
     applyColors(data.colors);
+
+    // Initialize projects from localStorage
+    const savedProjects = loadProjects();
+    if (savedProjects) {
+        data.projects = savedProjects;
+        console.info('[Developer Map] Loaded projects from localStorage', savedProjects.length, 'projects');
+    }
 
     const state = {
         view: APP_VIEWS.MAPS,
@@ -81,6 +134,83 @@ export function initDeveloperMap(options) {
     let customSelectControllers = [];
     let customSelectDocEventsBound = false;
 
+    function findMapItem(itemId) {
+        if (!itemId) {
+            return null;
+        }
+        const soughtId = String(itemId);
+        for (const project of data.projects ?? []) {
+            if (String(project.id) === soughtId) {
+                return { item: project, type: 'project', parent: null };
+            }
+            for (const floor of project.floors ?? []) {
+                if (String(floor.id) === soughtId) {
+                    return { item: floor, type: 'floor', parent: project };
+                }
+            }
+        }
+        return null;
+    }
+
+    function generateId(prefix) {
+        const safePrefix = prefix || 'entity';
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+            return `${safePrefix}-${crypto.randomUUID()}`;
+        }
+        const randomPart = Math.random().toString(36).slice(2, 8);
+        const timePart = Date.now().toString(36);
+        return `${safePrefix}-${randomPart}-${timePart}`;
+    }
+
+    function ensureBadge(name, fallback = 'M') {
+        if (typeof name === 'string' && name.trim().length) {
+            return name.trim().charAt(0).toUpperCase();
+        }
+        return fallback || 'M';
+    }
+
+    function collectModalFields() {
+        const form = root.querySelector('.dm-modal__form');
+        if (!form) {
+            return null;
+        }
+
+        const nameInput = form.querySelector('input[data-dm-field="name"]');
+        const typeSelect = form.querySelector('select[data-dm-field="map-type"]');
+        const parentSelect = form.querySelector('select[data-dm-field="parent"]');
+
+        const nameValue = nameInput ? nameInput.value.trim() : '';
+
+        let typeValue = '';
+        if (typeSelect) {
+            typeValue = typeSelect.value.trim();
+            if (!typeValue && typeSelect.selectedOptions.length) {
+                const selected = typeSelect.selectedOptions[0];
+                typeValue = selected.value.trim() || selected.textContent.trim();
+            }
+        }
+        if (!typeValue) {
+            typeValue = state.modal?.targetType === 'floor' ? 'Lokalita' : 'Projekt';
+        }
+
+        let parentId = null;
+        if (parentSelect) {
+            const rawValue = parentSelect.value;
+            parentId = rawValue && rawValue !== 'none' ? rawValue : null;
+        } else if (state.modal && state.modal.parentId) {
+            parentId = state.modal.parentId;
+        }
+
+        return {
+            name: nameValue,
+            type: typeValue,
+            parentId,
+            elements: {
+                nameInput,
+            },
+        };
+    }
+
     root.dataset.dmHydrated = '1';
     root.classList.add('dm-root');
 
@@ -90,11 +220,105 @@ export function initDeveloperMap(options) {
         render();
     }
 
+    function openModal(modalType, rawPayload = null) {
+        const normalizedType = typeof modalType === 'string' ? modalType : null;
+        const normalizedPayload =
+            rawPayload === null || rawPayload === undefined || rawPayload === 'null' || rawPayload === 'undefined'
+                ? null
+                : String(rawPayload);
+
+        if (!normalizedType) {
+            setState({ modal: null });
+            return;
+        }
+
+        if (normalizedType === 'edit-map' && normalizedPayload) {
+            const result = findMapItem(normalizedPayload);
+            if (result) {
+                setState({
+                    modal: {
+                        type: normalizedType,
+                        payload: String(result.item.id),
+                        parentId: result.type === 'floor' && result.parent ? String(result.parent.id) : null,
+                        imagePreview: null,
+                        targetType: result.type,
+                    },
+                });
+                return;
+            }
+        }
+
+        if (normalizedType === 'add-map') {
+            setState({
+                modal: {
+                    type: normalizedType,
+                    payload: null,
+                    parentId: null,
+                    imagePreview: null,
+                    targetType: 'project',
+                },
+            });
+            return;
+        }
+
+        if (normalizedType === 'add-location') {
+            const parentId = normalizedPayload ?? (state.activeProjectId ? String(state.activeProjectId) : null);
+            setState({
+                modal: {
+                    type: normalizedType,
+                    payload: parentId,
+                    parentId,
+                    imagePreview: null,
+                    targetType: 'floor',
+                },
+            });
+            return;
+        }
+
+        if (normalizedType === 'delete-map' && normalizedPayload) {
+            const result = findMapItem(normalizedPayload);
+            if (result) {
+                setState({
+                    modal: {
+                        type: normalizedType,
+                        payload: String(result.item.id),
+                        itemName: result.item.name || 'túto položku',
+                    },
+                });
+                return;
+            }
+        }
+
+        setState({
+            modal: {
+                type: normalizedType,
+                payload: normalizedPayload,
+            },
+        });
+    }
+
     function render() {
         root.innerHTML = [renderAppShell(state, data), renderModal(state, data)].join('');
         attachEventHandlers();
         enhanceSelects();
         enhanceDrawModal();
+        restoreExpandedProjects();
+    }
+
+    function restoreExpandedProjects() {
+        const expandedIds = loadExpandedProjects();
+        if (!expandedIds || expandedIds.length === 0) return;
+
+        expandedIds.forEach((projectId) => {
+            const parentRow = root.querySelector(`[data-dm-parent-id="${projectId}"]`);
+            const toggleButton = root.querySelector(`[data-dm-toggle="${projectId}"]`);
+            
+            if (parentRow && toggleButton) {
+                parentRow.classList.add('is-expanded');
+                toggleButton.setAttribute('aria-expanded', 'true');
+                toggleButton.setAttribute('aria-label', 'Zabaliť poschodia');
+            }
+        });
     }
 
     function attachEventHandlers() {
@@ -155,10 +379,22 @@ export function initDeveloperMap(options) {
                     parentRow.classList.remove('is-expanded');
                     button.setAttribute('aria-expanded', 'false');
                     button.setAttribute('aria-label', 'Rozbaliť poschodia');
+                    
+                    // Remove from expanded list
+                    const expandedProjects = loadExpandedProjects();
+                    const updatedExpanded = expandedProjects.filter(id => id !== parentId);
+                    saveExpandedProjects(updatedExpanded);
                 } else {
                     parentRow.classList.add('is-expanded');
                     button.setAttribute('aria-expanded', 'true');
                     button.setAttribute('aria-label', 'Zabaliť poschodia');
+                    
+                    // Add to expanded list
+                    const expandedProjects = loadExpandedProjects();
+                    if (!expandedProjects.includes(parentId)) {
+                        expandedProjects.push(parentId);
+                        saveExpandedProjects(expandedProjects);
+                    }
                 }
             });
             
@@ -213,7 +449,7 @@ export function initDeveloperMap(options) {
                 event.preventDefault();
                 const modal = button.getAttribute('data-dm-modal');
                 const payload = button.getAttribute('data-dm-payload');
-                setState({ modal: modal ? { type: modal, payload } : null });
+                openModal(modal, payload);
             });
         });
 
@@ -245,6 +481,10 @@ export function initDeveloperMap(options) {
                     setState({ modal: null });
                 }
             });
+        }
+
+        if (state.modal && ['add-map', 'edit-map', 'add-location'].includes(state.modal.type)) {
+            bindMapModalEvents();
         }
 
         // Color picker sync
@@ -288,6 +528,14 @@ export function initDeveloperMap(options) {
             });
         });
 
+        // Confirm delete button
+        const confirmDeleteButton = root.querySelector('[data-dm-confirm-delete]');
+        if (confirmDeleteButton) {
+            confirmDeleteButton.addEventListener('click', () => {
+                handleDeleteMap();
+            });
+        }
+
         // Disable default browser tooltips
         const elementsWithTitle = root.querySelectorAll('[title]');
         elementsWithTitle.forEach((element) => {
@@ -306,6 +554,294 @@ export function initDeveloperMap(options) {
                 }
             });
         });
+    }
+
+    function bindMapModalEvents() {
+        const uploadInput = root.querySelector('#dm-modal-upload');
+        if (uploadInput) {
+            uploadInput.addEventListener('change', handleFileInputChange);
+        }
+
+        const parentSelect = root.querySelector('select[data-dm-field="parent"]');
+        if (parentSelect) {
+            parentSelect.addEventListener('change', (event) => {
+                const value = event.target.value;
+                const nextParentId = value === 'none' ? null : value;
+                const currentParentId = state.modal ? state.modal.parentId ?? null : null;
+                if ((currentParentId ?? null) !== (nextParentId ?? null)) {
+                    setState((prev) => {
+                        if (!prev.modal) {
+                            return {};
+                        }
+                        return {
+                            modal: {
+                                ...prev.modal,
+                                parentId: nextParentId,
+                            },
+                        };
+                    });
+                }
+            });
+        }
+
+        const saveButton = root.querySelector('[data-dm-modal-save]');
+        if (saveButton) {
+            saveButton.addEventListener('click', handleModalPrimaryAction);
+        }
+    }
+
+    function handleFileInputChange(event) {
+        const input = event.currentTarget;
+        const file = input.files && input.files[0];
+
+        if (!file) {
+            if (state.modal?.imagePreview) {
+                setState((prev) => {
+                    if (!prev.modal) {
+                        return {};
+                    }
+                    return {
+                        modal: {
+                            ...prev.modal,
+                            imagePreview: null,
+                        },
+                    };
+                });
+            }
+            return;
+        }
+
+        if (!file.type || !file.type.startsWith('image/')) {
+            console.warn('[Developer Map] Vyberte prosím súbor typu obrázok.');
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+            if (typeof reader.result === 'string') {
+                setState((prev) => {
+                    if (!prev.modal) {
+                        return {};
+                    }
+                    return {
+                        modal: {
+                            ...prev.modal,
+                            imagePreview: reader.result,
+                        },
+                    };
+                });
+            }
+        });
+        reader.addEventListener('error', () => {
+            console.warn('[Developer Map] Nepodarilo sa načítať obrázok.', reader.error);
+        });
+        reader.readAsDataURL(file);
+    }
+
+    function handleModalPrimaryAction() {
+        if (!state.modal) {
+            return;
+        }
+        if (state.modal.type === 'edit-map') {
+            handleSaveEditMap();
+        } else if (state.modal.type === 'add-map' || state.modal.type === 'add-location') {
+            handleSaveAddMap();
+        }
+    }
+
+    function handleSaveEditMap() {
+        const modalState = state.modal;
+        if (!modalState || !modalState.payload) {
+            return;
+        }
+
+        const result = findMapItem(modalState.payload);
+        if (!result) {
+            console.warn('[Developer Map] Nepodarilo sa nájsť mapu pre úpravu.', modalState.payload);
+            setState({ modal: null });
+            return;
+        }
+
+        const fields = collectModalFields();
+        if (!fields) {
+            setState({ modal: null });
+            return;
+        }
+
+        if (!fields.name) {
+            fields.elements.nameInput?.focus();
+            return;
+        }
+
+        const nextName = fields.name;
+        const nextType = fields.type;
+        const targetParentId = fields.parentId ? String(fields.parentId) : null;
+        const imageData = modalState.imagePreview;
+
+        if (result.type === 'project') {
+            result.item.name = nextName;
+            result.item.type = nextType;
+            result.item.badge = ensureBadge(nextName, result.item.badge);
+            if (imageData) {
+                result.item.image = imageData;
+            }
+            saveProjects(data.projects);
+            setState({ modal: null });
+            return;
+        }
+
+        const currentParentId = result.parent ? String(result.parent.id) : null;
+        result.item.name = nextName;
+        result.item.type = nextType;
+        if (!result.item.label || result.item.label === result.item.name) {
+            result.item.label = nextName;
+        }
+        if (imageData) {
+            result.item.image = imageData;
+        }
+
+        let newActiveProjectId = currentParentId ?? state.activeProjectId;
+
+        if ((targetParentId ?? null) !== (currentParentId ?? null)) {
+            if (result.parent && Array.isArray(result.parent.floors)) {
+                result.parent.floors = result.parent.floors.filter((floor) => floor.id !== result.item.id);
+            }
+
+            if (targetParentId) {
+                const newParent = data.projects.find((project) => String(project.id) === targetParentId);
+                if (newParent) {
+                    if (!Array.isArray(newParent.floors)) {
+                        newParent.floors = [];
+                    }
+                    const existsInTarget = newParent.floors.some((floor) => floor.id === result.item.id);
+                    if (!existsInTarget) {
+                        newParent.floors.push(result.item);
+                    }
+                    newActiveProjectId = String(newParent.id);
+                } else {
+                    console.warn('[Developer Map] Nenašla sa nová nadradená mapa s ID:', targetParentId);
+                    if (result.parent && Array.isArray(result.parent.floors)) {
+                        const existsInOriginal = result.parent.floors.some((floor) => floor.id === result.item.id);
+                        if (!existsInOriginal) {
+                            result.parent.floors.push(result.item);
+                        }
+                    }
+                }
+            } else {
+                const newProjectId = generateId('project');
+                const projectImage = imageData || result.item.image || MEDIA.building;
+                const badge = ensureBadge(nextName);
+                data.projects.push({
+                    id: newProjectId,
+                    name: nextName,
+                    type: nextType,
+                    badge,
+                    image: projectImage,
+                    floors: [result.item],
+                });
+                newActiveProjectId = newProjectId;
+            }
+        }
+
+        saveProjects(data.projects);
+        setState({ modal: null, activeProjectId: newActiveProjectId });
+    }
+
+    function handleSaveAddMap() {
+        const modalState = state.modal;
+        if (!modalState) {
+            return;
+        }
+
+        const fields = collectModalFields();
+        if (!fields) {
+            setState({ modal: null });
+            return;
+        }
+
+        if (!fields.name) {
+            fields.elements.nameInput?.focus();
+            return;
+        }
+
+        const { name, type, parentId } = fields;
+        const imageData = modalState.imagePreview;
+        let newActiveProjectId = state.activeProjectId;
+
+        if (!parentId) {
+            const newProjectId = generateId('project');
+            const badge = ensureBadge(name);
+            data.projects.push({
+                id: newProjectId,
+                name,
+                type,
+                badge,
+                image: imageData || MEDIA.building,
+                floors: [],
+            });
+            newActiveProjectId = newProjectId;
+        } else {
+            const parentProject = data.projects.find((project) => String(project.id) === String(parentId));
+            if (!parentProject) {
+                console.warn('[Developer Map] Nenašla sa nadradená mapa pre pridanie lokality:', parentId);
+                return;
+            }
+            if (!Array.isArray(parentProject.floors)) {
+                parentProject.floors = [];
+            }
+            const newFloorId = generateId('floor');
+            parentProject.floors.push({
+                id: newFloorId,
+                name,
+                type,
+                label: name,
+                image: imageData || MEDIA.floor,
+            });
+            newActiveProjectId = String(parentProject.id);
+        }
+
+        saveProjects(data.projects);
+        setState({ modal: null, activeProjectId: newActiveProjectId });
+    }
+
+    function handleDeleteMap() {
+        const modalState = state.modal;
+        if (!modalState || !modalState.payload) {
+            setState({ modal: null });
+            return;
+        }
+
+        const result = findMapItem(modalState.payload);
+        if (!result) {
+            console.warn('[Developer Map] Nepodarilo sa nájsť položku pre vymazanie:', modalState.payload);
+            setState({ modal: null });
+            return;
+        }
+
+        if (result.type === 'project') {
+            // Vymazanie celého projektu
+            const projectIndex = data.projects.findIndex((p) => p.id === result.item.id);
+            if (projectIndex !== -1) {
+                data.projects.splice(projectIndex, 1);
+                
+                // Ak bol vymazaný aktívny projekt, nastav nový aktívny projekt
+                let newActiveProjectId = state.activeProjectId;
+                if (state.activeProjectId === result.item.id) {
+                    newActiveProjectId = data.projects[0]?.id ?? null;
+                }
+                
+                saveProjects(data.projects);
+                setState({ modal: null, activeProjectId: newActiveProjectId, view: APP_VIEWS.MAPS, mapSection: MAP_SECTIONS.LIST });
+            }
+        } else if (result.type === 'floor' && result.parent) {
+            // Vymazanie poschodia z projektu
+            if (Array.isArray(result.parent.floors)) {
+                result.parent.floors = result.parent.floors.filter((floor) => floor.id !== result.item.id);
+                saveProjects(data.projects);
+                setState({ modal: null });
+            }
+        }
     }
 
     function enhanceSelects() {
