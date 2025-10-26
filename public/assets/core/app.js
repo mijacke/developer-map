@@ -445,7 +445,7 @@ export function initDeveloperMap(options) {
                 modal: {
                     type: normalizedType,
                     payload: typeItem ? String(typeItem.id) : normalizedPayload,
-                    itemName: typeItem?.label ?? typeLabelHint || 'vybraný typ',
+                    itemName: (typeItem?.label ?? typeLabelHint) || 'vybraný typ',
                 },
             });
             return;
