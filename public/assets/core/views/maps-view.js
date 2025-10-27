@@ -171,7 +171,7 @@ function renderFloorRow(floor, shortcode) {
                     'data-dm-payload': floor.id,
                 })}
                 ${renderActionButton('edit', `Upraviť lokalitu ${floor.name}`, {
-                    'data-dm-modal': 'edit-map',
+                    'data-dm-modal': 'edit-location',
                     'data-dm-payload': floor.id,
                 })}
                 ${renderActionButton('delete', `Zmazať lokalitu ${floor.name}`, {
@@ -190,7 +190,6 @@ function renderFloorRow(floor, shortcode) {
         </div>
     `;
 }
-
 
 
 

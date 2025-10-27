@@ -72,6 +72,7 @@
 .dm-board__row--parent.is-expanded + .dm-board__children {
     grid-template-rows: 1fr;
     margin-bottom: 20px;
+    overflow: visible;
 }
 
 .dm-board__children-inner {
@@ -87,6 +88,7 @@
 .dm-board__row--parent.is-expanded + .dm-board__children .dm-board__children-inner {
     opacity: 1;
     padding-top: 20px;
+    overflow: visible;
 }
 
 /* Styling pre child riadky - bez posúvania obsahu */

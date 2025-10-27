@@ -125,9 +125,9 @@
 }
 
 .dm-board__thumb--floor {
-    width: clamp(50px, 7vw, 76px);
-    height: clamp(50px, 7vw, 76px);
-    border-radius: 16px;
+    width: clamp(60px, 8vw, 92px);
+    height: clamp(60px, 8vw, 92px);
+    border-radius: 18px;
 }
 
 .dm-board__thumb--floor.dm-board__thumb--clickable:hover {
@@ -143,19 +143,13 @@
 }
 
 .dm-board__thumb--floor img {
-    object-fit: contain;
-    background: #ffffff;
-    padding: 8px;
+    object-fit: cover;
+    background: transparent;
+    padding: 0;
 }
 
 .dm-board__thumb-floor-highlight {
-    position: absolute;
-    inset: 14px;
-    border-radius: 12px;
-    border: 2px solid rgba(71, 200, 116, 0.9);
-    background: linear-gradient(135deg, rgba(71, 200, 116, 0.28), rgba(71, 200, 116, 0));
-    pointer-events: none;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    display: none;
 }
 
 .dm-board__label {

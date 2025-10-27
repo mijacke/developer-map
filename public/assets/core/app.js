@@ -672,6 +672,19 @@ export function initDeveloperMap(options) {
         if (normalizedType === 'edit-map' && normalizedPayload) {
             const result = findMapItem(normalizedPayload);
             if (result) {
+                if (result.type === 'floor') {
+                    setState({
+                        modal: {
+                            type: 'edit-location',
+                            payload: String(result.item.id),
+                            parentId: result.parent ? String(result.parent.id) : null,
+                            targetType: 'floor',
+                            statusId: sanitiseStatusId(result.item.statusId || result.item.statusKey || ''),
+                            status: String(result.item.status ?? result.item.statusLabel ?? '').trim(),
+                        },
+                    });
+                    return;
+                }
                 setState({
                     modal: {
                         type: normalizedType,
