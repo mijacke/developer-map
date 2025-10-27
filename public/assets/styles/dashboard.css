@@ -134,39 +134,62 @@
 .dm-dashboard__add {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    border: none;
-    border-radius: 14px;
-    padding: 14px 22px;
-    font-weight: 600;
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+    border: 1px solid var(--dm-button-color);
+    border-radius: 16px;
+    padding: 10px 18px;
+    font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
+    font-weight: 500;
     font-size: 15px;
-    color: #fff;
-    background: linear-gradient(135deg, #7c3aed, #5b21b6);
-    box-shadow: 0 16px 36px rgba(124, 58, 237, 0.35);
+    color: #000 !important;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: var(--dm-button-color) !important;
+    box-shadow: 0 4px 12px rgba(22, 22, 29, 0.12);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
 }
 
 .dm-dashboard__add:hover {
     transform: translateY(-1px);
-    box-shadow: 0 18px 40px rgba(124, 58, 237, 0.4);
+    opacity: 0.9;
+    background: var(--dm-button-color) !important;
+    color: #000 !important;
+    box-shadow: 0 6px 16px rgba(22, 22, 29, 0.15);
 }
 
 .dm-dashboard__add:focus {
-    outline: 3px solid rgba(124, 58, 237, 0.35);
+    outline: 2px solid var(--dm-button-color);
     outline-offset: 2px;
+    background: var(--dm-button-color) !important;
+    color: #000 !important;
+}
+
+.dm-dashboard__add:active {
+    background: var(--dm-button-color) !important;
+    color: #000 !important;
+}
+
+.dm-dashboard__add-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    
 }
 
 .dm-dashboard__add--ghost {
-    background: rgba(124, 58, 237, 0.08);
-    color: #5b21b6;
+    background: transparent;
+    color: var(--dm-button-color);
     box-shadow: none;
-    border: 1px dashed rgba(124, 58, 237, 0.3);
+    border: 1px dashed var(--dm-button-color);
+    opacity: 0.7;
 }
 
 .dm-dashboard__add--ghost:hover {
     transform: none;
-    background: rgba(124, 58, 237, 0.12);
+    background: transparent;
+    opacity: 1;
+    border-style: solid;
 }
 
 .dm-dashboard__table-wrapper {
