@@ -79,11 +79,16 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
     const parentSelectAttrs = canChangeParent ? '' : ' disabled aria-disabled="true"';
 
     const resolvedParentValue = (() => {
-        if (modalState && Object.prototype.hasOwnProperty.call(modalState, 'parentId')) {
-            if (modalState.parentId === null || modalState.parentId === undefined || modalState.parentId === '') {
-                return 'none';
+        const hasParentProp = modalState && Object.prototype.hasOwnProperty.call(modalState, 'parentId');
+        if (hasParentProp) {
+            const stateParent = modalState.parentId;
+            if (stateParent === null || stateParent === undefined || stateParent === '') {
+                return modalState?.type === 'add-map' ? '' : 'none';
             }
-            return String(modalState.parentId);
+            return String(stateParent);
+        }
+        if (!isEdit) {
+            return '';
         }
         if (editType === 'floor' && editParent) {
             return String(editParent.id);
