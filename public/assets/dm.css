@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-27 02:46:09 */
+/* Generated: 2025-10-27 03:21:01 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -1476,6 +1476,21 @@
 
 .dm-dashboard__back:active {
     color: var(--dm-heading-color);
+}
+
+.dm-dashboard__project-image {
+    width: 100%;
+    margin-bottom: 24px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(82, 51, 143, 0.08);
+    border: 1px solid rgba(85, 60, 154, 0.08);
+}
+
+.dm-dashboard__project-image img {
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
 .dm-dashboard__card {

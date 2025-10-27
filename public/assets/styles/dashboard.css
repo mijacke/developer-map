@@ -32,6 +32,21 @@
     color: var(--dm-heading-color);
 }
 
+.dm-dashboard__project-image {
+    width: 100%;
+    margin-bottom: 24px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(82, 51, 143, 0.08);
+    border: 1px solid rgba(85, 60, 154, 0.08);
+}
+
+.dm-dashboard__project-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
 .dm-dashboard__card {
     background: var(--dm-surface, #fff);
     border-radius: 28px;

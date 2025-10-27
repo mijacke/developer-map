@@ -402,8 +402,19 @@ export function initDeveloperMap(options) {
     // Initialize projects from localStorage
     const savedProjects = loadProjects();
     if (savedProjects) {
-        data.projects = savedProjects;
-        console.info('[Developer Map] Loaded projects from localStorage', savedProjects.length, 'projects');
+        // Check if projects have images (for backward compatibility)
+        const hasImages = savedProjects.some(p => p.image || p.imageUrl);
+        if (!hasImages) {
+            console.info('[Developer Map] Saved projects missing images, refreshing from demo data');
+            // Clear localStorage and use fresh demo data
+            localStorage.removeItem('dm-projects');
+            // data.projects already contains fresh demo data from createDemoData()
+            // Save the fresh data to localStorage
+            saveProjects(data.projects);
+        } else {
+            data.projects = savedProjects;
+            console.info('[Developer Map] Loaded projects from localStorage', savedProjects.length, 'projects');
+        }
     }
     const repairedProjects = ensureFloorStatusReferences();
     if (repairedProjects) {

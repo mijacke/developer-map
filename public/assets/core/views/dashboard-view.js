@@ -82,6 +82,12 @@ export function renderDashboardView(state, data) {
     const project = data.projects.find((item) => item.id === state.activeProjectId) ?? data.projects[0];
     const floors = project?.floors ?? [];
     const statuses = data.statuses ?? [];
+    const projectImageUrl = project?.image ?? project?.imageUrl ?? '';
+    
+    // Debug: log project image
+    console.log('[Dashboard IMAGE] Project:', project);
+    console.log('[Dashboard IMAGE] Project image URL:', projectImageUrl);
+    console.log('[Dashboard IMAGE] Has image?', !!projectImageUrl);
     
     // Debug: log statuses
     console.log('[Dashboard] Statuses:', statuses);
@@ -152,6 +158,11 @@ export function renderDashboardView(state, data) {
                         <h1>Zoznam lokalít</h1>
                         <p>${escapeHtml(project?.name ?? '')}</p>
                     </div>
+                    ${projectImageUrl ? `
+                    <div class="dm-dashboard__project-image">
+                        <img src="${escapeHtml(projectImageUrl)}" alt="${escapeHtml(project?.name ?? 'Mapa projektu')}" />
+                    </div>
+                    ` : ''}
                     <div class="dm-dashboard__toolbar" role="search">
                         <label class="dm-dashboard__search">
                             <span class="dm-dashboard__search-icon" aria-hidden="true">${TOOLBAR_ICONS.search}</span>
