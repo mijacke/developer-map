@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-27 01:01:34 */
+/* Generated: 2025-10-27 02:14:40 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -836,6 +836,7 @@
     margin-bottom: 0;
     margin-left: 72px; /* Odsadenie detí od rodiča */
     padding-right: 72px; /* Rovnaký padding ako parent pre zarovnanie stĺpcov */
+    border-left: 4px solid #c7d2fe; /* Vizuálna indikácia hierarchie bez posúvania obsahu */
 }
 
 .dm-board__row--child:last-child {
@@ -1451,7 +1452,30 @@
 
 .dm-dashboard__back {
     align-self: flex-start;
+    border: none;
+    background: transparent;
+    font-weight: 600;
+    font-size: 15px;
     color: var(--dm-content-text-color);
+    cursor: pointer;
+    padding: 8px 0;
+    transition: color 0.2s ease;
+    text-decoration: none;
+}
+
+.dm-dashboard__back:hover {
+    color: var(--dm-button-color);
+    background: transparent;
+}
+
+.dm-dashboard__back:focus {
+    outline: 2px solid var(--dm-button-color);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.dm-dashboard__back:active {
+    color: var(--dm-heading-color);
 }
 
 .dm-dashboard__card {
@@ -2490,6 +2514,14 @@
     color: #2196f3 !important;
 }
 
+.dm-modal__form .dm-field--select-has-value .dm-field__label {
+    top: 0;
+    transform: translateY(-50%) scale(0.8);
+    background-color: var(--dm-surface);
+    padding: 0 .2em;
+    color: #2196f3;
+}
+
 .dm-modal__form select.dm-field__input {
     appearance: none;
     -webkit-appearance: none;
@@ -2678,6 +2710,7 @@
     transform: translateY(-6px);
     transition: opacity 0.18s ease, transform 0.18s ease;
     z-index: 80;
+    overflow: hidden;
 }
 
 .dm-select--open .dm-select__dropdown {
@@ -2688,13 +2721,39 @@
 
 .dm-select__list {
     margin: 0;
-    padding: 10px;
+    padding: 10px 6px 10px 10px;
     list-style: none;
     display: flex;
     flex-direction: column;
     gap: 4px;
     max-height: 224px;
     overflow-y: auto;
+    border-bottom-left-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+}
+
+.dm-select__list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dm-select__list::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 6px;
+    border-radius: 999px;
+}
+
+.dm-select__list::-webkit-scrollbar-thumb {
+    background: rgba(26, 115, 232, 0.25);
+    border-radius: 999px;
+}
+
+.dm-select__list::-webkit-scrollbar-thumb:hover {
+    background: rgba(26, 115, 232, 0.4);
+}
+
+.dm-select__list {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(26, 115, 232, 0.4) transparent;
 }
 
 .dm-select__option {

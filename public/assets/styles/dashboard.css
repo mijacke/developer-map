@@ -6,7 +6,30 @@
 
 .dm-dashboard__back {
     align-self: flex-start;
+    border: none;
+    background: transparent;
+    font-weight: 600;
+    font-size: 15px;
     color: var(--dm-content-text-color);
+    cursor: pointer;
+    padding: 8px 0;
+    transition: color 0.2s ease;
+    text-decoration: none;
+}
+
+.dm-dashboard__back:hover {
+    color: var(--dm-button-color);
+    background: transparent;
+}
+
+.dm-dashboard__back:focus {
+    outline: 2px solid var(--dm-button-color);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.dm-dashboard__back:active {
+    color: var(--dm-heading-color);
 }
 
 .dm-dashboard__card {
