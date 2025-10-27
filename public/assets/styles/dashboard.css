@@ -152,12 +152,14 @@
     border: 1px solid #d2d2dc;
     padding: 24px;
     box-shadow: 0 10px 28px rgba(22, 22, 29, 0.06);
+    overflow: visible;
 }
 
 .dm-dashboard__table {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    overflow: visible;
 }
 
 .dm-dashboard__table thead {
@@ -193,6 +195,7 @@
     display: flex;
     flex-direction: column;
     gap: 0;
+    overflow: visible;
 }
 
 .dm-dashboard__table tbody tr {
@@ -232,6 +235,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     background: transparent !important;
+    position: relative;
+    z-index: 1;
+}
+
+.dm-dashboard__table td.dm-dashboard__cell--actions {
+    overflow: visible !important;
 }
 
 .dm-dashboard__table td:hover {
@@ -341,15 +350,19 @@
 }
 
 .dm-dashboard__cell--actions {
+    position: relative !important;
+    z-index: 1000 !important;
     display: flex;
     justify-content: flex-end;
     align-items: center;
     gap: clamp(8px, 1.2vw, 14px);
     min-width: 0;
-    overflow: visible;
+    overflow: visible !important;
 }
 
 .dm-dashboard__cell--actions .dm-icon-button {
+    position: relative !important;
+    z-index: 1001 !important;
     flex-shrink: 0;
     width: 36px !important;
     height: 36px !important;

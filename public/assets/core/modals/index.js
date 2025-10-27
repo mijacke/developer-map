@@ -22,7 +22,11 @@ export function renderModal(state, data) {
         case 'delete-type':
             return renderConfirmModal(state);
         case 'add-status':
-            return renderSimpleModal('Pridať stav', renderSimpleForm('Nový stav'));
+            return renderStatusModal('Pridať stav', 'Pridať stav', data, null, state.modal);
+        case 'edit-status':
+            return renderStatusModal('Upraviť stav', 'Uložiť zmeny', data, payload, state.modal);
+        case 'delete-status':
+            return renderConfirmModal(state);
         case 'add-blueprint':
             return renderSimpleModal('Pridať pôdorys', renderSimpleForm('Názov pôdorysu'));
         case 'edit-color':
@@ -313,9 +317,78 @@ function renderTypeModal(title, cta, data, itemId = null, modalState = null) {
     `;
 }
 
+function renderStatusModal(title, cta, data, itemId = null, modalState = null) {
+    const saveIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>';
+    const plusIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus-icon lucide-circle-plus"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>';
+    const statuses = Array.isArray(data.statuses) ? data.statuses : [];
+    const targetId = itemId || modalState?.payload || '';
+    const editItem = targetId ? statuses.find((status) => String(status.id) === String(targetId)) ?? null : null;
+    const statusId = editItem?.id ?? targetId ?? '';
+
+    const defaultColor = '#22c55e';
+    const nameValue = modalState?.name ?? modalState?.itemName ?? editItem?.label ?? '';
+    const colorValue = modalState?.color ?? editItem?.color ?? defaultColor;
+    const hexValue = typeof colorValue === 'string' && colorValue.startsWith('#') ? colorValue : `#${String(colorValue || '').replace(/^#+/, '')}`;
+
+    return `
+        <div class="dm-modal-overlay">
+            <div class="dm-modal dm-modal--narrow">
+                <header class="dm-modal__header">
+                    <h2>${title}</h2>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                </header>
+                <div class="dm-modal__body">
+                    <form class="dm-form" data-dm-status-form${statusId ? ` data-dm-status-id="${escapeHtml(statusId)}"` : ''}>
+                        <div class="dm-field">
+                            <input 
+                                required 
+                                type="text" 
+                                autocomplete="off" 
+                                class="dm-field__input"
+                                value="${escapeHtml(nameValue)}"
+                                data-dm-status-name
+                            />
+                            <label class="dm-field__label">Názov stavu<span class="dm-field__required">*</span></label>
+                        </div>
+                        <div class="dm-field">
+                            <input 
+                                type="color" 
+                                value="${escapeHtml(hexValue)}" 
+                                autocomplete="off"
+                                class="dm-field__input dm-field__input--color"
+                                data-dm-status-color
+                                required
+                            />
+                            <label class="dm-field__label">Farba</label>
+                        </div>
+                        <div class="dm-field">
+                            <input 
+                                type="text" 
+                                value="${escapeHtml(hexValue)}"
+                                autocomplete="off"
+                                class="dm-field__input"
+                                data-dm-status-hex
+                                required
+                            />
+                            <label class="dm-field__label">HEX kód<span class="dm-field__required">*</span></label>
+                        </div>
+                    </form>
+                </div>
+                <footer class="dm-modal__actions dm-modal__actions--split">
+                    <button class="dm-button dm-button--outline" data-dm-close-modal>Zrušiť</button>
+                    <button class="dm-button dm-button--dark" data-dm-modal-save>
+                        <span class="dm-button__icon" aria-hidden="true">${editItem ? saveIcon : plusIcon}</span>
+                        ${cta}
+                    </button>
+                </footer>
+            </div>
+        </div>
+    `;
+}
+
 function renderConfirmModal(state) {
     const itemName = state?.modal?.itemName || 'túto položku';
-    const deleteKind = state?.modal?.type === 'delete-type' ? 'type' : state?.modal?.type === 'delete-map' ? 'map' : '';
+    const deleteKind = state?.modal?.type === 'delete-type' ? 'type' : state?.modal?.type === 'delete-status' ? 'status' : state?.modal?.type === 'delete-map' ? 'map' : '';
     const deleteTarget = state?.modal?.payload ?? '';
     const confirmAttributes = deleteKind
         ? ` data-dm-delete-kind="${escapeHtml(deleteKind)}" data-dm-delete-target="${escapeHtml(String(deleteTarget))}"`

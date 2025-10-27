@@ -129,6 +129,28 @@ export function initDeveloperMap(options) {
         }
     }
 
+    // Load statuses from localStorage
+    function loadStatuses() {
+        try {
+            const stored = localStorage.getItem('dm-statuses');
+            if (stored) {
+                return JSON.parse(stored);
+            }
+        } catch (err) {
+            console.warn('[Developer Map] Failed to load statuses from localStorage', err);
+        }
+        return null;
+    }
+
+    // Save statuses to localStorage
+    function saveStatuses(statuses) {
+        try {
+            localStorage.setItem('dm-statuses', JSON.stringify(statuses));
+        } catch (err) {
+            console.warn('[Developer Map] Failed to save statuses to localStorage', err);
+        }
+    }
+
     function normaliseTypes() {
         if (!Array.isArray(data.types)) {
             data.types = [];
@@ -206,11 +228,186 @@ export function initDeveloperMap(options) {
     }
     normaliseTypes();
 
+    function sanitiseStatusId(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        const str = String(value).trim();
+        if (!str || str === 'undefined' || str === 'null') {
+            return '';
+        }
+        return str;
+    }
+
+    function sanitiseStatusLabel(value) {
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            return trimmed || 'Stav';
+        }
+        if (value === null || value === undefined) {
+            return 'Stav';
+        }
+        const str = String(value).trim();
+        return str || 'Stav';
+    }
+
+    function sanitiseStatusColor(value) {
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (/^#[0-9A-Fa-f]{6}$/.test(trimmed)) {
+                return trimmed.toUpperCase();
+            }
+            if (/^[0-9A-Fa-f]{6}$/.test(trimmed)) {
+                return `#${trimmed.toUpperCase()}`;
+            }
+            return '#22C55E';
+        }
+        if (value === null || value === undefined) {
+            return '#22C55E';
+        }
+        const str = String(value).trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(str)) {
+            return str.toUpperCase();
+        }
+        if (/^[0-9A-Fa-f]{6}$/.test(str)) {
+            return `#${str.toUpperCase()}`;
+        }
+        return '#22C55E';
+    }
+
+    function normaliseStatuses() {
+        if (!Array.isArray(data.statuses)) {
+            data.statuses = [];
+            return;
+        }
+
+        const usedIds = new Set();
+        let changed = false;
+
+        const pickId = (preferred, fallback) => {
+            const preferredId = sanitiseStatusId(preferred);
+            const fallbackId = sanitiseStatusId(fallback);
+            let candidate = preferredId || fallbackId;
+            if (!candidate) {
+                candidate = generateId('status');
+            }
+            while (!candidate || usedIds.has(candidate)) {
+                candidate = generateId('status');
+            }
+            if (!preferredId || candidate !== preferredId) {
+                changed = true;
+            }
+            usedIds.add(candidate);
+            return candidate;
+        };
+
+        data.statuses = data.statuses.map((status, index) => {
+            const source = status && typeof status === 'object' ? status : { label: status };
+            const nextId = pickId(source.id, `status-${index + 1}`);
+            const nextLabel = sanitiseStatusLabel(source.label);
+            const nextColor = sanitiseStatusColor(source.color);
+
+            if (
+                String(source.id ?? '') !== nextId ||
+                source.label !== nextLabel ||
+                source.color !== nextColor ||
+                source !== status
+            ) {
+                changed = true;
+            }
+
+            return {
+                ...source,
+                id: nextId,
+                label: nextLabel,
+                color: nextColor,
+            };
+        });
+
+        if (changed) {
+            saveStatuses(data.statuses);
+        }
+    }
+
+    function ensureFloorStatusReferences() {
+        if (!Array.isArray(data.projects) || data.projects.length === 0) {
+            return false;
+        }
+        if (!Array.isArray(data.statuses) || data.statuses.length === 0) {
+            return false;
+        }
+
+        const validIds = new Set(data.statuses.map((status) => sanitiseStatusId(status?.id)));
+        const labelLookup = new Map();
+        data.statuses.forEach((status) => {
+            if (!status || typeof status !== 'object') {
+                return;
+            }
+            const labelKey =
+                typeof status.label === 'string' ? status.label.trim().toLowerCase() : '';
+            const statusId = sanitiseStatusId(status.id);
+            if (labelKey && statusId && !labelLookup.has(labelKey)) {
+                labelLookup.set(labelKey, statusId);
+            }
+        });
+        const fallbackId = sanitiseStatusId(data.statuses[0]?.id);
+
+        let updated = false;
+
+        data.projects.forEach((project) => {
+            if (!project || typeof project !== 'object' || !Array.isArray(project.floors)) {
+                return;
+            }
+            project.floors.forEach((floor) => {
+                if (!floor || typeof floor !== 'object') {
+                    return;
+                }
+                const currentId = sanitiseStatusId(floor.statusId);
+                let nextId = currentId;
+
+                if (nextId && !validIds.has(nextId)) {
+                    const label =
+                        (typeof floor.statusLabel === 'string' && floor.statusLabel.trim()) ||
+                        (typeof floor.status === 'string' && floor.status.trim()) ||
+                        '';
+                    if (label) {
+                        const match = labelLookup.get(label.toLowerCase());
+                        nextId = match || '';
+                    } else {
+                        nextId = '';
+                    }
+                }
+
+                if (!nextId && fallbackId) {
+                    nextId = fallbackId;
+                }
+
+                if (nextId !== currentId || String(floor.statusId ?? '') !== nextId) {
+                    floor.statusId = nextId;
+                    updated = true;
+                }
+            });
+        });
+
+        return updated;
+    }
+
+    // Initialize statuses
+    const savedStatuses = loadStatuses();
+    if (savedStatuses) {
+        data.statuses = savedStatuses;
+    }
+    normaliseStatuses();
+
     // Initialize projects from localStorage
     const savedProjects = loadProjects();
     if (savedProjects) {
         data.projects = savedProjects;
         console.info('[Developer Map] Loaded projects from localStorage', savedProjects.length, 'projects');
+    }
+    const repairedProjects = ensureFloorStatusReferences();
+    if (repairedProjects) {
+        saveProjects(data.projects);
     }
 
     // Clear expanded projects on page load (fresh start)
@@ -266,6 +463,44 @@ export function initDeveloperMap(options) {
 
     function collectModalFields() {
         const form = root.querySelector('.dm-modal__form');
+        const typeForm = root.querySelector('[data-dm-type-form]');
+        const statusForm = root.querySelector('[data-dm-status-form]');
+        
+        // Handle status form
+        if (statusForm) {
+            const statusId = statusForm.getAttribute('data-dm-status-id') || '';
+            const nameInput = statusForm.querySelector('[data-dm-status-name]');
+            const colorInput = statusForm.querySelector('[data-dm-status-color]');
+            const hexInput = statusForm.querySelector('[data-dm-status-hex]');
+            
+            return {
+                elements: {
+                    statusIdInput: { value: statusId },
+                    nameInput,
+                    colorInput,
+                    hexInput,
+                },
+            };
+        }
+        
+        // Handle type form
+        if (typeForm) {
+            const typeId = typeForm.getAttribute('data-dm-type-id') || '';
+            const nameInput = typeForm.querySelector('[data-dm-type-name]');
+            const colorInput = typeForm.querySelector('[data-dm-type-color]');
+            const hexInput = typeForm.querySelector('[data-dm-type-hex]');
+            
+            return {
+                elements: {
+                    typeIdInput: { value: typeId },
+                    nameInput,
+                    colorInput,
+                    hexInput,
+                },
+            };
+        }
+        
+        // Handle map form
         if (!form) {
             return null;
         }
@@ -446,6 +681,53 @@ export function initDeveloperMap(options) {
                     type: normalizedType,
                     payload: typeItem ? String(typeItem.id) : normalizedPayload,
                     itemName: (typeItem?.label ?? typeLabelHint) || 'vybraný typ',
+                },
+            });
+            return;
+        }
+
+        if (normalizedType === 'edit-status') {
+            if (!normalizedPayload) {
+                console.warn('[Developer Map] Missing status id for edit-status modal. Aborting.');
+                return;
+            }
+
+            const statusItem = data.statuses.find((status) => String(status.id) === normalizedPayload);
+            if (statusItem) {
+                setState({
+                    modal: {
+                        type: normalizedType,
+                        payload: String(statusItem.id),
+                        itemName: statusItem.label,
+                    },
+                });
+                return;
+            }
+            console.warn('[Developer Map] Status not found in openModal, but continuing with payload:', normalizedPayload);
+        }
+
+        if (normalizedType === 'add-status') {
+            setState({
+                modal: {
+                    type: normalizedType,
+                    payload: null,
+                },
+            });
+            return;
+        }
+
+        if (normalizedType === 'delete-status') {
+            if (!normalizedPayload) {
+                console.warn('[Developer Map] Missing status id for delete-status modal. Aborting.');
+                return;
+            }
+
+            const statusItem = data.statuses.find((status) => String(status.id) === normalizedPayload);
+            setState({
+                modal: {
+                    type: normalizedType,
+                    payload: statusItem ? String(statusItem.id) : normalizedPayload,
+                    itemName: statusItem?.label || 'vybraný stav',
                 },
             });
             return;
@@ -658,6 +940,9 @@ export function initDeveloperMap(options) {
         if (state.modal && ['add-type', 'edit-type'].includes(state.modal.type)) {
             bindTypeModalEvents();
         }
+        if (state.modal && ['add-status', 'edit-status'].includes(state.modal.type)) {
+            bindStatusModalEvents();
+        }
 
         // Color picker sync
         const colorInputs = root.querySelectorAll('[data-dm-color-input]');
@@ -834,6 +1119,41 @@ export function initDeveloperMap(options) {
         }
     }
 
+    function bindStatusModalEvents() {
+        const form = root.querySelector('[data-dm-status-form]');
+        if (!form) {
+            return;
+        }
+
+        const colorInput = form.querySelector('[data-dm-status-color]');
+        const hexInput = form.querySelector('[data-dm-status-hex]');
+
+        if (colorInput && hexInput) {
+            colorInput.addEventListener('input', (event) => {
+                const value = String(event.target.value ?? '').toUpperCase();
+                hexInput.value = value;
+            });
+
+            hexInput.addEventListener('input', (event) => {
+                const raw = String(event.target.value ?? '').trim();
+                const normalised = raw.startsWith('#') ? raw : `#${raw}`;
+                if (/^#[0-9A-Fa-f]{6}$/.test(normalised)) {
+                    const finalValue = normalised.toUpperCase();
+                    hexInput.value = finalValue;
+                    colorInput.value = finalValue;
+                }
+            });
+        }
+
+        const saveButton = form.querySelector('[data-dm-modal-save]');
+        if (saveButton) {
+            saveButton.addEventListener('click', handleModalPrimaryAction);
+        } else {
+            const genericSave = root.querySelector('[data-dm-modal-save]');
+            genericSave?.addEventListener('click', handleModalPrimaryAction);
+        }
+    }
+
     function handleModalPrimaryAction() {
         if (!state.modal) {
             return;
@@ -844,6 +1164,8 @@ export function initDeveloperMap(options) {
             handleSaveAddMap();
         } else if (state.modal.type === 'add-type' || state.modal.type === 'edit-type') {
             handleSaveTypeModal();
+        } else if (state.modal.type === 'add-status' || state.modal.type === 'edit-status') {
+            handleSaveStatusModal();
         }
     }
 
@@ -1002,6 +1324,7 @@ export function initDeveloperMap(options) {
                 type,
                 label: name,
                 image: imageData || MEDIA.floor,
+                statusId: sanitiseStatusId(data.statuses[0]?.id),
             });
             newActiveProjectId = String(parentProject.id);
         }
@@ -1106,6 +1429,90 @@ export function initDeveloperMap(options) {
         setState({ modal: null });
     }
 
+    function handleSaveStatusModal() {
+        const modalState = state.modal;
+        if (!modalState) {
+            return;
+        }
+
+        const fields = collectModalFields();
+        if (!fields || !fields.elements) {
+            setState({ modal: null });
+            return;
+        }
+
+        const nameInput = fields.elements.nameInput;
+        const colorInput = fields.elements.colorInput;
+        const hexInput = fields.elements.hexInput;
+        const formStatusId = fields.elements.statusIdInput?.value;
+
+        const nameValue = (nameInput?.value || '').trim();
+        if (!nameValue) {
+            nameInput?.focus();
+            return;
+        }
+
+        let colorValue = (colorInput?.value || '#7C3AED').trim();
+        if (hexInput) {
+            const hexValue = (hexInput.value || '').trim();
+            if (hexValue && /^#?[0-9A-Fa-f]{6}$/.test(hexValue)) {
+                colorValue = hexValue.startsWith('#') ? hexValue : `#${hexValue}`;
+            }
+        }
+
+        const normalisedHex = /^#[0-9A-Fa-f]{6}$/.test(colorValue) ? colorValue : '#7C3AED';
+        if (colorValue !== normalisedHex) {
+            if (hexInput) {
+                hexInput.focus();
+                hexInput.select?.();
+            }
+            return;
+        }
+
+        if (colorInput) {
+            colorInput.value = normalisedHex;
+        }
+        if (hexInput) {
+            hexInput.value = normalisedHex;
+        }
+
+        const targetStatusId = modalState.payload || formStatusId || '';
+        const isEditingExisting = (modalState.type === 'edit-status' || Boolean(formStatusId)) && Boolean(targetStatusId);
+
+        if (isEditingExisting) {
+            const statusIndex = data.statuses.findIndex((item) => String(item.id) === String(targetStatusId));
+            if (statusIndex === -1) {
+                console.warn('[Developer Map] Status not found for editing:', targetStatusId);
+                setState({ modal: null });
+                return;
+            }
+
+            const currentItem = data.statuses[statusIndex];
+            const updatedItem = {
+                ...currentItem,
+                id: currentItem.id,
+                label: nameValue,
+                color: normalisedHex,
+            };
+            data.statuses.splice(statusIndex, 1, updatedItem);
+
+            saveStatuses(data.statuses);
+            saveProjects(data.projects);
+            setState({ modal: null });
+            return;
+        }
+
+        const newStatusId = generateId('status');
+        data.statuses.push({
+            id: newStatusId,
+            label: nameValue,
+            color: normalisedHex,
+        });
+
+        saveStatuses(data.statuses);
+        setState({ modal: null });
+    }
+
     function handleConfirmDelete(event) {
         if (event) {
             event.preventDefault();
@@ -1113,13 +1520,15 @@ export function initDeveloperMap(options) {
         const button = event?.currentTarget ?? null;
         const kindAttr = button?.getAttribute('data-dm-delete-kind') ?? '';
         const targetAttr = button?.getAttribute('data-dm-delete-target') ?? '';
-        const kind = kindAttr || (state.modal?.type === 'delete-type' ? 'type' : state.modal?.type === 'delete-map' ? 'map' : '');
+        const kind = kindAttr || (state.modal?.type === 'delete-type' ? 'type' : state.modal?.type === 'delete-status' ? 'status' : state.modal?.type === 'delete-map' ? 'map' : '');
         const targetId = targetAttr || state.modal?.payload || '';
 
         if (kind === 'map') {
             handleDeleteMap(targetId);
         } else if (kind === 'type') {
             handleDeleteType(targetId);
+        } else if (kind === 'status') {
+            handleDeleteStatus(targetId);
         } else {
             console.warn('[Developer Map] Unknown delete kind:', kind);
         }
@@ -1200,6 +1609,48 @@ export function initDeveloperMap(options) {
                     project.floors.forEach((floor) => {
                         if (floor.type === removedLabel) {
                             floor.type = '';
+                        }
+                    });
+                }
+            });
+            saveProjects(data.projects);
+        }
+
+        setState({ modal: null });
+    }
+
+    function handleDeleteStatus(targetId = null) {
+        const modalState = state.modal;
+        let effectiveId = targetId || modalState?.payload || null;
+        if (!effectiveId && modalState?.itemName) {
+            const labelMatch = data.statuses.find((status) => String(status.label).trim() === String(modalState.itemName).trim());
+            if (labelMatch) {
+                effectiveId = String(labelMatch.id);
+            }
+        }
+        if (!effectiveId) {
+            console.warn('[Developer Map] No status ID to delete');
+            setState({ modal: null });
+            return;
+        }
+
+        const statusIndex = data.statuses.findIndex((status) => String(status.id) === String(effectiveId));
+        if (statusIndex === -1) {
+            console.warn('[Developer Map] Status not found for deletion:', effectiveId);
+            setState({ modal: null });
+            return;
+        }
+
+        const [removedStatus] = data.statuses.splice(statusIndex, 1);
+        saveStatuses(data.statuses);
+
+        if (removedStatus?.id) {
+            const removedId = removedStatus.id;
+            data.projects.forEach((project) => {
+                if (Array.isArray(project.floors)) {
+                    project.floors.forEach((floor) => {
+                        if (floor.statusId === removedId) {
+                            floor.statusId = '';
                         }
                     });
                 }

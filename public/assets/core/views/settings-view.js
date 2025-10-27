@@ -122,14 +122,14 @@ function renderSettingsStatuses(data) {
                         (item) => `
                             <div class="dm-settings__item">
                                 <div class="dm-pill">
-                                    <span class="dm-pill__dot" style="background:${item.color}"></span>
-                                    ${item.label}
+                                    <span class="dm-pill__dot" style="background:${escapeHtml(String(item.color))}"></span>
+                                    ${escapeHtml(item.label)}
                                 </div>
                                 <div class="dm-settings__item-actions">
-                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-status" aria-label="Upraviť ${item.label}" title="Upraviť">
+                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-status" data-dm-payload="${escapeHtml(String(item.id))}" aria-label="Upraviť ${escapeHtml(item.label)}" title="Upraviť">
                                         <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.edit}</span>
                                     </button>
-                                    <button type="button" class="dm-icon-button dm-icon-button--delete" data-dm-modal="delete-status" aria-label="Zmazať ${item.label}" title="Zmazať">
+                                    <button type="button" class="dm-icon-button dm-icon-button--delete" data-dm-modal="delete-status" data-dm-payload="${escapeHtml(String(item.id))}" aria-label="Zmazať ${escapeHtml(item.label)}" title="Zmazať">
                                         <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.delete}</span>
                                     </button>
                                 </div>
