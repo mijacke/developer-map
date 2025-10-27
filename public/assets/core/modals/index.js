@@ -14,7 +14,9 @@ export function renderModal(state, data) {
         case 'draw-coordinates':
             return renderDrawModal(state, data);
         case 'add-location':
-            return renderFormModal('Pridať lokalitu', 'Pridať lokalitu', data, payload ?? null, state.modal);
+            return renderLocationModal('Pridať lokalitu', 'Pridať lokalitu', data, null, state.modal);
+        case 'edit-location':
+            return renderLocationModal('Upraviť lokalitu', 'Uložiť zmeny', data, payload, state.modal);
         case 'add-type':
             return renderTypeModal('Pridať typ', 'Pridať typ', data, null, state.modal);
         case 'edit-type':
@@ -180,62 +182,279 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Názov mapy alebo lokality" data-tooltip="Názov mapy alebo lokality">${infoIcon}</button>
-                                            <input required type="text" autocomplete="off" class="dm-field__input" data-dm-field="name" value="${escapeHtml(resolvedName)}">
+                                            <input required type="text" autocomplete="off" class="dm-field__input" data-dm-field="name" placeholder=" " value="${escapeHtml(resolvedName)}">
                                             <label class="dm-field__label">Názov<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Minimálne možné oddialenie mapy" data-tooltip="Minimálne možné oddialenie mapy">${infoIcon}</button>
-                                            <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input">
+                                            <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input" placeholder=" ">
                                             <label class="dm-field__label">Minimálny zoom<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Maximálne možné priblíženie mapy" data-tooltip="Maximálne možné priblíženie mapy">${infoIcon}</button>
-                                            <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input">
+                                            <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input" placeholder=" ">
                                             <label class="dm-field__label">Maximálny zoom<span class="dm-field__required">*</span></label>
                                         </div>
                                     </div>
                                     <div class="dm-form__column">
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Východzie priblíženie mapy pri načítaní" data-tooltip="Východzie priblíženie mapy pri načítaní">${infoIcon}</button>
-                                            <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input">
+                                            <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input" placeholder=" ">
                                             <label class="dm-field__label">Východzí zoom<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Šírka obrázku mapy v pixeloch" data-tooltip="Šírka obrázku mapy v pixeloch">${infoIcon}</button>
-                                            <input required type="number" step="1" autocomplete="off" class="dm-field__input">
+                                            <input required type="number" step="1" autocomplete="off" class="dm-field__input" placeholder=" ">
                                             <label class="dm-field__label">Šírka mapy<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Výška obrázku mapy v pixeloch" data-tooltip="Výška obrázku mapy v pixeloch">${infoIcon}</button>
-                                            <input required type="number" step="1" autocomplete="off" class="dm-field__input">
+                                            <input required type="number" step="1" autocomplete="off" class="dm-field__input" placeholder=" ">
                                             <label class="dm-field__label">Výška mapy<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Šírka čiary ohraničenia lokality v pixeloch" data-tooltip="Šírka čiary ohraničenia lokality v pixeloch">${infoIcon}</button>
-                                            <input required type="number" step="1" min="1" max="10" autocomplete="off" class="dm-field__input">
+                                            <input required type="number" step="1" min="1" max="10" autocomplete="off" class="dm-field__input" placeholder=" ">
                                             <label class="dm-field__label">Hrúbka ohraničenia<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Priehľadnosť čiary ohraničenia (0-100%)" data-tooltip="Priehľadnosť čiary ohraničenia (0-100%)">${infoIcon}</button>
-                                            <input required type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input">
+                                            <input required type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" placeholder=" ">
                                             <label class="dm-field__label">Prehľadnosť ohraničenia<span class="dm-field__required">*</span></label>
                                         </div>
                                     </div>
                                     <div class="dm-form__column">
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Priehľadnosť výplne lokality (0-100%)" data-tooltip="Priehľadnosť výplne lokality (0-100%)">${infoIcon}</button>
-                                            <input required type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input">
+                                            <input required type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" placeholder=" ">
                                             <label class="dm-field__label">Prehľadnosť pozadia<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Smer orientácie objektu" data-tooltip="Smer orientácie objektu">${infoIcon}</button>
-                                            <input required type="text" autocomplete="off" class="dm-field__input">
+                                            <input required type="text" autocomplete="off" class="dm-field__input" placeholder=" ">
                                             <label class="dm-field__label">Smer<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Uhol natočenia objektu v stupňoch" data-tooltip="Uhol natočenia objektu v stupňoch">${infoIcon}</button>
-                                            <input required type="text" autocomplete="off" class="dm-field__input">
+                                            <input required type="text" autocomplete="off" class="dm-field__input" placeholder=" ">
                                             <label class="dm-field__label">Uhol<span class="dm-field__required">*</span></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dm-modal__actions">
+                                    <button type="button" class="dm-button dm-button--dark" data-dm-modal-save>
+                                        ${isEdit ? `${cta} ${arrowIcon}` : `${plusIcon} ${cta}`}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderLocationModal(title, cta, data, itemId = null, modalState = null) {
+    const plusIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus-icon lucide-circle-plus"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>';
+    const infoIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>';
+    const arrowIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right-icon lucide-arrow-right"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+    const isEdit = title.includes('Upraviť');
+    const headerIcon = isEdit ? arrowIcon : plusIcon;
+    
+    // Find the location being edited
+    let editLocation = null;
+    let editParent = null;
+    const projects = Array.isArray(data.projects) ? data.projects : [];
+
+    if (itemId && projects.length) {
+        for (const project of projects) {
+            const floor = project.floors?.find((f) => f.id === itemId);
+            if (floor) {
+                editLocation = floor;
+                editParent = project;
+                break;
+            }
+        }
+    }
+
+    const selectedPreview = modalState?.imagePreview ?? null;
+    let imageUrl = selectedPreview || (editLocation?.image ?? null);
+    if (!imageUrl && isEdit) {
+        imageUrl = MEDIA.floor;
+    }
+
+    const uploadLabel = isEdit ? 'Zmeniť obrázok' : 'Nahrať obrázok';
+
+    // Parent project select
+    const parentValue = modalState?.parentId ?? (editParent ? String(editParent.id) : '');
+    const parentOptions = projects
+        .map((project) => {
+            const value = String(project.id);
+            const isSelected = parentValue === value;
+            return `<option value="${escapeHtml(value)}"${isSelected ? ' selected' : ''}>${escapeHtml(project.name)}</option>`;
+        })
+        .join('');
+    const parentPlaceholderSelected = parentValue === '' ? ' selected' : '';
+
+    // Type select
+    const typeOptionsSource = Array.isArray(data.types) ? data.types : [];
+    const resolvedType = editLocation?.type ?? '';
+    const resolvedTypeInList = resolvedType ? typeOptionsSource.some((option) => option.label === resolvedType) : false;
+    const selectTypeValue = resolvedTypeInList ? resolvedType : '';
+    const typePlaceholderSelected = selectTypeValue ? '' : ' selected';
+    const typePlaceholderLabel = typeOptionsSource.length ? 'Vyberte typ' : 'Najprv pridajte typ v nastaveniach';
+    const typeOptions = typeOptionsSource
+        .map((option) => {
+            const value = option.label;
+            const isSelected = selectTypeValue === value;
+            return `<option value="${escapeHtml(value)}"${isSelected ? ' selected' : ''}>${escapeHtml(option.label)}</option>`;
+        })
+        .join('');
+
+    // Status select
+    const statusOptionsSource = Array.isArray(data.statuses) ? data.statuses : [];
+    const statusIdFromState = modalState?.statusId ?? null;
+    const statusLabelFromState = modalState?.status ?? '';
+    const locationStatusId = editLocation?.statusId ?? null;
+    const locationStatusLabel = editLocation?.status ?? editLocation?.statusLabel ?? '';
+    const matchedStatus = (() => {
+        const targetId = statusIdFromState ?? locationStatusId;
+        if (targetId) {
+            return statusOptionsSource.find((option) => String(option.id) === String(targetId)) ?? null;
+        }
+        if (statusLabelFromState) {
+            return statusOptionsSource.find((option) => option.label === statusLabelFromState) ?? null;
+        }
+        if (locationStatusLabel) {
+            return statusOptionsSource.find((option) => option.label === locationStatusLabel) ?? null;
+        }
+        return null;
+    })();
+    const resolvedStatusLabel = statusLabelFromState || matchedStatus?.label || locationStatusLabel;
+    const resolvedStatusInList = resolvedStatusLabel ? statusOptionsSource.some((option) => option.label === resolvedStatusLabel) : false;
+    const selectStatusValue = resolvedStatusInList ? resolvedStatusLabel : '';
+    const statusPlaceholderSelected = selectStatusValue ? '' : ' selected';
+    const statusPlaceholderLabel = statusOptionsSource.length ? 'Vyberte stav' : 'Najprv pridajte stav v nastaveniach';
+    const statusOptions = statusOptionsSource
+        .map((option) => {
+            const value = option.label;
+            const isSelected = selectStatusValue === value;
+            return `<option value="${escapeHtml(value)}" data-status-id="${escapeHtml(String(option.id))}"${isSelected ? ' selected' : ''}>${escapeHtml(option.label)}</option>`;
+        })
+        .join('');
+
+    // Field values - always set, even if empty (like in renderFormModal)
+    const nameValue = editLocation?.name ?? '';
+    const urlValue = editLocation?.url ?? '';
+    const areaValue = editLocation?.area ?? '';
+    const suffixValue = editLocation?.suffix ?? '';
+    const prefixValue = editLocation?.prefix ?? '';
+    const designationValue = editLocation?.designation ?? editLocation?.label ?? '';
+    const priceValue = editLocation?.price ?? editLocation?.rent ?? '';
+    const rentValue = editLocation?.rent ?? editLocation?.price ?? '';
+
+    return `
+        <div class="dm-modal-overlay">
+            <div class="dm-modal">
+                <header class="dm-modal__header">
+                    <div class="dm-modal__header-left">
+                        ${headerIcon}
+                        <h2>${title}</h2>
+                    </div>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                </header>
+                <div class="dm-modal__body">
+                    <form class="dm-modal__form">
+                        <div class="dm-modal__form-layout">
+                            <div class="dm-upload-card">
+                                ${imageUrl ? `
+                                    <div class="dm-upload-card__preview">
+                                        <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(nameValue || 'Obrázok lokality')}" />
+                                    </div>
+                                ` : `
+                                    <div class="dm-upload-card__dropzone">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+                                            <path d="M7 10V9C7 6.23858 9.23858 4 12 4C14.7614 4 17 6.23858 17 9V10C19.2091 10 21 11.7909 21 14C21 15.4806 20.1956 16.8084 19 17.5M7 10C4.79086 10 3 11.7909 3 14C3 15.4806 3.8044 16.8084 5 17.5M7 10C7.43285 10 7.84965 10.0688 8.24006 10.1959M12 12V21M12 12L15 15M12 12L9 15" stroke="#5a3bff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        </svg>
+                                    </div>
+                                `}
+                                <label for="dm-modal-upload" class="dm-upload-card__footer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-icon lucide-upload"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+                                    <p>${uploadLabel}</p>
+                                </label>
+                                <input id="dm-modal-upload" type="file" accept="image/*" class="dm-upload-card__input" />
+                            </div>
+                            <div class="dm-modal__form-fields">
+                                <div class="dm-form__grid">
+                                    <div class="dm-form__column">
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Vyberte nadradenú mapu" data-tooltip="Vyberte nadradenú mapu">${infoIcon}</button>
+                                            <select required autocomplete="off" class="dm-field__input" data-dm-select data-dm-field="parent">
+                                                <option value="" disabled${parentPlaceholderSelected} hidden>Vyberte nadradenú</option>
+                                                ${parentOptions}
+                                            </select>
+                                            <label class="dm-field__label">Nadradená<span class="dm-field__required">*</span></label>
+                                        </div>
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Typ nehnuteľnosti alebo objektu" data-tooltip="Typ nehnuteľnosti alebo objektu">${infoIcon}</button>
+                                            <select required autocomplete="off" class="dm-field__input" data-dm-select data-dm-field="location-type">
+                                                <option value="" disabled${typePlaceholderSelected} hidden>${escapeHtml(typePlaceholderLabel)}</option>
+                                                ${typeOptions}
+                                            </select>
+                                            <label class="dm-field__label">Typ<span class="dm-field__required">*</span></label>
+                                        </div>
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Názov lokality" data-tooltip="Názov lokality">${infoIcon}</button>
+                                            <input required type="text" autocomplete="off" class="dm-field__input" data-dm-field="name" placeholder=" " value="${escapeHtml(nameValue)}">
+                                            <label class="dm-field__label">Názov<span class="dm-field__required">*</span></label>
+                                        </div>
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Označenie lokality" data-tooltip="Označenie lokality">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="designation" placeholder=" " value="${escapeHtml(designationValue)}">
+                                            <label class="dm-field__label">Označenie</label>
+                                        </div>
+                                    </div>
+                                    <div class="dm-form__column">
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="URL lokality" data-tooltip="URL lokality">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="url" placeholder=" " value="${escapeHtml(urlValue)}">
+                                            <label class="dm-field__label">URL</label>
+                                        </div>
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Rozloha lokality v m²" data-tooltip="Rozloha lokality v m²">${infoIcon}</button>
+                                            <input type="number" step="0.01" autocomplete="off" class="dm-field__input" data-dm-field="area" placeholder=" " value="${escapeHtml(areaValue)}">
+                                            <label class="dm-field__label">Rozloha (m²)</label>
+                                        </div>
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Prefix lokality" data-tooltip="Prefix lokality">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="prefix" placeholder=" " value="${escapeHtml(prefixValue)}">
+                                            <label class="dm-field__label">Prefix</label>
+                                        </div>
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Cena v €" data-tooltip="Cena v €">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="price" placeholder=" " value="${escapeHtml(priceValue)}">
+                                            <label class="dm-field__label">Cena (€)</label>
+                                        </div>
+                                    </div>
+                                    <div class="dm-form__column">
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Prenájom v €" data-tooltip="Prenájom v €">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="rent" placeholder=" " value="${escapeHtml(rentValue)}">
+                                            <label class="dm-field__label">Prenájom (€)</label>
+                                        </div>
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Suffix pre rozlohu" data-tooltip="Suffix pre rozlohu">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="suffix" placeholder=" " value="${escapeHtml(suffixValue)}">
+                                            <label class="dm-field__label">Suffix</label>
+                                        </div>
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Stav lokality" data-tooltip="Stav lokality">${infoIcon}</button>
+                                            <select required autocomplete="off" class="dm-field__input" data-dm-select data-dm-field="location-status">
+                                                <option value="" disabled${statusPlaceholderSelected} hidden>${escapeHtml(statusPlaceholderLabel)}</option>
+                                                ${statusOptions}
+                                            </select>
+                                            <label class="dm-field__label">Stav<span class="dm-field__required">*</span></label>
                                         </div>
                                     </div>
                                 </div>

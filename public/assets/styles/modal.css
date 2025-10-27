@@ -441,45 +441,56 @@
     transform: translateX(0);
 }
 
-.dm-modal__form input:focus,
-.dm-modal__form input:valid {
+/* Field group for inline fields (e.g., area + suffix) */
+.dm-field-group {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.dm-field--flex-1 {
+    flex: 1;
+    min-width: 0;
+}
+
+.dm-field--flex-2 {
+    flex: 2;
+    min-width: 0;
+}
+
+.dm-modal__form .dm-field__input:focus,
+.dm-modal__form .dm-field--filled .dm-field__input {
     outline: none;
     border: 1.5px solid #1a73e8;
 }
 
-.dm-modal__form select:focus,
-.dm-modal__form select:valid,
-.dm-modal__form .dm-field--select-open .dm-field__input {
-    outline: none;
-    border: 1.5px solid #1a73e8;
-}
-
-.dm-modal__form input:focus ~ label,
-.dm-modal__form input:valid ~ label {
+.dm-modal__form .dm-field__input:focus ~ label,
+.dm-modal__form .dm-field--filled .dm-field__label {
     top: 0;
     transform: translateY(-50%) scale(0.8);
     background-color: var(--dm-surface);
     padding: 0 .2em;
     color: #2196f3;
+}
+
+.dm-modal__form select:focus,
+.dm-modal__form select:valid,
+.dm-modal__form .dm-field--select-open .dm-field__input,
+.dm-modal__form .dm-field--select-has-value .dm-field__input {
+    outline: none;
+    border: 1.5px solid #1a73e8;
 }
 
 /* Pre select elementy - presun label hore hned pri focus (kliknutí), aj bez valid hodnoty */
 .dm-modal__form select:focus ~ label,
 .dm-modal__form select:valid ~ label,
-.dm-modal__form .dm-field--select-open .dm-field__label {
+.dm-modal__form .dm-field--select-open .dm-field__label,
+.dm-modal__form .dm-field--select-has-value .dm-field__label {
     top: 0;
     transform: translateY(-50%) scale(0.8) !important;
     background-color: var(--dm-surface) !important;
     padding: 0 .2em !important;
     color: #2196f3 !important;
-}
-
-.dm-modal__form .dm-field--select-has-value .dm-field__label {
-    top: 0;
-    transform: translateY(-50%) scale(0.8);
-    background-color: var(--dm-surface);
-    padding: 0 .2em;
-    color: #2196f3;
 }
 
 .dm-modal__form select.dm-field__input {

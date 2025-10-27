@@ -547,6 +547,94 @@ export function initDeveloperMap(options) {
         };
     }
 
+    function collectLocationFields() {
+        const form = root.querySelector('.dm-modal__form');
+        if (!form) {
+            return null;
+        }
+
+        const nameInput = form.querySelector('input[data-dm-field="name"]');
+        const typeSelect = form.querySelector('select[data-dm-field="location-type"]');
+        const statusSelect = form.querySelector('select[data-dm-field="location-status"]');
+        const parentSelect = form.querySelector('select[data-dm-field="parent"]');
+        const urlInput = form.querySelector('input[data-dm-field="url"]');
+        const areaInput = form.querySelector('input[data-dm-field="area"]');
+        const suffixInput = form.querySelector('input[data-dm-field="suffix"]');
+        const prefixInput = form.querySelector('input[data-dm-field="prefix"]');
+        const designationInput = form.querySelector('input[data-dm-field="designation"]');
+        const priceInput = form.querySelector('input[data-dm-field="price"]');
+        const rentInput = form.querySelector('input[data-dm-field="rent"]');
+
+        const nameValue = nameInput ? nameInput.value.trim() : '';
+        const typeValue = typeSelect ? (typeSelect.value || '').trim() : '';
+        const statusOption = (() => {
+            if (!statusSelect) {
+                return null;
+            }
+            if (typeof statusSelect.selectedOptions !== 'undefined') {
+                return statusSelect.selectedOptions.length ? statusSelect.selectedOptions[0] : null;
+            }
+            const index = statusSelect.selectedIndex;
+            if (typeof index === 'number' && index >= 0) {
+                return statusSelect.options[index] ?? null;
+            }
+            return null;
+        })();
+        const statusValue = statusOption ? statusOption.textContent.trim() : statusSelect ? (statusSelect.value || '').trim() : '';
+        const statusIdValue = (() => {
+            const raw = statusOption?.dataset?.statusId ?? statusOption?.getAttribute?.('data-status-id') ?? '';
+            if (raw) {
+                return sanitiseStatusId(raw);
+            }
+            if (statusValue) {
+                const normalized = statusValue.trim();
+                const match = data.statuses?.find((item) => String(item.label ?? '').trim() === normalized);
+                if (match?.id) {
+                    return sanitiseStatusId(match.id);
+                }
+            }
+            if (state.modal?.statusId) {
+                return sanitiseStatusId(state.modal.statusId);
+            }
+            return '';
+        })();
+        const urlValue = urlInput ? urlInput.value.trim() : '';
+        const areaValue = areaInput ? areaInput.value.trim() : '';
+        const suffixValue = suffixInput ? suffixInput.value.trim() : 'm²';
+        const prefixValue = prefixInput ? prefixInput.value.trim() : '';
+        const designationValue = designationInput ? designationInput.value.trim() : '';
+        const priceValue = priceInput ? priceInput.value.trim() : '';
+        const rentValue = rentInput ? rentInput.value.trim() : '';
+
+        let parentId = null;
+        if (parentSelect) {
+            const rawValue = parentSelect.value;
+            parentId = rawValue && rawValue !== 'none' ? rawValue : null;
+        } else if (state.modal && state.modal.parentId) {
+            parentId = state.modal.parentId;
+        }
+
+        return {
+            name: nameValue,
+            type: typeValue,
+            status: statusValue,
+            statusId: statusIdValue,
+            parentId,
+            url: urlValue,
+            area: areaValue,
+            suffix: suffixValue,
+            prefix: prefixValue,
+            designation: designationValue,
+            price: priceValue,
+            rent: rentValue,
+            elements: {
+                nameInput,
+                typeSelect,
+                statusSelect,
+            },
+        };
+    }
+
     root.dataset.dmHydrated = '1';
     root.classList.add('dm-root');
 
@@ -597,6 +685,23 @@ export function initDeveloperMap(options) {
             }
         }
 
+        if (normalizedType === 'edit-location' && normalizedPayload) {
+            const result = findMapItem(normalizedPayload);
+            if (result && result.type === 'floor') {
+                setState({
+                    modal: {
+                        type: normalizedType,
+                        payload: String(result.item.id),
+                        parentId: result.parent ? String(result.parent.id) : null,
+                        targetType: 'floor',
+                        statusId: sanitiseStatusId(result.item.statusId || result.item.statusKey || ''),
+                        status: String(result.item.status ?? result.item.statusLabel ?? '').trim(),
+                    },
+                });
+                return;
+            }
+        }
+
         if (normalizedType === 'add-map') {
             setState({
                 modal: {
@@ -615,9 +720,8 @@ export function initDeveloperMap(options) {
             setState({
                 modal: {
                     type: normalizedType,
-                    payload: parentId,
+                    payload: null,
                     parentId,
-                    imagePreview: null,
                     targetType: 'floor',
                 },
             });
@@ -756,6 +860,7 @@ export function initDeveloperMap(options) {
         root.innerHTML = [renderAppShell(state, data), renderModal(state, data)].join('');
         attachEventHandlers();
         enhanceSelects();
+        initFloatingFieldState();
         enhanceDrawModal();
         restoreExpandedProjects();
     }
@@ -944,7 +1049,7 @@ export function initDeveloperMap(options) {
             });
         }
 
-        if (state.modal && ['add-map', 'edit-map', 'add-location'].includes(state.modal.type)) {
+        if (state.modal && ['add-map', 'edit-map', 'add-location', 'edit-location'].includes(state.modal.type)) {
             bindMapModalEvents();
         }
 
@@ -964,12 +1069,15 @@ export function initDeveloperMap(options) {
             if (textInput) {
                 input.addEventListener('input', (event) => {
                     textInput.value = event.target.value;
+                    updateFieldFilledState(textInput);
+                    updateFieldFilledState(input);
                 });
                 
                 textInput.addEventListener('input', (event) => {
                     const value = event.target.value.trim();
                     if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
                         input.value = value;
+                        updateFieldFilledState(input);
                     }
                 });
             }
@@ -1112,15 +1220,20 @@ export function initDeveloperMap(options) {
             colorInput.addEventListener('input', (event) => {
                 if (hexInput) {
                     hexInput.value = String(event.target.value ?? '').toUpperCase();
+                    updateFieldFilledState(hexInput);
                 }
+                updateFieldFilledState(colorInput);
             });
 
             hexInput.addEventListener('input', (event) => {
                 const raw = String(event.target.value ?? '').trim();
                 const normalised = raw.startsWith('#') ? raw : `#${raw}`;
                 if (/^#[0-9A-Fa-f]{6}$/.test(normalised)) {
-                    colorInput.value = normalised.toUpperCase();
+                    const upper = normalised.toUpperCase();
+                    colorInput.value = upper;
+                    updateFieldFilledState(colorInput);
                 }
+                updateFieldFilledState(hexInput);
             });
         }
 
@@ -1143,6 +1256,8 @@ export function initDeveloperMap(options) {
             colorInput.addEventListener('input', (event) => {
                 const value = String(event.target.value ?? '').toUpperCase();
                 hexInput.value = value;
+                updateFieldFilledState(colorInput);
+                updateFieldFilledState(hexInput);
             });
 
             hexInput.addEventListener('input', (event) => {
@@ -1152,7 +1267,9 @@ export function initDeveloperMap(options) {
                     const finalValue = normalised.toUpperCase();
                     hexInput.value = finalValue;
                     colorInput.value = finalValue;
+                    updateFieldFilledState(colorInput);
                 }
+                updateFieldFilledState(hexInput);
             });
         }
 
@@ -1171,6 +1288,8 @@ export function initDeveloperMap(options) {
         }
         if (state.modal.type === 'edit-map') {
             handleSaveEditMap();
+        } else if (state.modal.type === 'edit-location') {
+            handleSaveEditLocation();
         } else if (state.modal.type === 'add-map' || state.modal.type === 'add-location') {
             handleSaveAddMap();
         } else if (state.modal.type === 'add-type' || state.modal.type === 'edit-type') {
@@ -1282,12 +1401,166 @@ export function initDeveloperMap(options) {
         setState({ modal: null, activeProjectId: newActiveProjectId });
     }
 
+    function handleSaveEditLocation() {
+        const modalState = state.modal;
+        if (!modalState || !modalState.payload) {
+            return;
+        }
+
+        const result = findMapItem(modalState.payload);
+        if (!result || result.type !== 'floor') {
+            console.warn('[Developer Map] Nepodarilo sa nájsť lokalitu pre úpravu.', modalState.payload);
+            setState({ modal: null });
+            return;
+        }
+
+        const fields = collectLocationFields();
+        if (!fields) {
+            setState({ modal: null });
+            return;
+        }
+
+        if (!fields.name) {
+            fields.elements.nameInput?.focus();
+            return;
+        }
+        if (!fields.type) {
+            fields.elements.typeSelect?.focus();
+            return;
+        }
+        if (!fields.status) {
+            fields.elements.statusSelect?.focus();
+            return;
+        }
+
+        const currentParentId = result.parent ? String(result.parent.id) : null;
+        
+        // Update location fields
+        result.item.name = fields.name;
+        result.item.type = fields.type;
+        result.item.status = fields.status;
+        result.item.statusLabel = fields.status;
+        const fallbackStatusMatch = data.statuses.find((status) => String(status.label ?? '').trim() === String(fields.status ?? '').trim());
+        result.item.statusId = sanitiseStatusId(fields.statusId || fallbackStatusMatch?.id);
+        result.item.label = fields.designation || fields.name;
+        result.item.url = fields.url;
+        result.item.area = fields.area;
+        result.item.suffix = fields.suffix;
+        result.item.prefix = fields.prefix;
+        result.item.designation = fields.designation;
+        result.item.rent = fields.rent;
+        result.item.price = fields.price;
+
+        // Handle image upload
+        const imageData = modalState.imagePreview;
+        if (imageData) {
+            result.item.image = imageData;
+        }
+
+        let newActiveProjectId = currentParentId ?? state.activeProjectId;
+        const targetParentId = fields.parentId;
+
+        // Handle parent change
+        if ((targetParentId ?? null) !== (currentParentId ?? null)) {
+            if (result.parent && Array.isArray(result.parent.floors)) {
+                result.parent.floors = result.parent.floors.filter((floor) => floor.id !== result.item.id);
+            }
+
+            if (targetParentId) {
+                const newParent = data.projects.find((project) => String(project.id) === targetParentId);
+                if (newParent) {
+                    if (!Array.isArray(newParent.floors)) {
+                        newParent.floors = [];
+                    }
+                    const existsInTarget = newParent.floors.some((floor) => floor.id === result.item.id);
+                    if (!existsInTarget) {
+                        newParent.floors.push(result.item);
+                    }
+                    newActiveProjectId = String(newParent.id);
+                } else {
+                    console.warn('[Developer Map] Nenašla sa nová nadradená mapa s ID:', targetParentId);
+                    if (result.parent && Array.isArray(result.parent.floors)) {
+                        const existsInOriginal = result.parent.floors.some((floor) => floor.id === result.item.id);
+                        if (!existsInOriginal) {
+                            result.parent.floors.push(result.item);
+                        }
+                    }
+                }
+            }
+        }
+
+        saveProjects(data.projects);
+        setState({ modal: null, activeProjectId: newActiveProjectId });
+    }
+
     function handleSaveAddMap() {
         const modalState = state.modal;
         if (!modalState) {
             return;
         }
 
+        // Handle add-location with location-specific fields
+        if (modalState.type === 'add-location') {
+            const fields = collectLocationFields();
+            if (!fields) {
+                setState({ modal: null });
+                return;
+            }
+
+            if (!fields.name) {
+                fields.elements.nameInput?.focus();
+                return;
+            }
+            if (!fields.type) {
+                fields.elements.typeSelect?.focus();
+                return;
+            }
+            if (!fields.status) {
+                fields.elements.statusSelect?.focus();
+                return;
+            }
+
+            const parentId = fields.parentId;
+            if (!parentId) {
+                console.warn('[Developer Map] Lokalita musí mať nadradenú mapu.');
+                return;
+            }
+
+            const parentProject = data.projects.find((project) => String(project.id) === String(parentId));
+            if (!parentProject) {
+                console.warn('[Developer Map] Nenašla sa nadradená mapa pre pridanie lokality:', parentId);
+                return;
+            }
+
+            if (!Array.isArray(parentProject.floors)) {
+                parentProject.floors = [];
+            }
+
+            const newFloorId = generateId('floor');
+            parentProject.floors.push({
+                id: newFloorId,
+                name: fields.name,
+                type: fields.type,
+                status: fields.status,
+                statusLabel: fields.status,
+                label: fields.designation || fields.name,
+                url: fields.url,
+                area: fields.area,
+                suffix: fields.suffix,
+                prefix: fields.prefix,
+                designation: fields.designation,
+                rent: fields.rent,
+                price: fields.price,
+                image: modalState.imagePreview || MEDIA.floor,
+                statusId: sanitiseStatusId(fields.statusId || data.statuses.find((s) => String(s.label ?? '').trim() === String(fields.status ?? '').trim())?.id),
+            });
+
+            saveProjects(data.projects);
+            setState({ modal: null, activeProjectId: String(parentProject.id) });
+            return;
+        }
+
+        // Handle add-map with project fields
         const fields = collectModalFields();
         if (!fields) {
             setState({ modal: null });
@@ -1382,9 +1655,11 @@ export function initDeveloperMap(options) {
 
         if (colorInput) {
             colorInput.value = normalisedHex;
+            updateFieldFilledState(colorInput);
         }
         if (hexInput) {
             hexInput.value = normalisedHex;
+            updateFieldFilledState(hexInput);
         }
 
         const targetTypeId = modalState.payload || formTypeId || '';
@@ -1482,9 +1757,11 @@ export function initDeveloperMap(options) {
 
         if (colorInput) {
             colorInput.value = normalisedHex;
+            updateFieldFilledState(colorInput);
         }
         if (hexInput) {
             hexInput.value = normalisedHex;
+            updateFieldFilledState(hexInput);
         }
 
         const targetStatusId = modalState.payload || formStatusId || '';
@@ -1670,6 +1947,50 @@ export function initDeveloperMap(options) {
         }
 
         setState({ modal: null });
+    }
+
+    function updateFieldFilledState(element) {
+        if (!element) {
+            return;
+        }
+        const field = element.closest('.dm-field');
+        if (!field) {
+            return;
+        }
+
+        let hasValue = false;
+        if (element.matches('select')) {
+            hasValue = element.value !== '';
+        } else if (element.type === 'checkbox' || element.type === 'radio') {
+            hasValue = element.checked;
+        } else if (element.type === 'number' || element.type === 'range') {
+            hasValue = element.value !== '';
+        } else if (element.type === 'color') {
+            hasValue = Boolean(element.value);
+        } else {
+            hasValue = element.value.trim() !== '';
+        }
+
+        field.classList.toggle('dm-field--filled', hasValue);
+    }
+
+    function initFloatingFieldState(context = root) {
+        const inputs = context.querySelectorAll('.dm-field__input');
+        inputs.forEach((input) => {
+            if (input.type === 'file') {
+                return;
+            }
+            if (input.dataset.dmFloatingBound === '1') {
+                updateFieldFilledState(input);
+                return;
+            }
+            const handler = () => updateFieldFilledState(input);
+            input.addEventListener('input', handler);
+            input.addEventListener('change', handler);
+            input.addEventListener('blur', handler);
+            input.dataset.dmFloatingBound = '1';
+            updateFieldFilledState(input);
+        });
     }
 
     function enhanceSelects() {
@@ -1904,6 +2225,7 @@ export function initDeveloperMap(options) {
         wrapper.classList.toggle('dm-select--has-value', hasValue);
         wrapper.classList.toggle('dm-select--placeholder', !hasValue);
         field.classList.toggle('dm-field--select-has-value', hasValue);
+        updateFieldFilledState(select);
 
         options.forEach((item) => {
             const isActive = item.option.value === currentValue && !item.option.hidden && !item.option.disabled;

@@ -118,7 +118,7 @@ export function renderDashboardView(state, data) {
                                 )}
                                 ${renderDashboardAction(
                                     'edit',
-                                    'edit-map',
+                                    'edit-location',
                                     floor.id,
                                     `Upraviť lokalitu ${floor.name}`,
                                 )}
