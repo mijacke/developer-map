@@ -836,7 +836,6 @@
     margin-bottom: 0;
     margin-left: 72px; /* Odsadenie detí od rodiča */
     padding-right: 72px; /* Rovnaký padding ako parent pre zarovnanie stĺpcov */
-    border-left: 4px solid #c7d2fe; /* Vizuálna indikácia hierarchie bez posúvania obsahu */
 }
 
 .dm-board__row--child:last-child {
