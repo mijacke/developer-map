@@ -119,7 +119,7 @@
     border-radius: 18px;
     border: 1px solid rgba(22, 22, 29, 0.12);
     background: #ececf2;
-    color: var(--dm-text);
+    color: var(--dm-content-text-color);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
@@ -285,7 +285,7 @@
     margin: 0;
     font-size: 34px;
     letter-spacing: -0.02em;
-    color: var(--dm-heading-color);
+    color: #1C134F;
 }
 
 .dm-main-surface__title p {

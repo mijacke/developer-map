@@ -131,7 +131,7 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
     
     return `
         <div class="dm-modal-overlay">
-            <div class="dm-modal">
+            <div class="dm-modal dm-modal--map">
                 <header class="dm-modal__header">
                     <div class="dm-modal__header-left">
                         ${headerIcon}
@@ -356,7 +356,7 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
 
     return `
         <div class="dm-modal-overlay">
-            <div class="dm-modal">
+            <div class="dm-modal dm-modal--location">
                 <header class="dm-modal__header">
                     <div class="dm-modal__header-left">
                         ${headerIcon}

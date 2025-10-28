@@ -290,8 +290,8 @@ export function createDemoData() {
         ],
         colors: [
             { id: 'color-1', label: 'Farba tlačidiel', value: '#7c3aed' },
-            { id: 'color-2', label: 'Farba nadpisov', value: '#111827' },
-            { id: 'color-3', label: 'Farba obsahových textov', value: '#6b7280' },
+            { id: 'color-2', label: 'Farba nadpisov', value: '#1C134F' },
+            { id: 'color-3', label: 'Farba obsahových textov', value: '#1C134F' },
         ],
         fonts: [
             { id: 'font-1', label: 'Font nadpisov' },

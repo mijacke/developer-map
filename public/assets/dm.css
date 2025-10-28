@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-28 21:37:20 */
+/* Generated: 2025-10-28 22:48:18 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -8,7 +8,7 @@
     --dm-surface: #ffffff;
     --dm-border: #d9d9de;
     --dm-border-strong: #babac4;
-    --dm-text: #16161d;
+    --dm-text: #1C134F;
     --dm-text-muted: #6a6a76;
     --dm-text-quiet: #a0a0ad;
     --dm-action: #4d38ff;
@@ -22,8 +22,8 @@
 
     /* Dynamic theme colors (loaded from localStorage) */
     --dm-button-color: #7c3aed;
-    --dm-heading-color: #111827;
-    --dm-content-text-color: #6b7280;
+    --dm-heading-color: #1C134F;
+    --dm-content-text-color: #1C134F;
 
     position: relative;
     display: flex;
@@ -252,7 +252,7 @@
     border-radius: 18px;
     border: 1px solid rgba(22, 22, 29, 0.12);
     background: #ececf2;
-    color: var(--dm-text);
+    color: var(--dm-content-text-color);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
@@ -418,7 +418,7 @@
     margin: 0;
     font-size: 34px;
     letter-spacing: -0.02em;
-    color: var(--dm-heading-color);
+    color: #1C134F;
 }
 
 .dm-main-surface__title p {
@@ -1115,7 +1115,7 @@
 
     .dm-card__list h3 {
         margin: 0 0 12px;
-        color: var(--dm-heading-color);
+        color: #1C134F;
     }
 
     .dm-simple-list {
@@ -1311,7 +1311,7 @@
     .dm-section-head h2 {
         margin: 0;
         font-size: 24px;
-        color: var(--dm-heading-color);
+        color: #1C134F;
     }
 
     .dm-section-head p {
@@ -1374,7 +1374,7 @@
     .dm-form h3 {
         margin: 0;
         font-size: 22px;
-        color: var(--dm-heading-color);
+        color: #1C134F;
     }
 
     .dm-form__grid {
@@ -1499,7 +1499,7 @@
     .dm-form-placeholder__header h3 {
         margin: 0;
         font-size: 20px;
-        color: var(--dm-heading-color);
+        color: #1C134F;
     }
 
     .dm-form-placeholder__fields {
@@ -1560,7 +1560,7 @@
 }
 
 .dm-dashboard__back:active {
-    color: var(--dm-heading-color);
+    color: #1C134F;
 }
 
 .dm-dashboard__project-image {
@@ -1597,7 +1597,7 @@
     margin: 0;
     font-size: 28px;
     font-weight: 700;
-    color: var(--dm-heading-color);
+    color: #1C134F;
 }
 
 .dm-dashboard__heading p {
@@ -1631,8 +1631,13 @@
     background: transparent;
     border: none;
     font-size: 15px;
-    color: var(--dm-text);
+    color: var(--dm-content-text-color);
     height: 100%;
+}
+
+.dm-dashboard__search input::placeholder {
+    color: var(--dm-content-text-color);
+    opacity: 0.7;
 }
 
 .dm-dashboard__search input:focus {
@@ -1640,7 +1645,8 @@
 }
 
 .dm-dashboard__search-icon {
-    color: rgba(124, 58, 237, 0.8);
+    color: var(--dm-content-text-color);
+    opacity: 0.8;
     display: inline-flex;
 }
 
@@ -1656,7 +1662,7 @@
     border-radius: 16px;
     border: 1px solid rgba(124, 58, 237, 0.15);
     background: #f5f3ff;
-    color: var(--dm-text);
+    color: var(--dm-content-text-color);
     font-size: 15px;
     padding: 0 36px 0 18px;
     appearance: none;
@@ -1674,7 +1680,8 @@
     right: 14px;
     transform: translateY(-50%);
     pointer-events: none;
-    color: rgba(124, 58, 237, 0.8);
+    color: var(--dm-content-text-color);
+    opacity: 0.8;
 }
 
 .dm-dashboard__add {
@@ -1906,7 +1913,7 @@
 .dm-dashboard__empty-state h3 {
     font-size: 20px;
     font-weight: 700;
-    color: var(--dm-heading-color, #1f2937);
+    color: #1C134F;
     margin: 0;
 }
 
@@ -2081,7 +2088,7 @@
 .dm-settings__header h1 {
     margin: 0;
     font-size: 32px;
-    color: var(--dm-heading-color);
+    color: #1C134F;
 }
 
 .dm-settings__back {
@@ -2184,6 +2191,7 @@
     flex-direction: column;
     overflow: hidden;
     position: relative;
+    color: #1C134F;
 }
 
 .dm-modal--narrow {
@@ -2243,7 +2251,7 @@
     font-size: 32px;
     font-weight: 700;
     letter-spacing: -0.01em;
-    color: #1d1b2f;
+    color: inherit;
 }
 
 .dm-modal__close {
@@ -2989,7 +2997,7 @@
     align-items: center;
     gap: 10px;
     background: transparent;
-    color: #1d1b2f;
+    color: inherit;
     border: 1px solid rgba(29, 27, 47, 0.16);
     border-radius: 18px;
     padding: 16px 28px;

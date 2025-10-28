@@ -40,9 +40,12 @@ export function initDeveloperMap(options) {
         
         const colorMap = {
             'Farba tlačidiel': '--dm-button-color',
-            'Farba nadpisov': '--dm-heading-color',
-            'Farba obsahových textov': '--dm-content-text-color',
         };
+
+        const staticTextColor = '#1C134F';
+        root.style.setProperty('--dm-heading-color', staticTextColor);
+        root.style.setProperty('--dm-content-text-color', staticTextColor);
+        root.style.setProperty('--dm-text', staticTextColor);
 
         colors.forEach((color) => {
             const varName = colorMap[color.label];

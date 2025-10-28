@@ -3,7 +3,7 @@
     --dm-surface: #ffffff;
     --dm-border: #d9d9de;
     --dm-border-strong: #babac4;
-    --dm-text: #16161d;
+    --dm-text: #1C134F;
     --dm-text-muted: #6a6a76;
     --dm-text-quiet: #a0a0ad;
     --dm-action: #4d38ff;
@@ -17,8 +17,8 @@
 
     /* Dynamic theme colors (loaded from localStorage) */
     --dm-button-color: #7c3aed;
-    --dm-heading-color: #111827;
-    --dm-content-text-color: #6b7280;
+    --dm-heading-color: #1C134F;
+    --dm-content-text-color: #1C134F;
 
     position: relative;
     display: flex;

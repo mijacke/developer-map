@@ -21,6 +21,7 @@
     flex-direction: column;
     overflow: hidden;
     position: relative;
+    color: #1C134F;
 }
 
 .dm-modal--narrow {
@@ -80,7 +81,7 @@
     font-size: 32px;
     font-weight: 700;
     letter-spacing: -0.01em;
-    color: #1d1b2f;
+    color: inherit;
 }
 
 .dm-modal__close {
@@ -826,7 +827,7 @@
     align-items: center;
     gap: 10px;
     background: transparent;
-    color: #1d1b2f;
+    color: inherit;
     border: 1px solid rgba(29, 27, 47, 0.16);
     border-radius: 18px;
     padding: 16px 28px;
