@@ -19,6 +19,7 @@
     --dm-button-color: #7c3aed;
     --dm-heading-color: #1C134F;
     --dm-content-text-color: #1C134F;
+    --dm-map-modal-heading-color: #1C134F;
 
     position: relative;
     display: flex;

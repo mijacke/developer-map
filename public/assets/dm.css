@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-28 22:48:18 */
+/* Generated: 2025-10-28 23:11:09 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -24,6 +24,7 @@
     --dm-button-color: #7c3aed;
     --dm-heading-color: #1C134F;
     --dm-content-text-color: #1C134F;
+    --dm-map-modal-heading-color: #1C134F;
 
     position: relative;
     display: flex;
@@ -1415,7 +1416,7 @@
     .dm-field select:focus,
     .dm-field select:valid {
         outline: none;
-        border: 1.5px solid #1a73e8;
+        border: 1.5px solid var(--dm-map-modal-heading-color, #1C134F);
     }
 
     .dm-field input:focus ~ label,
@@ -2517,6 +2518,11 @@
     transition: transform 150ms cubic-bezier(0.4,0,0.2,1), top 150ms cubic-bezier(0.4,0,0.2,1);
 }
 
+.dm-modal--map .dm-field__label,
+.dm-modal--location .dm-field__label {
+    color: var(--dm-map-modal-heading-color, #1C134F);
+}
+
 .dm-modal__form .dm-field__required {
     color: #f43f5e;
 }
@@ -2670,7 +2676,7 @@
 .dm-modal__form .dm-field__input:focus,
 .dm-modal__form .dm-field--filled .dm-field__input {
     outline: none;
-    border: 1.5px solid #1a73e8;
+    border: 1.5px solid var(--dm-map-modal-heading-color, #1C134F);
 }
 
 .dm-modal__form .dm-field__input:focus ~ label,
@@ -2682,12 +2688,19 @@
     color: #2196f3;
 }
 
+.dm-modal--map .dm-field__input:focus ~ .dm-field__label,
+.dm-modal--map .dm-field--filled .dm-field__label,
+.dm-modal--location .dm-field__input:focus ~ .dm-field__label,
+.dm-modal--location .dm-field--filled .dm-field__label {
+    color: var(--dm-map-modal-heading-color, #1C134F);
+}
+
 .dm-modal__form select:focus,
 .dm-modal__form select:valid,
 .dm-modal__form .dm-field--select-open .dm-field__input,
 .dm-modal__form .dm-field--select-has-value .dm-field__input {
     outline: none;
-    border: 1.5px solid #1a73e8;
+    border: 1.5px solid var(--dm-map-modal-heading-color, #1C134F);
 }
 
 /* Pre select elementy - presun label hore hned pri focus (kliknutí), aj bez valid hodnoty */
@@ -2700,6 +2713,17 @@
     background-color: var(--dm-surface) !important;
     padding: 0 .2em !important;
     color: #2196f3 !important;
+}
+
+.dm-modal--map select:focus ~ .dm-field__label,
+.dm-modal--map select:valid ~ .dm-field__label,
+.dm-modal--map .dm-field--select-open .dm-field__label,
+.dm-modal--map .dm-field--select-has-value .dm-field__label,
+.dm-modal--location select:focus ~ .dm-field__label,
+.dm-modal--location select:valid ~ .dm-field__label,
+.dm-modal--location .dm-field--select-open .dm-field__label,
+.dm-modal--location .dm-field--select-has-value .dm-field__label {
+    color: var(--dm-map-modal-heading-color, #1C134F) !important;
 }
 
 .dm-modal__form select.dm-field__input {
@@ -2783,7 +2807,7 @@
 .dm-field--select-open .dm-select__trigger {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    border-color: #1a73e8 !important;
+    border-color: var(--dm-map-modal-heading-color, #1C134F) !important;
     box-shadow: 0 18px 38px rgba(26, 115, 232, 0.15) !important;
 }
 
@@ -2815,13 +2839,13 @@
 .dm-select__trigger:focus,
 .dm-select__trigger:focus-visible {
     outline: none !important;
-    border-color: #1a73e8 !important;
+    border-color: var(--dm-map-modal-heading-color, #1C134F) !important;
     box-shadow: 0 18px 38px rgba(26, 115, 232, 0.15) !important;
 }
 
 .dm-select__trigger:focus-visible .dm-select__icon,
 .dm-select__trigger:focus .dm-select__icon {
-    color: #1a73e8;
+    color: var(--dm-map-modal-heading-color, #1C134F);
 }
 
 .dm-select__value {
@@ -2836,7 +2860,7 @@
 }
 
 .dm-modal__form .dm-field--select .dm-select:not(.dm-select--placeholder) .dm-select__trigger {
-    border-color: #1a73e8 !important;
+    border-color: var(--dm-map-modal-heading-color, #1C134F) !important;
     box-shadow: none !important;
 }
 
@@ -2856,12 +2880,12 @@
 }
 
 .dm-select--open .dm-select__icon {
-    color: #1a73e8;
+    color: var(--dm-map-modal-heading-color, #1C134F);
     transform: translateY(-50%) rotate(180deg);
 }
 
 .dm-select--open .dm-select__trigger {
-    border-color: #1a73e8 !important;
+    border-color: var(--dm-map-modal-heading-color, #1C134F) !important;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     border-bottom: 0;
@@ -2879,7 +2903,7 @@
     top: 100%;
     margin-top: -1px;
     background: var(--dm-surface) !important;
-    border: 1.5px solid #1a73e8 !important;
+    border: 1.5px solid var(--dm-map-modal-heading-color, #1C134F) !important;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     border-bottom-left-radius: 1rem;

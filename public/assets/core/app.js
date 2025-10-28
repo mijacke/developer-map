@@ -46,11 +46,21 @@ export function initDeveloperMap(options) {
         root.style.setProperty('--dm-heading-color', staticTextColor);
         root.style.setProperty('--dm-content-text-color', staticTextColor);
         root.style.setProperty('--dm-text', staticTextColor);
+        root.style.setProperty('--dm-map-modal-heading-color', staticTextColor);
 
         colors.forEach((color) => {
-            const varName = colorMap[color.label];
-            if (varName && color.value) {
-                root.style.setProperty(varName, color.value);
+            if (!color || typeof color.label !== 'string') return;
+            const label = color.label.trim();
+            if (!label) return;
+
+            if (label === 'Farba nadpisov' && typeof color.value === 'string' && color.value.trim()) {
+                root.style.setProperty('--dm-map-modal-heading-color', color.value.trim());
+                return;
+            }
+
+            const varName = colorMap[label];
+            if (varName && typeof color.value === 'string' && color.value.trim()) {
+                root.style.setProperty(varName, color.value.trim());
             }
         });
     }

@@ -328,7 +328,7 @@
     .dm-field select:focus,
     .dm-field select:valid {
         outline: none;
-        border: 1.5px solid #1a73e8;
+        border: 1.5px solid var(--dm-map-modal-heading-color, #1C134F);
     }
 
     .dm-field input:focus ~ label,
