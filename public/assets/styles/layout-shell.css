@@ -22,8 +22,8 @@
 
 .dm-topbar__brand {
     display: inline-flex;
-    align-items: baseline;
-    gap: 12px;
+    align-items: center;
+    gap: 16px;
     padding: 0;
     margin: 0;
     border: none;
@@ -37,23 +37,49 @@
     color: inherit;
 }
 
-.dm-topbar__brand:hover .dm-topbar__title,
-.dm-topbar__brand:hover .dm-topbar__by {
-    color: inherit;
-    background: transparent;
-    background-clip: text;
-    -webkit-background-clip: text;
+.dm-topbar__brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .dm-topbar__title {
     font-size: 32px;
     font-weight: 700;
     letter-spacing: -0.02em;
+    line-height: 1.1;
 }
 
-.dm-topbar__by {
-    font-size: 16px;
+.dm-topbar__version {
+    font-size: 13px;
+    font-weight: 500;
     color: var(--dm-content-text-color);
+    opacity: 0.7;
+}
+
+.dm-topbar__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dm-topbar__mark svg {
+    display: block;
+    width: auto;
+    height: 28px;
+}
+
+.dm-topbar__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
 }
 
 .dm-topbar__search {
