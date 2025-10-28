@@ -26,8 +26,8 @@ export function renderMapsView(state, data) {
 
 
 const ACTION_ICONS = {
-    open: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-waypoints-icon lucide-waypoints"><circle cx="12" cy="4.5" r="2.5"/><path d="m10.2 6.3-3.9 3.9"/><circle cx="4.5" cy="12" r="2.5"/><path d="M7 12h10"/><circle cx="19.5" cy="12" r="2.5"/><path d="m13.8 17.7 3.9-3.9"/><circle cx="12" cy="19.5" r="2.5"/></svg>',
-    edit: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>',
+    open: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20.9598 17.4821L19.6287 5.49985C20.5944 5.02976 21.2663 4.04695 21.2663 2.9C21.2663 1.29891 19.9674 0 18.3663 0C16.9607 0 15.7891 1.00166 15.524 2.3287L7.3892 3.49102C6.90403 2.5694 5.94674 1.93343 4.83314 1.93343C3.23205 1.93343 1.93314 3.23234 1.93314 4.83343C1.93314 5.92383 2.54301 6.86198 3.43215 7.35759L2.39482 13.5845C1.03443 13.824 0 15.0049 0 16.4334C0 18.0345 1.29891 19.3334 2.9 19.3334C3.93559 19.3334 4.83923 18.7856 5.3505 17.9684L17.436 20.6541C17.6123 22.0861 18.8198 23.2 20.3 23.2C21.9011 23.2 23.2 21.9011 23.2 20.3C23.2 18.9266 22.2418 17.7822 20.9598 17.4821ZM4.30099 13.909L5.33832 7.68239C6.51166 7.47562 7.44256 6.56821 7.67572 5.40444L15.8105 4.24241C16.1965 4.97495 16.88 5.5245 17.7068 5.71793L19.0379 17.7002C18.549 17.9388 18.1366 18.3063 17.8483 18.765L5.76404 16.0793C5.64891 15.1409 5.09211 14.3489 4.30099 13.909Z" fill="#2E1F7E"/></svg>',
+    edit: '<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.99414 15.2877C1.99416 17.79 2.47827 19.4353 3.54395 20.4644C4.61213 21.4958 6.3227 21.9644 8.91895 21.9644H15.584C18.1806 21.9644 19.8909 21.4957 20.959 20.4644C22.0247 19.4354 22.5088 17.7902 22.5088 15.2877V13.1422C22.5089 12.6732 22.9013 12.3079 23.3652 12.3101C23.8237 12.3101 24.2103 12.6687 24.2168 13.1304C24.3661 16.3022 24.1111 18.9516 22.8447 20.8004C21.5625 22.6721 19.2932 23.6609 15.5869 23.6324H15.583C13.7562 23.5923 11.929 23.6751 10.1455 23.6695C8.38109 23.664 6.69074 23.5707 5.22559 23.1685C3.75499 22.7648 2.49702 22.0457 1.61816 20.7828C0.741989 19.5234 0.263834 17.7531 0.289062 15.2886V15.2857C0.33034 13.521 0.244166 11.7602 0.25 10.0357C0.255772 8.3316 0.352901 6.69676 0.770508 5.27887C1.19013 3.85419 1.93677 2.63863 3.24316 1.79059C4.54383 0.946463 6.3716 0.485869 8.91895 0.508362V0.507385H11.1406C11.4041 0.507393 11.621 0.607205 11.7695 0.772034C11.914 0.932426 11.9814 1.13978 11.9814 1.33942C11.9814 1.53921 11.9143 1.74741 11.7695 1.90778C11.6208 2.07248 11.4032 2.17197 11.1396 2.17145H11.1318V2.17047C8.19979 2.07322 5.89969 2.19213 4.34082 3.09625C2.82145 3.97765 1.94819 5.64801 1.99414 8.8443V15.2877Z" fill="#2E1F7E" stroke="#2E1F7E" stroke-width="0.5"/><path d="M19.4894 0.25C20.6352 0.25 21.7542 0.800077 22.8342 1.84277C23.9131 2.88445 24.4875 3.96743 24.4875 5.08203C24.4875 6.19654 23.9129 7.2793 22.8342 8.32129L14.0754 16.7744L14.0676 16.7822L14.0666 16.7812C13.5286 17.2598 12.8627 17.5815 12.1457 17.709L12.1359 17.7109L8.7912 18.1748C8.01463 18.294 7.18442 18.0896 6.60272 17.5332L6.59784 17.5283C6.04202 16.9641 5.79366 16.1755 5.93378 15.4043L6.41522 12.1807L6.4162 12.1709C6.54829 11.4716 6.88513 10.8237 7.38397 10.3037L7.39081 10.2969L16.1447 1.84473C17.2253 0.800587 18.3439 0.250143 19.4894 0.25ZM8.17206 12.2334C8.15028 12.3165 8.12715 12.4128 8.10468 12.5205C8.0356 12.8517 7.96789 13.2707 7.90546 13.6982C7.84307 14.1255 7.78654 14.5564 7.73846 14.9111C7.69156 15.2573 7.65132 15.5481 7.62128 15.6758L7.6203 15.6748C7.56891 15.9155 7.63718 16.1655 7.80585 16.3545C8.00307 16.5195 8.27068 16.588 8.53046 16.5352C8.65989 16.5073 8.95678 16.4682 9.31366 16.4229C9.68165 16.3761 10.1298 16.3214 10.5744 16.2607C11.0197 16.2 11.4571 16.1347 11.8019 16.0684C11.9049 16.0486 11.9976 16.027 12.0793 16.0078L8.17206 12.2334ZM9.20135 10.8887L13.4748 15.0146L19.4308 9.26367C17.5524 8.41348 16.0404 6.95302 15.1613 5.13379L9.20135 10.8887ZM19.4865 1.90527C18.8344 1.90544 18.1468 2.25078 17.3439 3.02637L16.4758 3.86426C17.1943 5.78128 18.7605 7.29287 20.7541 7.98535L21.6301 7.14062C22.4351 6.36408 22.7883 5.70392 22.7883 5.08398C22.7883 4.46401 22.4352 3.80371 21.6301 3.02637C20.8266 2.25069 20.1388 1.90527 19.4865 1.90527Z" fill="#2E1F7E" stroke="#2E1F7E" stroke-width="0.5"/></svg>',
     delete: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
 };
 
@@ -116,12 +116,12 @@ function renderProjectRow(project, shortcode, floors = []) {
             </div>
             <div class="dm-board__cell dm-board__cell--type" role="cell" data-label="Typ:">${escapeHtml(project.type)}</div>
             <div class="dm-board__cell dm-board__cell--actions" role="cell" data-label="Akcie:">
-                ${renderActionButton('open', 'Lokality', {
-                    'data-dm-modal': 'draw-coordinates',
+                 ${renderActionButton('edit', 'Upraviť', {
+                    'data-dm-modal': 'edit-map',
                     'data-dm-payload': project.id,
                 })}
-                ${renderActionButton('edit', 'Upraviť', {
-                    'data-dm-modal': 'edit-map',
+                ${renderActionButton('open', 'Lokality', {
+                    'data-dm-modal': 'draw-coordinates',
                     'data-dm-payload': project.id,
                 })}
                 ${renderActionButton('delete', 'Zmazať', {
@@ -166,12 +166,12 @@ function renderFloorRow(floor, shortcode) {
             </div>
             <div class="dm-board__cell dm-board__cell--type" role="cell" data-label="Typ:">${escapeHtml(floor.type)}</div>
             <div class="dm-board__cell dm-board__cell--actions" role="cell" data-label="Akcie:">
-                ${renderActionButton('open', `Zobraziť lokalitu ${floor.name}`, {
-                    'data-dm-modal': 'draw-coordinates',
-                    'data-dm-payload': floor.id,
-                })}
                 ${renderActionButton('edit', `Upraviť lokalitu ${floor.name}`, {
                     'data-dm-modal': 'edit-location',
+                    'data-dm-payload': floor.id,
+                })}
+                ${renderActionButton('open', `Zobraziť lokalitu ${floor.name}`, {
+                    'data-dm-modal': 'draw-coordinates',
                     'data-dm-payload': floor.id,
                 })}
                 ${renderActionButton('delete', `Zmazať lokalitu ${floor.name}`, {
@@ -190,6 +190,4 @@ function renderFloorRow(floor, shortcode) {
         </div>
     `;
 }
-
-
 

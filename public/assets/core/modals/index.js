@@ -421,7 +421,7 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="url" placeholder=" " value="${escapeHtml(urlValue)}">
                                             <label class="dm-field__label">URL</label>
                                         </div>
-                                        <div class="dm-field">
+                                        <div class="dm-field dm-field--with-unit" data-unit="m²">
                                             <button type="button" class="dm-field__info" aria-label="Rozloha lokality v m²" data-tooltip="Rozloha lokality v m²">${infoIcon}</button>
                                             <input type="number" step="0.01" autocomplete="off" class="dm-field__input" data-dm-field="area" placeholder=" " value="${escapeHtml(areaValue)}">
                                             <label class="dm-field__label">Rozloha (m²)</label>
@@ -431,14 +431,14 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="prefix" placeholder=" " value="${escapeHtml(prefixValue)}">
                                             <label class="dm-field__label">Prefix</label>
                                         </div>
-                                        <div class="dm-field">
+                                        <div class="dm-field dm-field--with-unit" data-unit="€">
                                             <button type="button" class="dm-field__info" aria-label="Cena v €" data-tooltip="Cena v €">${infoIcon}</button>
                                             <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="price" placeholder=" " value="${escapeHtml(priceValue)}">
                                             <label class="dm-field__label">Cena (€)</label>
                                         </div>
                                     </div>
                                     <div class="dm-form__column">
-                                        <div class="dm-field">
+                                        <div class="dm-field dm-field--with-unit" data-unit="€">
                                             <button type="button" class="dm-field__info" aria-label="Prenájom v €" data-tooltip="Prenájom v €">${infoIcon}</button>
                                             <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="rent" placeholder=" " value="${escapeHtml(rentValue)}">
                                             <label class="dm-field__label">Prenájom (€)</label>
