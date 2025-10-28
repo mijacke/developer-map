@@ -47,6 +47,7 @@ export function initDeveloperMap(options) {
         root.style.setProperty('--dm-content-text-color', staticTextColor);
         root.style.setProperty('--dm-text', staticTextColor);
         root.style.setProperty('--dm-map-modal-heading-color', staticTextColor);
+        root.style.setProperty('--dm-toolbar-text-color', staticTextColor);
 
         colors.forEach((color) => {
             if (!color || typeof color.label !== 'string') return;
@@ -55,6 +56,11 @@ export function initDeveloperMap(options) {
 
             if (label === 'Farba nadpisov' && typeof color.value === 'string' && color.value.trim()) {
                 root.style.setProperty('--dm-map-modal-heading-color', color.value.trim());
+                return;
+            }
+
+            if (label === 'Farba obsahových textov' && typeof color.value === 'string' && color.value.trim()) {
+                root.style.setProperty('--dm-toolbar-text-color', color.value.trim());
                 return;
             }
 
