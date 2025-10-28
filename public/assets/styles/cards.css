@@ -336,14 +336,14 @@
         transform: translateY(-50%) scale(0.8);
         background-color: var(--dm-surface);
         padding: 0 .2em;
-        color: #2196f3;
+        color: var(--dm-map-modal-heading-color, #1C134F);
     }
 
     .dm-field select:focus ~ label {
         transform: translateY(-50%) scale(0.8);
         background-color: var(--dm-surface);
         padding: 0 .2em;
-        color: #2196f3;
+        color: var(--dm-map-modal-heading-color, #1C134F);
     }
 
     .dm-field select.dm-field__input {

@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-28 23:11:09 */
+/* Generated: 2025-10-28 23:37:32 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -1424,14 +1424,14 @@
         transform: translateY(-50%) scale(0.8);
         background-color: var(--dm-surface);
         padding: 0 .2em;
-        color: #2196f3;
+        color: var(--dm-map-modal-heading-color, #1C134F);
     }
 
     .dm-field select:focus ~ label {
         transform: translateY(-50%) scale(0.8);
         background-color: var(--dm-surface);
         padding: 0 .2em;
-        color: #2196f3;
+        color: var(--dm-map-modal-heading-color, #1C134F);
     }
 
     .dm-field select.dm-field__input {
@@ -2618,7 +2618,7 @@
 .dm-modal__form .dm-field--with-unit.dm-field--filled::after,
 .dm-form .dm-field--with-unit:focus-within::after,
 .dm-form .dm-field--with-unit.dm-field--filled::after {
-    color: #2196f3;
+    color: var(--dm-map-modal-heading-color, #1C134F);
 }
 
 .dm-modal__form .dm-field:not(.dm-field--filled):not(:focus-within) .dm-field__input {
@@ -2685,7 +2685,7 @@
     transform: translateY(-50%) scale(0.8);
     background-color: var(--dm-surface);
     padding: 0 .2em;
-    color: #2196f3;
+    color: var(--dm-map-modal-heading-color, #1C134F);
 }
 
 .dm-modal--map .dm-field__input:focus ~ .dm-field__label,
@@ -2712,7 +2712,7 @@
     transform: translateY(-50%) scale(0.8) !important;
     background-color: var(--dm-surface) !important;
     padding: 0 .2em !important;
-    color: #2196f3 !important;
+    color: var(--dm-map-modal-heading-color, #1C134F) !important;
 }
 
 .dm-modal--map select:focus ~ .dm-field__label,
