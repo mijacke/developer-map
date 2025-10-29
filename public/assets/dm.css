@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-29 01:06:51 */
+/* Generated: 2025-10-29 01:13:06 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -2210,6 +2210,17 @@
     box-shadow: 0 32px 84px rgba(15, 18, 28, 0.28);
 }
 
+.dm-modal--map,
+.dm-modal--location {
+    scrollbar-color: color-mix(in srgb, var(--dm-map-modal-content-color) 18%, transparent) transparent;
+}
+
+.dm-modal--map::-webkit-scrollbar-thumb,
+.dm-modal--location::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--dm-map-modal-content-color) 18%, transparent);
+    border-radius: 999px;
+}
+
 .dm-modal__header {
     display: flex;
     justify-content: space-between;
@@ -2974,12 +2985,12 @@
 }
 
 .dm-select__list::-webkit-scrollbar-thumb {
-    background: rgba(26, 115, 232, 0.25);
+    background: color-mix(in srgb, var(--dm-map-modal-content-color) 18%, transparent);
     border-radius: 999px;
 }
 
 .dm-select__list::-webkit-scrollbar-thumb:hover {
-    background: rgba(26, 115, 232, 0.4);
+    background: color-mix(in srgb, var(--dm-map-modal-content-color) 18%, transparent);
 }
 
 .dm-select__list {
