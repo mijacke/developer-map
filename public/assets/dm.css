@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-29 11:29:36 */
+/* Generated: 2025-10-29 13:21:04 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -1596,7 +1596,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 18px;
+    padding: 15px 45px;
     border-radius: 16px;
     border: 1px solid var(--dm-button-color);
     background: var(--dm-button-color);

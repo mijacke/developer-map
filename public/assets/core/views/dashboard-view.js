@@ -118,6 +118,82 @@ function matchesStatusFilter(floor, statusFilter, statuses) {
     return resolveStatusId(floor, statuses) === statusFilter;
 }
 
+function formatArea(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) {
+        return escapeHtml('—');
+    }
+    const normalised = raw.toLowerCase().replace(/\s+/g, '');
+    if (normalised.endsWith('m²') || normalised.endsWith('m2')) {
+        const display = raw.replace(/m2$/i, 'm²');
+        return escapeHtml(display);
+    }
+    return escapeHtml(`${raw} m²`);
+}
+
+function normaliseCurrencyDisplay(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) {
+        return '';
+    }
+    let result = raw.replace(/\beur\b/gi, '€');
+    result = result.replace(/\s+/g, ' ').trim();
+    if (result.includes('€')) {
+        result = result.replace(/\s*€\s*/g, ' € ').replace(/\s+/g, ' ').trim();
+        if (result.startsWith('€')) {
+            const remainder = result.slice(1).trim();
+            if (remainder) {
+                result = `${remainder} €`;
+            } else {
+                result = '€';
+            }
+        } else if (!result.endsWith('€')) {
+            const parts = result.split('€');
+            if (parts.length === 2) {
+                const prefix = parts[0].trim();
+                const suffix = parts[1].trim();
+                result = suffix ? `${prefix} € ${suffix}` : `${prefix} €`;
+            }
+        }
+        return result.replace(/\s+/g, ' ').trim();
+    }
+    return `${result} €`;
+}
+
+function formatPrice(value) {
+    const display = normaliseCurrencyDisplay(value);
+    if (!display || display === '€') {
+        return escapeHtml('—');
+    }
+    return escapeHtml(display);
+}
+
+function formatRent(value) {
+    const display = normaliseCurrencyDisplay(value);
+    if (!display) {
+        return escapeHtml('—');
+    }
+    const normalised = display.toLowerCase().replace(/\s+/g, '');
+    const hasPerMonth = normalised.includes('€/mes') || normalised.includes('€/mesiac');
+    if (hasPerMonth) {
+        const cleaned = display
+            .replace(/€\s*\/\s*mesiac/gi, '€ /mes')
+            .replace(/€\s*\/\s*mes/gi, '€ /mes')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .replace('€ /mes', '€/mes');
+        if (!cleaned || cleaned === '€/mes') {
+            return escapeHtml('—');
+        }
+        return escapeHtml(cleaned);
+    }
+    const base = display.replace(/\s*€$/, '').trim();
+    if (!base) {
+        return escapeHtml('—');
+    }
+    return escapeHtml(`${base} €/mes`);
+}
+
 function parsePriceValue(rawPrice) {
     if (rawPrice === null || rawPrice === undefined) return null;
     let cleaned = String(rawPrice)
@@ -192,9 +268,9 @@ export function renderDashboardView(state, data) {
                             <td role="cell" data-label="Typ">${safeText(floor.type)}</td>
                             <td role="cell" data-label="Názov">${safeText(floor.name)}</td>
                             <td role="cell" data-label="Označenie">${safeText(designation)}</td>
-                            <td role="cell" data-label="Rozloha">${safeText(floor.area)}</td>
-                            <td role="cell" data-label="Cena">${safeText(floor.price)}</td>
-                            <td role="cell" data-label="Prenájom">${safeText(floor.rent)}</td>
+                            <td role="cell" data-label="Rozloha">${formatArea(floor.area)}</td>
+                            <td role="cell" data-label="Cena">${formatPrice(floor.price)}</td>
+                            <td role="cell" data-label="Prenájom">${formatRent(floor.rent)}</td>
                             <td role="cell" data-label="Stav">${renderStatusBadge(status)}</td>
                             <td role="cell" data-label="Akcie" class="dm-dashboard__cell--actions">
                                 ${renderDashboardAction(
