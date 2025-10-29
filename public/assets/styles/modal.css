@@ -352,6 +352,17 @@
     color: var(--dm-map-modal-heading-color, #1C134F);
 }
 
+.dm-modal--map .dm-field__input,
+.dm-modal--location .dm-field__input {
+    color: var(--dm-map-modal-content-color, #1C134F) !important;
+}
+
+.dm-modal--map .dm-field__input::placeholder,
+.dm-modal--location .dm-field__input::placeholder {
+    color: var(--dm-map-modal-content-color, #1C134F) !important;
+    opacity: 0.6;
+}
+
 .dm-modal__form .dm-field__required {
     color: #f43f5e;
 }
@@ -585,6 +596,16 @@
     border: none;
 }
 
+.dm-modal--map select.dm-field__input,
+.dm-modal--location select.dm-field__input {
+    color: var(--dm-map-modal-content-color, #1C134F) !important;
+}
+
+.dm-modal--map select.dm-field__input option,
+.dm-modal--location select.dm-field__input option {
+    color: var(--dm-map-modal-content-color, #1C134F) !important;
+}
+
 .dm-modal__form select.dm-field__input option:hover,
 .dm-modal__form select.dm-field__input option:checked {
     background: rgba(26, 115, 232, 0.14);
@@ -659,6 +680,11 @@
     position: relative;
     background-clip: padding-box;
     outline: none !important;
+}
+
+.dm-modal--map .dm-select__trigger,
+.dm-modal--location .dm-select__trigger {
+    color: var(--dm-map-modal-content-color, #1C134F) !important;
 }
 
 .dm-select__trigger:hover {
@@ -786,7 +812,7 @@
 
 .dm-select__list {
     scrollbar-width: thin;
-    scrollbar-color: rgba(26, 115, 232, 0.4) transparent;
+    scrollbar-color: color-mix(in srgb, var(--dm-map-modal-content-color) 18%, transparent);
 }
 
 .dm-select__option {
@@ -797,18 +823,23 @@
     transition: background 0.15s ease, color 0.15s ease;
 }
 
+.dm-modal--map .dm-select__option,
+.dm-modal--location .dm-select__option {
+    color: var(--dm-map-modal-content-color, #1C134F) !important;
+}
+
 .dm-select__option.is-disabled {
     cursor: not-allowed;
     opacity: 0.5;
 }
 
 .dm-select__option:not(.is-disabled):hover {
-    background: rgba(26, 115, 232, 0.12);
+    background: color-mix(in srgb, var(--dm-map-modal-content-color) 12%, transparent);
     color: #0f3d8c;
 }
 
 .dm-select__option.is-active {
-    background: rgba(26, 115, 232, 0.18);
+    background: color-mix(in srgb, var(--dm-map-modal-content-color) 18%, transparent);
     color: #0f3d8c;
     font-weight: 600;
 }
