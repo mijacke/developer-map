@@ -137,7 +137,11 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
                         ${headerIcon}
                         <h2>${title}</h2>
                     </div>
-                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4841 15.5772L3.09313 24.9681L0 21.875L9.39094 12.4841L0 3.09313L3.09313 0L12.4841 9.39094L21.875 0L24.9681 3.09313L15.5772 12.4841L24.9681 21.875L21.875 24.9681L12.4841 15.5772Z" fill="#1C134F"/>
+                        </svg>
+                    </button>
                 </header>
                 <div class="dm-modal__body">
                     <form class="dm-modal__form">
@@ -362,7 +366,11 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                         ${headerIcon}
                         <h2>${title}</h2>
                     </div>
-                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4841 15.5772L3.09313 24.9681L0 21.875L9.39094 12.4841L0 3.09313L3.09313 0L12.4841 9.39094L21.875 0L24.9681 3.09313L15.5772 12.4841L24.9681 21.875L21.875 24.9681L12.4841 15.5772Z" fill="#1C134F"/>
+                        </svg>
+                    </button>
                 </header>
                 <div class="dm-modal__body">
                     <form class="dm-modal__form">
@@ -490,7 +498,11 @@ function renderTypeModal(title, cta, data, itemId = null, modalState = null) {
             <div class="dm-modal dm-modal--narrow">
                 <header class="dm-modal__header">
                     <h2>${title}</h2>
-                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4841 15.5772L3.09313 24.9681L0 21.875L9.39094 12.4841L0 3.09313L3.09313 0L12.4841 9.39094L21.875 0L24.9681 3.09313L15.5772 12.4841L24.9681 21.875L21.875 24.9681L12.4841 15.5772Z" fill="#1C134F"/>
+                        </svg>
+                    </button>
                 </header>
                 <div class="dm-modal__body">
                     <form class="dm-form" data-dm-type-form${typeId ? ` data-dm-type-id="${escapeHtml(typeId)}"` : ''}>
@@ -559,7 +571,11 @@ function renderStatusModal(title, cta, data, itemId = null, modalState = null) {
             <div class="dm-modal dm-modal--narrow">
                 <header class="dm-modal__header">
                     <h2>${title}</h2>
-                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4841 15.5772L3.09313 24.9681L0 21.875L9.39094 12.4841L0 3.09313L3.09313 0L12.4841 9.39094L21.875 0L24.9681 3.09313L15.5772 12.4841L24.9681 21.875L21.875 24.9681L12.4841 15.5772Z" fill="#1C134F"/>
+                        </svg>
+                    </button>
                 </header>
                 <div class="dm-modal__body">
                     <form class="dm-form" data-dm-status-form${statusId ? ` data-dm-status-id="${escapeHtml(statusId)}"` : ''}>
@@ -622,7 +638,11 @@ function renderConfirmModal(state) {
             <div class="dm-modal dm-modal--narrow">
                 <header class="dm-modal__header">
                     <h2>Ste si istý?</h2>
-                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4841 15.5772L3.09313 24.9681L0 21.875L9.39094 12.4841L0 3.09313L3.09313 0L12.4841 9.39094L21.875 0L24.9681 3.09313L15.5772 12.4841L24.9681 21.875L21.875 24.9681L12.4841 15.5772Z" fill="#1C134F"/>
+                        </svg>
+                    </button>
                 </header>
                 <div class="dm-modal__body">
                     <p>Naozaj chcete vymazať <strong>${escapeHtml(itemName)}</strong>?</p>
@@ -659,7 +679,11 @@ function renderDrawModal(state, data) {
             <div class="dm-modal dm-modal--draw">
                 <header class="dm-modal__header dm-modal__header--center">
                     <h2>Nakresliť súradnice</h2>
-                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4841 15.5772L3.09313 24.9681L0 21.875L9.39094 12.4841L0 3.09313L3.09313 0L12.4841 9.39094L21.875 0L24.9681 3.09313L15.5772 12.4841L24.9681 21.875L21.875 24.9681L12.4841 15.5772Z" fill="#1C134F"/>
+                        </svg>
+                    </button>
                 </header>
                 <div class="dm-modal__body dm-modal__body--draw">
                     <div class="dm-draw" data-dm-draw-root data-dm-floor="${activeFloor ? escapeHtml(activeFloor.id) : ''}" data-dm-floor-name="${escapeHtml(floorLabel)}">
@@ -711,7 +735,11 @@ function renderSimpleModal(title, body) {
             <div class="dm-modal dm-modal--narrow">
                 <header class="dm-modal__header">
                     <h2>${title}</h2>
-                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4841 15.5772L3.09313 24.9681L0 21.875L9.39094 12.4841L0 3.09313L3.09313 0L12.4841 9.39094L21.875 0L24.9681 3.09313L15.5772 12.4841L24.9681 21.875L21.875 24.9681L12.4841 15.5772Z" fill="#1C134F"/>
+                        </svg>
+                    </button>
                 </header>
                 <div class="dm-modal__body">${body}</div>
                 <footer class="dm-modal__actions dm-modal__actions--split">
@@ -743,7 +771,11 @@ function renderColorModal(data, payload) {
             <div class="dm-modal dm-modal--narrow">
                 <header class="dm-modal__header">
                     <h2>Upraviť farbu</h2>
-                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>&times;</button>
+                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4841 15.5772L3.09313 24.9681L0 21.875L9.39094 12.4841L0 3.09313L3.09313 0L12.4841 9.39094L21.875 0L24.9681 3.09313L15.5772 12.4841L24.9681 21.875L21.875 24.9681L12.4841 15.5772Z" fill="#1C134F"/>
+                        </svg>
+                    </button>
                 </header>
                 <div class="dm-modal__body">
                     <form class="dm-form">

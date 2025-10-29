@@ -70,7 +70,7 @@
     border-radius: 0;
     border: none;
     background: transparent;
-    color: #4d2fff;
+    color: #1C134F;
     flex-shrink: 0;
     box-shadow: none;
 }
@@ -97,27 +97,27 @@
 
 .dm-modal__close {
     border: none !important;
-    background: transparent !important;
+    background: #ffffff !important;
     width: 52px;
     height: 52px;
     border-radius: 18px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px !important;
+    font-size: 39px !important;
     line-height: 1;
     cursor: pointer;
-    color: #2f1fc5 !important;
-    border: 1px solid rgba(47, 31, 197, 0.14) !important;
-    background: rgba(47, 31, 197, 0.06) !important;
-    box-shadow: 0 12px 24px rgba(47, 31, 197, 0.15);
+    color: #1C134F !important;
+    border: 1px solid #ffffff !important;
+    background: #ffffff !important;
     transition: color 0.15s ease !important;
 }
 
-.dm-modal__close:hover {
-    color: #1c104f !important;
-    background: rgba(47, 31, 197, 0.12) !important;
-    border-color: rgba(47, 31, 197, 0.22) !important;
+.dm-modal__close:hover,
+.dm-modal__close:focus {
+    color: #1C134F !important;
+    background: #ffffff !important;
+    border-color: #ffffff !important;
 }
 
 .dm-modal__close:focus-visible {
