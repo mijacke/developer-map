@@ -452,6 +452,9 @@ export function initDeveloperMap(options) {
         settingsSection: SETTINGS_SECTIONS.OVERVIEW,
         activeProjectId: data.projects[0]?.id ?? null,
         searchTerm: '',
+        dashboardSearchTerm: '',
+        dashboardStatusFilter: '',
+        dashboardPriceOrder: '',
         modal: null,
         runtimeConfig,
     };
@@ -660,10 +663,63 @@ export function initDeveloperMap(options) {
     root.dataset.dmHydrated = '1';
     root.classList.add('dm-root');
 
+    function captureFocusState() {
+        if (typeof document === 'undefined') {
+            return null;
+        }
+        const active = document.activeElement;
+        if (!active || !root.contains(active)) {
+            return null;
+        }
+        const preserveKey = active.getAttribute('data-dm-preserve-focus');
+        if (!preserveKey) {
+            return null;
+        }
+        let selectionStart = null;
+        let selectionEnd = null;
+        if (typeof active.selectionStart === 'number' && typeof active.selectionEnd === 'number') {
+            selectionStart = active.selectionStart;
+            selectionEnd = active.selectionEnd;
+        }
+        return {
+            key: preserveKey,
+            selectionStart,
+            selectionEnd,
+            scrollX: typeof window !== 'undefined' ? window.scrollX : 0,
+            scrollY: typeof window !== 'undefined' ? window.scrollY : 0,
+        };
+    }
+
+    function restoreFocusState(focusState) {
+        if (!focusState) {
+            return;
+        }
+        const target = root.querySelector(`[data-dm-preserve-focus="${focusState.key}"]`);
+        if (target && typeof target.focus === 'function') {
+            target.focus();
+            if (
+                focusState.selectionStart !== null &&
+                focusState.selectionEnd !== null &&
+                typeof target.setSelectionRange === 'function'
+            ) {
+                try {
+                    target.setSelectionRange(focusState.selectionStart, focusState.selectionEnd);
+                } catch (err) {
+                    // Ignore selection errors for inputs that do not support setSelectionRange.
+                }
+            }
+        }
+        if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+            window.scrollTo(focusState.scrollX ?? 0, focusState.scrollY ?? 0);
+        }
+    }
+
     function setState(patch) {
+        const focusState = captureFocusState();
         const next = typeof patch === 'function' ? patch(state) : patch;
         Object.assign(state, next);
         render();
+        restoreFocusState(focusState);
     }
 
     function openModal(modalType, rawPayload = null, metadata = null) {
@@ -950,6 +1006,9 @@ export function initDeveloperMap(options) {
                     view: APP_VIEWS.DASHBOARD,
                     activeProjectId: projectId,
                     mapSection: MAP_SECTIONS.LIST,
+                    dashboardSearchTerm: '',
+                    dashboardStatusFilter: '',
+                    dashboardPriceOrder: '',
                 });
             });
         });
@@ -1058,6 +1117,29 @@ export function initDeveloperMap(options) {
         if (searchInput) {
             searchInput.addEventListener('input', (event) => {
                 setState({ searchTerm: String(event.target.value ?? '') });
+            });
+        }
+
+        const dashboardSearchInput = root.querySelector('[data-dm-dashboard-search]');
+        if (dashboardSearchInput) {
+            dashboardSearchInput.addEventListener('input', (event) => {
+                setState({ dashboardSearchTerm: String(event.target.value ?? '') });
+            });
+        }
+
+        const dashboardStatusSelect = root.querySelector('[data-dm-dashboard-status]');
+        if (dashboardStatusSelect) {
+            dashboardStatusSelect.addEventListener('change', (event) => {
+                setState({ dashboardStatusFilter: String(event.target.value ?? '') });
+            });
+        }
+
+        const dashboardPriceSelect = root.querySelector('[data-dm-dashboard-price]');
+        if (dashboardPriceSelect) {
+            dashboardPriceSelect.addEventListener('change', (event) => {
+                const nextValue = String(event.target.value ?? '');
+                const allowed = nextValue === 'asc' || nextValue === 'desc' ? nextValue : '';
+                setState({ dashboardPriceOrder: allowed });
             });
         }
 

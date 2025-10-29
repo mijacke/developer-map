@@ -79,6 +79,71 @@ function renderStatusBadge(status) {
     `;
 }
 
+function normaliseText(value) {
+    return String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function matchesSearchTerm(floor, searchTerm) {
+    if (!searchTerm) return true;
+    const needle = normaliseText(searchTerm);
+    if (!needle) return true;
+    const candidates = [
+        normaliseText(floor?.name),
+        normaliseText(floor?.designation),
+        normaliseText(floor?.label),
+        normaliseText(floor?.type),
+    ].filter(Boolean);
+    return candidates.some((value) => value.includes(needle));
+}
+
+function resolveStatusId(floor, statuses) {
+    if (!floor) return '';
+    if (floor.statusId) return String(floor.statusId);
+    if (floor.statusKey) return String(floor.statusKey);
+    const label = floor.statusLabel ?? floor.status;
+    if (!label || !Array.isArray(statuses)) {
+        return '';
+    }
+    const match = statuses.find((status) => normaliseText(status.label) === normaliseText(label));
+    return match ? String(match.id) : '';
+}
+
+function matchesStatusFilter(floor, statusFilter, statuses) {
+    if (!statusFilter) return true;
+    return resolveStatusId(floor, statuses) === statusFilter;
+}
+
+function parsePriceValue(rawPrice) {
+    if (rawPrice === null || rawPrice === undefined) return null;
+    let cleaned = String(rawPrice)
+        .replace(/\s/g, '')
+        .replace(/[€$£₤₿¥₹₽₴₪₫₵₢₣₦₱₲₳₵₡₮₩₭₺₼₸₶₯₠₧₷₨₰₥٫]+/g, '')
+        .replace(/,/g, '.')
+        .replace(/[^0-9.+-]/g, '');
+    if (!cleaned) return null;
+
+    const isNegative = cleaned.startsWith('-');
+    if (isNegative || cleaned.startsWith('+')) {
+        cleaned = cleaned.slice(1);
+    }
+
+    if (!cleaned) return null;
+
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+        const fraction = parts.pop();
+        cleaned = parts.join('') + '.' + fraction;
+    }
+
+    const numeric = parseFloat((isNegative ? '-' : '') + cleaned);
+    return Number.isFinite(numeric) ? numeric : null;
+}
+
 export function renderDashboardView(state, data) {
     const project = data.projects.find((item) => item.id === state.activeProjectId) ?? data.projects[0];
     const floors = project?.floors ?? [];
@@ -94,9 +159,30 @@ export function renderDashboardView(state, data) {
     console.log('[Dashboard] Statuses:', statuses);
     console.log('[Dashboard] First floor statusId:', floors[0]?.statusId);
 
-    const tableRows =
+    const statusFilter = String(state.dashboardStatusFilter ?? '').trim();
+    const searchTerm = String(state.dashboardSearchTerm ?? '');
+    const priceOrder = String(state.dashboardPriceOrder ?? '').trim();
+
+    const filteredFloors =
         floors.length > 0
-            ? floors
+            ? floors.filter((floor) => matchesSearchTerm(floor, searchTerm)).filter((floor) => matchesStatusFilter(floor, statusFilter, statuses))
+            : [];
+
+    const orderedFloors =
+        filteredFloors.length > 1 && (priceOrder === 'asc' || priceOrder === 'desc')
+            ? [...filteredFloors].sort((a, b) => {
+                  const priceA = parsePriceValue(a.price);
+                  const priceB = parsePriceValue(b.price);
+                  if (priceA === null && priceB === null) return 0;
+                  if (priceA === null) return priceOrder === 'asc' ? 1 : -1;
+                  if (priceB === null) return priceOrder === 'asc' ? -1 : 1;
+                  return priceOrder === 'asc' ? priceA - priceB : priceB - priceA;
+              })
+            : filteredFloors;
+
+    const tableRows =
+        orderedFloors.length > 0
+            ? orderedFloors
                   .map((floor) => {
                       const status = resolveStatus(floor, statuses);
                       const designation = floor.designation ?? floor.shortcode ?? floor.label;
@@ -181,25 +267,28 @@ export function renderDashboardView(state, data) {
                                 placeholder="Vyhľadať lokalitu..."
                                 autocomplete="off"
                                 aria-label="Vyhľadať lokalitu"
+                                data-dm-preserve-focus="dashboard-search"
+                                data-dm-dashboard-search
+                                value="${escapeHtml(searchTerm)}"
                             />
                         </label>
                         <div class="dm-field dm-dashboard__select">
-                            <select id="dm-dashboard-status" name="dm-dashboard-status" class="dm-field__input" data-dm-select>
-                                <option value="">Všetky stavy</option>
+                            <select id="dm-dashboard-status" name="dm-dashboard-status" class="dm-field__input" data-dm-select data-dm-dashboard-status>
+                                <option value=""${statusFilter === '' ? ' selected' : ''}>Všetky stavy</option>
                                 ${statuses
                                     .map(
                                         (status) =>
-                                            `<option value="${escapeHtml(String(status.id))}">${escapeHtml(status.label)}</option>`,
+                                            `<option value="${escapeHtml(String(status.id))}"${String(status.id) === statusFilter ? ' selected' : ''}>${escapeHtml(status.label)}</option>`,
                                     )
                                     .join('')}
                             </select>
                             <label class="dm-field__label" for="dm-dashboard-status">Stav</label>
                         </div>
                         <div class="dm-field dm-dashboard__select">
-                            <select id="dm-dashboard-price" name="dm-dashboard-price" class="dm-field__input" data-dm-select>
-                                <option value="">Všetky ceny</option>
-                                <option value="asc">Najnižšia</option>
-                                <option value="desc">Najvyššia</option>
+                            <select id="dm-dashboard-price" name="dm-dashboard-price" class="dm-field__input" data-dm-select data-dm-dashboard-price>
+                                <option value=""${priceOrder === '' ? ' selected' : ''}>Všetky ceny</option>
+                                <option value="asc"${priceOrder === 'asc' ? ' selected' : ''}>Najnižšia</option>
+                                <option value="desc"${priceOrder === 'desc' ? ' selected' : ''}>Najvyššia</option>
                             </select>
                             <label class="dm-field__label" for="dm-dashboard-price">Cena</label>
                         </div>
