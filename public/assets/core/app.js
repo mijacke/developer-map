@@ -2256,7 +2256,7 @@ export function initDeveloperMap(options) {
             valueEl.innerHTML = placeholderMarkup;
         }
 
-        const hasValue = Boolean(currentValue);
+        const hasValue = Boolean(activeOption);
         wrapper.classList.toggle('dm-select--has-value', hasValue);
         wrapper.classList.toggle('dm-select--placeholder', !hasValue);
         field.classList.toggle('dm-field--select-has-value', hasValue);

@@ -4,6 +4,7 @@ const TOOLBAR_ICONS = {
     search: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
     chevron: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
     plus: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>',
+    back: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>',
 };
 
 const ACTION_ICONS = {
@@ -151,12 +152,19 @@ export function renderDashboardView(state, data) {
 
     return `
         <section class="dm-dashboard">
-            <button class="dm-link-button dm-dashboard__back" data-dm-back>← Späť na zoznam</button>
             <div class="dm-dashboard__card">
                 <header class="dm-dashboard__card-head">
                     <div class="dm-dashboard__heading">
-                        <h1>Zoznam lokalít</h1>
-                        <p>${escapeHtml(project?.name ?? '')}</p>
+                        <div class="dm-dashboard__heading-top">
+                            <div class="dm-dashboard__heading-text">
+                                <h1>Zoznam lokalít</h1>
+                                <p>${escapeHtml(project?.name ?? '')}</p>
+                            </div>
+                            <button type="button" class="dm-button dm-button--dark dm-dashboard__back" data-dm-back>
+                                <span class="dm-dashboard__back-icon" aria-hidden="true">${TOOLBAR_ICONS.back}</span>
+                                Vrátit sa na mapy
+                            </button>
+                        </div>
                     </div>
                     ${projectImageUrl ? `
                     <div class="dm-dashboard__project-image">
@@ -164,6 +172,7 @@ export function renderDashboardView(state, data) {
                     </div>
                     ` : ''}
                     <div class="dm-dashboard__toolbar" role="search">
+                        <p class="dm-dashboard__toolbar-heading">Zoznam lokalít</p>
                         <label class="dm-dashboard__search">
                             <span class="dm-dashboard__search-icon" aria-hidden="true">${TOOLBAR_ICONS.search}</span>
                             <input
@@ -174,9 +183,9 @@ export function renderDashboardView(state, data) {
                                 aria-label="Vyhľadať lokalitu"
                             />
                         </label>
-                        <label class="dm-dashboard__select">
-                            <select name="dm-dashboard-status" aria-label="Filtrovať podľa stavu">
-                                <option value="">Stav</option>
+                        <div class="dm-field dm-dashboard__select">
+                            <select id="dm-dashboard-status" name="dm-dashboard-status" class="dm-field__input" data-dm-select>
+                                <option value="">Všetky stavy</option>
                                 ${statuses
                                     .map(
                                         (status) =>
@@ -184,16 +193,16 @@ export function renderDashboardView(state, data) {
                                     )
                                     .join('')}
                             </select>
-                            <span class="dm-dashboard__select-icon" aria-hidden="true">${TOOLBAR_ICONS.chevron}</span>
-                        </label>
-                        <label class="dm-dashboard__select">
-                            <select name="dm-dashboard-price" aria-label="Filtrovať podľa ceny">
-                                <option value="">Cena</option>
+                            <label class="dm-field__label" for="dm-dashboard-status">Stav</label>
+                        </div>
+                        <div class="dm-field dm-dashboard__select">
+                            <select id="dm-dashboard-price" name="dm-dashboard-price" class="dm-field__input" data-dm-select>
+                                <option value="">Všetky ceny</option>
                                 <option value="asc">Najnižšia</option>
                                 <option value="desc">Najvyššia</option>
                             </select>
-                            <span class="dm-dashboard__select-icon" aria-hidden="true">${TOOLBAR_ICONS.chevron}</span>
-                        </label>
+                            <label class="dm-field__label" for="dm-dashboard-price">Cena</label>
+                        </div>
                         <button class="dm-dashboard__add" data-dm-modal="add-location">
                             <span class="dm-dashboard__add-icon" aria-hidden="true">${TOOLBAR_ICONS.plus}</span>
                             Pridať lokalitu
