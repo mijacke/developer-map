@@ -134,6 +134,7 @@ function dm_render_dashboard_shortcode(): string
         #dm-root.dm-root .dm-button--dark,
         #dm-root.dm-root .dm-board__cta {
             background: var(--dm-button-color, #7c3aed) !important;
+            color: #ffffff !important;
         }
     ';
     wp_add_inline_style(DM_PLUGIN_STYLE_HANDLE, $critical_css);

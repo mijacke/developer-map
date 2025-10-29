@@ -891,9 +891,9 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    background: transparent;
-    color: inherit;
-    border: 1px solid rgba(29, 27, 47, 0.16);
+    background: var(--dm-button-color, #7c3aed) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--dm-button-color, #7c3aed) !important;
     border-radius: 18px;
     padding: 16px 28px;
     font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -902,7 +902,7 @@
     letter-spacing: -0.01em;
     box-shadow: none;
     cursor: pointer;
-    transition: transform 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
 .dm-modal .dm-button--dark svg {
@@ -913,8 +913,9 @@
 
 .dm-modal .dm-button--dark:hover,
 .dm-modal .dm-button--dark:focus-visible {
-    background: transparent;
-    border-color: rgba(29, 27, 47, 0.32);
+    background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 85%, #ffffff) !important;
+    border-color: color-mix(in srgb, var(--dm-button-color, #7c3aed) 85%, #ffffff) !important;
+    color: #ffffff !important;
     transform: translateY(-1px);
 }
 

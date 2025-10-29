@@ -1,5 +1,5 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-29 01:13:06 */
+/* Generated: 2025-10-29 01:24:12 */
 /* Version: 0.2.1 */
 
 /* === base.css === */
@@ -25,6 +25,7 @@
     --dm-heading-color: #1C134F;
     --dm-content-text-color: #1C134F;
     --dm-map-modal-heading-color: #1C134F;
+    --dm-map-modal-content-color: #1C134F;
     --dm-toolbar-text-color: #1C134F;
 
     position: relative;
@@ -797,15 +798,15 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    border: 1px solid rgba(107, 114, 128, 0.2);
+    border: 1px solid var(--dm-button-color, #7c3aed);
     border-radius: 16px;
     padding: 10px 18px;
     font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
     font-weight: 500;
     font-size: 15px;
-    color: var(--dm-content-text-color);
+    color: #ffffff;
     cursor: pointer;
-    background: rgba(107, 114, 128, 0.06);
+    background: var(--dm-button-color, #7c3aed);
     box-shadow: 0 4px 12px rgba(22, 22, 29, 0.12);
     transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
@@ -818,8 +819,8 @@
 
 .dm-board__cta:hover {
     transform: translateY(-1px);
-    background: rgba(107, 114, 128, 0.12);
-    border-color: rgba(107, 114, 128, 0.3);
+    background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 85%, #ffffff);
+    border-color: color-mix(in srgb, var(--dm-button-color, #7c3aed) 85%, #ffffff);
     box-shadow: 0 6px 16px rgba(22, 22, 29, 0.15);
 }
 
@@ -1278,15 +1279,16 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: rgba(107, 114, 128, 0.06);
-        color: var(--dm-content-text-color);
-        border: 1px solid rgba(107, 114, 128, 0.2);
+        background: var(--dm-button-color, #7c3aed);
+        color: #ffffff !important;
+        border: 1px solid var(--dm-button-color, #7c3aed);
         border-radius: 16px;
         padding: 10px 18px;
         font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
         font-size: 15px;
         font-weight: 500;
         box-shadow: 0 4px 12px rgba(22, 22, 29, 0.12);
+        transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
     }
 
     .dm-button--dark svg {
@@ -1306,8 +1308,9 @@
     }
 
     .dm-button--dark:hover {
-        background: rgba(107, 114, 128, 0.12);
-        border-color: rgba(107, 114, 128, 0.3);
+        background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 85%, #ffffff);
+        border-color: color-mix(in srgb, var(--dm-button-color, #7c3aed) 85%, #ffffff);
+        color: #ffffff !important;
     }
 
     .dm-section-head h2 {
@@ -1698,7 +1701,7 @@
     font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
     font-weight: 500;
     font-size: 15px;
-    color: #000 !important;
+    color: #ffffff !important;
     cursor: pointer;
     background: var(--dm-button-color) !important;
     box-shadow: 0 4px 12px rgba(22, 22, 29, 0.12);
@@ -1708,8 +1711,8 @@
 .dm-dashboard__add:hover {
     transform: translateY(-1px);
     opacity: 0.9;
-    background: var(--dm-button-color) !important;
-    color: #000 !important;
+    background: color-mix(in srgb, var(--dm-button-color) 85%, #ffffff) !important;
+    color: #ffffff !important;
     box-shadow: 0 6px 16px rgba(22, 22, 29, 0.15);
 }
 
@@ -1717,12 +1720,12 @@
     outline: 2px solid var(--dm-button-color);
     outline-offset: 2px;
     background: var(--dm-button-color) !important;
-    color: #000 !important;
+    color: #ffffff !important;
 }
 
 .dm-dashboard__add:active {
     background: var(--dm-button-color) !important;
-    color: #000 !important;
+    color: #ffffff !important;
 }
 
 .dm-dashboard__add-icon {
@@ -3063,9 +3066,9 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    background: transparent;
-    color: inherit;
-    border: 1px solid rgba(29, 27, 47, 0.16);
+    background: var(--dm-button-color, #7c3aed) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--dm-button-color, #7c3aed) !important;
     border-radius: 18px;
     padding: 16px 28px;
     font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -3074,7 +3077,7 @@
     letter-spacing: -0.01em;
     box-shadow: none;
     cursor: pointer;
-    transition: transform 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
 .dm-modal .dm-button--dark svg {
@@ -3085,8 +3088,9 @@
 
 .dm-modal .dm-button--dark:hover,
 .dm-modal .dm-button--dark:focus-visible {
-    background: transparent;
-    border-color: rgba(29, 27, 47, 0.32);
+    background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 85%, #ffffff) !important;
+    border-color: color-mix(in srgb, var(--dm-button-color, #7c3aed) 85%, #ffffff) !important;
+    color: #ffffff !important;
     transform: translateY(-1px);
 }
 

@@ -165,7 +165,7 @@
     font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
     font-weight: 500;
     font-size: 15px;
-    color: #000 !important;
+    color: #ffffff !important;
     cursor: pointer;
     background: var(--dm-button-color) !important;
     box-shadow: 0 4px 12px rgba(22, 22, 29, 0.12);
@@ -175,8 +175,8 @@
 .dm-dashboard__add:hover {
     transform: translateY(-1px);
     opacity: 0.9;
-    background: var(--dm-button-color) !important;
-    color: #000 !important;
+    background: color-mix(in srgb, var(--dm-button-color) 85%, #ffffff) !important;
+    color: #ffffff !important;
     box-shadow: 0 6px 16px rgba(22, 22, 29, 0.15);
 }
 
@@ -184,12 +184,12 @@
     outline: 2px solid var(--dm-button-color);
     outline-offset: 2px;
     background: var(--dm-button-color) !important;
-    color: #000 !important;
+    color: #ffffff !important;
 }
 
 .dm-dashboard__add:active {
     background: var(--dm-button-color) !important;
-    color: #000 !important;
+    color: #ffffff !important;
 }
 
 .dm-dashboard__add-icon {
