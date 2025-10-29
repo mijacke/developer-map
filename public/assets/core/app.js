@@ -83,6 +83,66 @@ export function initDeveloperMap(options) {
         }
     }
 
+    // Convert status label to CSS class name
+    function slugifyStatus(label) {
+        if (!label) return 'unknown';
+        return label
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-)|(-$)/g, '') || 'unknown';
+    }
+
+    // Convert hex color to RGB
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    // Apply status styles dynamically
+    function applyStatusStyles(statuses) {
+        if (!statuses || !Array.isArray(statuses)) return;
+
+        // Remove existing status styles if present
+        let styleElement = document.getElementById('dm-status-styles');
+        if (!styleElement) {
+            styleElement = document.createElement('style');
+            styleElement.id = 'dm-status-styles';
+            document.head.appendChild(styleElement);
+        }
+
+        // Generate CSS for each status
+        const cssRules = statuses.map((status) => {
+            if (!status || !status.label || !status.color) return '';
+            
+            const className = slugifyStatus(status.label);
+            const color = status.color;
+            const rgb = hexToRgb(color);
+            
+            if (!rgb) return '';
+
+            // Generate background with alpha transparency and text color
+            const bgColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`;
+            
+            // Use the status color for text
+            const textColor = color;
+
+            return `
+#dm-root .dm-status.dm-status--${className} {
+    background: ${bgColor} !important;
+    color: ${textColor} !important;
+}`;
+        }).filter(Boolean).join('\n');
+
+        styleElement.textContent = cssRules;
+        console.log('[Developer Map] Applied status styles:', statuses.length, 'statuses');
+    }
+
     // Load expanded projects from localStorage
     function loadExpandedProjects() {
         try {
@@ -168,6 +228,7 @@ export function initDeveloperMap(options) {
     function saveStatuses(statuses) {
         try {
             localStorage.setItem('dm-statuses', JSON.stringify(statuses));
+            applyStatusStyles(statuses);
         } catch (err) {
             console.warn('[Developer Map] Failed to save statuses to localStorage', err);
         }
@@ -949,6 +1010,7 @@ export function initDeveloperMap(options) {
 
     function render() {
         root.innerHTML = [renderAppShell(state, data), renderModal(state, data)].join('');
+        applyStatusStyles(data.statuses);
         attachEventHandlers();
         enhanceSelects();
         initFloatingFieldState();
