@@ -268,14 +268,6 @@
     height: var(--dm-dashboard-control-height);
 }
 
-.dm-dashboard__add:hover {
-    transform: translateY(-1px);
-    opacity: 0.9;
-    background: color-mix(in srgb, var(--dm-button-color) 85%, #ffffff) !important;
-    color: #ffffff !important;
-    box-shadow: 0 6px 16px rgba(22, 22, 29, 0.15);
-}
-
 .dm-dashboard__add:focus {
     outline: 2px solid var(--dm-button-color);
     outline-offset: 2px;
