@@ -2,13 +2,19 @@ import { APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX, DEFAULT_DRAW_
 import { createDemoData } from './data.js';
 import { renderAppShell } from './layout/app-shell.js';
 import { renderModal } from './modals/index.js';
+import { createStorageClient } from './storage-client.js';
 
 /**
  * Initialise the Developer Map dashboard inside the provided root element.
- * @param {{ root: HTMLElement; runtimeConfig: Record<string, unknown>; projectConfig?: object }} options
+ * @param {{
+ *   root: HTMLElement;
+ *   runtimeConfig: Record<string, unknown>;
+ *   projectConfig?: object;
+ *   storageClient?: ReturnType<typeof createStorageClient>;
+ * }} options
  */
-export function initDeveloperMap(options) {
-    const { root, runtimeConfig } = options;
+export async function initDeveloperMap(options) {
+    const { root, runtimeConfig, storageClient: providedStorage } = options;
 
     if (!root || !(root instanceof HTMLElement)) {
         throw new Error('Developer Map: initDeveloperMap requires a valid root element.');
@@ -18,18 +24,205 @@ export function initDeveloperMap(options) {
         return root.__dmInstance;
     }
 
+    let storage = providedStorage || null;
+    if (!storage) {
+        try {
+            storage = createStorageClient(runtimeConfig || {});
+        } catch (storageError) {
+            console.warn('[Developer Map] Failed to initialise storage client', storageError);
+            storage = null;
+        }
+    }
+    const storageCache = {
+        colors: null,
+        types: null,
+        statuses: null,
+        projects: null,
+        expanded: [],
+        images: {},
+    };
+
     const data = createDemoData();
 
-    // Load colors from localStorage
-    function loadColors() {
+    function cloneForStorage(value) {
+        if (value === null || value === undefined) {
+            return value;
+        }
         try {
-            const stored = localStorage.getItem('dm-colors');
-            if (stored) {
-                const colors = JSON.parse(stored);
-                return colors;
+            return JSON.parse(JSON.stringify(value));
+        } catch (error) {
+            console.warn('[Developer Map] Failed to clone value for storage', error);
+            return value;
+        }
+    }
+
+    function persistValue(key, value) {
+        if (!storage || typeof storage.set !== 'function') {
+            return;
+        }
+        const payload = cloneForStorage(value);
+        Promise.resolve(storage.set(key, payload)).catch((error) => {
+            console.warn('[Developer Map] Failed to persist key', key, error);
+        });
+    }
+
+    function removePersistedValue(key) {
+        if (!storage || typeof storage.remove !== 'function') {
+            return;
+        }
+        Promise.resolve(storage.remove(key)).catch((error) => {
+            console.warn('[Developer Map] Failed to remove key', key, error);
+        });
+    }
+
+    function applyImageToEntity(entity, payload) {
+        if (!entity || typeof entity !== 'object' || !payload || typeof payload !== 'object') {
+            return;
+        }
+        if (payload.url) {
+            entity.image = payload.url;
+            entity.imageUrl = payload.url;
+        }
+        if (payload.id) {
+            entity.image_id = payload.id;
+        }
+        if (payload.alt) {
+            entity.imageAlt = payload.alt;
+        }
+    }
+
+    function applyStoredImages(projects) {
+        if (!Array.isArray(projects)) {
+            return;
+        }
+        const images = storageCache.images;
+        if (!images || typeof images !== 'object') {
+            return;
+        }
+        Object.entries(images).forEach(([key, payload]) => {
+            if (!key) {
+                return;
             }
-        } catch (err) {
-            console.warn('[Developer Map] Failed to load colors from localStorage', err);
+            const parts = key.split('__');
+            if (parts.length < 2) {
+                return;
+            }
+            const [type, ...rest] = parts;
+            const targetId = rest.join('__');
+            if (!targetId) {
+                return;
+            }
+            if (type === 'project') {
+                const project = projects.find((item) => String(item.id) === targetId);
+                if (project) {
+                    applyImageToEntity(project, payload);
+                }
+                return;
+            }
+            if (type === 'floor') {
+                projects.forEach((project) => {
+                    const floor = Array.isArray(project?.floors)
+                        ? project.floors.find((item) => String(item.id) === targetId)
+                        : null;
+                    if (floor) {
+                        applyImageToEntity(floor, payload);
+                    }
+                });
+            }
+        });
+    }
+
+    function getEntityImageSelection(entity) {
+        if (!entity || typeof entity !== 'object') {
+            return null;
+        }
+        const url = entity.image ?? entity.imageUrl ?? '';
+        const id = entity.image_id ?? null;
+        const alt = entity.imageAlt ?? entity.name ?? '';
+        if (!url && !id) {
+            return null;
+        }
+        return {
+            id,
+            url,
+            alt,
+        };
+    }
+
+    function persistEntityImage(entityType, entityId, selection) {
+        if (!selection || !selection.id || !storage || typeof storage.saveImage !== 'function') {
+            return;
+        }
+        const safeId = String(entityId ?? '').trim();
+        if (!safeId) {
+            return;
+        }
+        const prefix = entityType === 'floor' ? 'floor__' : 'project__';
+        const entityKey = `${prefix}${safeId}`;
+        const provisional = {
+            id: selection.id,
+            url: selection.url,
+            alt: selection.alt || '',
+            entity_id: entityKey,
+            key: 'dm-projects',
+        };
+        storageCache.images[entityKey] = provisional;
+        Promise.resolve(
+            storage.saveImage({
+                key: 'dm-projects',
+                entityId: entityKey,
+                attachmentId: selection.id,
+            })
+        )
+            .then((response) => {
+                if (response && response.image) {
+                    storageCache.images[entityKey] = response.image;
+                }
+            })
+            .catch((error) => {
+                console.warn('[Developer Map] Failed to persist image reference', error);
+            });
+    }
+
+    function repairProjectSchema(projects) {
+        if (!Array.isArray(projects)) {
+            return false;
+        }
+        let mutated = false;
+        const remapKeys = (entity) => {
+            if (!entity || typeof entity !== 'object') {
+                return;
+            }
+            const keyMap = {
+                imageurl: 'imageUrl',
+                imagealt: 'imageAlt',
+                statusid: 'statusId',
+                statuslabel: 'statusLabel',
+                parentid: 'parentId',
+            };
+            Object.entries(keyMap).forEach(([legacy, modern]) => {
+                if (Object.prototype.hasOwnProperty.call(entity, legacy)) {
+                    if (!Object.prototype.hasOwnProperty.call(entity, modern)) {
+                        entity[modern] = entity[legacy];
+                    }
+                    delete entity[legacy];
+                    mutated = true;
+                }
+            });
+        };
+        projects.forEach((project) => {
+            remapKeys(project);
+            if (Array.isArray(project?.floors)) {
+                project.floors.forEach((floor) => remapKeys(floor));
+            }
+        });
+        return mutated;
+    }
+
+    // Load colors from storage cache
+    function loadColors() {
+        if (Array.isArray(storageCache.colors)) {
+            return cloneForStorage(storageCache.colors);
         }
         return null;
     }
@@ -74,13 +267,10 @@ export function initDeveloperMap(options) {
         });
     }
 
-    // Save colors to localStorage
+    // Save colors via storage client
     function saveColors(colors) {
-        try {
-            localStorage.setItem('dm-colors', JSON.stringify(colors));
-        } catch (err) {
-            console.warn('[Developer Map] Failed to save colors to localStorage', err);
-        }
+        storageCache.colors = cloneForStorage(colors);
+        persistValue('dm-colors', storageCache.colors);
     }
 
     // Convert status label to CSS class name
@@ -143,96 +333,103 @@ export function initDeveloperMap(options) {
         console.log('[Developer Map] Applied status styles:', statuses.length, 'statuses');
     }
 
-    // Load expanded projects from localStorage
+    // Load expanded projects from storage cache
     function loadExpandedProjects() {
-        try {
-            const stored = localStorage.getItem('dm-expanded-projects');
-            if (stored) {
-                return JSON.parse(stored);
-            }
-        } catch (err) {
-            console.warn('[Developer Map] Failed to load expanded projects from localStorage', err);
-        }
-        return [];
+        return Array.isArray(storageCache.expanded) ? [...storageCache.expanded] : [];
     }
 
-    // Save expanded projects to localStorage
+    // Save expanded projects via storage
     function saveExpandedProjects(expandedIds) {
-        try {
-            localStorage.setItem('dm-expanded-projects', JSON.stringify(expandedIds));
-        } catch (err) {
-            console.warn('[Developer Map] Failed to save expanded projects to localStorage', err);
-        }
+        storageCache.expanded = Array.isArray(expandedIds) ? [...expandedIds] : [];
+        persistValue('dm-expanded-projects', storageCache.expanded);
     }
 
-    // Load projects (maps) from localStorage
+    // Load projects (maps) from storage cache
     function loadProjects() {
-        try {
-            const stored = localStorage.getItem('dm-projects');
-            if (stored) {
-                const projects = JSON.parse(stored);
-                return projects;
-            }
-        } catch (err) {
-            console.warn('[Developer Map] Failed to load projects from localStorage', err);
+        if (Array.isArray(storageCache.projects)) {
+            return cloneForStorage(storageCache.projects);
         }
         return null;
     }
 
-    // Save projects (maps) to localStorage
+    // Save projects (maps) via storage
     function saveProjects(projects) {
-        try {
-            localStorage.setItem('dm-projects', JSON.stringify(projects));
-            console.info('[Developer Map] Projects saved to localStorage', projects.length, 'projects');
-        } catch (err) {
-            console.warn('[Developer Map] Failed to save projects to localStorage', err);
-        }
+        storageCache.projects = cloneForStorage(projects);
+        persistValue('dm-projects', storageCache.projects);
     }
 
-    // Load types from localStorage
+    // Load types from storage cache
     function loadTypes() {
-        try {
-            const stored = localStorage.getItem('dm-types');
-            if (stored) {
-                return JSON.parse(stored);
-            }
-        } catch (err) {
-            console.warn('[Developer Map] Failed to load types from localStorage', err);
+        if (Array.isArray(storageCache.types)) {
+            return cloneForStorage(storageCache.types);
         }
         return null;
     }
 
-    // Save types to localStorage
+    // Save types via storage
     function saveTypes(types) {
-        try {
-            localStorage.setItem('dm-types', JSON.stringify(types));
-        } catch (err) {
-            console.warn('[Developer Map] Failed to save types to localStorage', err);
-        }
+        storageCache.types = cloneForStorage(types);
+        persistValue('dm-types', storageCache.types);
     }
 
-    // Load statuses from localStorage
+    // Load statuses from storage cache
     function loadStatuses() {
-        try {
-            const stored = localStorage.getItem('dm-statuses');
-            if (stored) {
-                return JSON.parse(stored);
-            }
-        } catch (err) {
-            console.warn('[Developer Map] Failed to load statuses from localStorage', err);
+        if (Array.isArray(storageCache.statuses)) {
+            return cloneForStorage(storageCache.statuses);
         }
         return null;
     }
 
-    // Save statuses to localStorage
+    // Save statuses via storage
     function saveStatuses(statuses) {
+        storageCache.statuses = cloneForStorage(statuses);
+        persistValue('dm-statuses', storageCache.statuses);
+        applyStatusStyles(statuses);
+    }
+
+    async function hydrateStorage() {
+        if (!storage || typeof storage.list !== 'function') {
+            return;
+        }
         try {
-            localStorage.setItem('dm-statuses', JSON.stringify(statuses));
-            applyStatusStyles(statuses);
-        } catch (err) {
-            console.warn('[Developer Map] Failed to save statuses to localStorage', err);
+            const response = await storage.list();
+            const dataset = response?.data && typeof response.data === 'object' ? response.data : response;
+            if (dataset && typeof dataset === 'object') {
+                if (Array.isArray(dataset['dm-colors'])) {
+                    storageCache.colors = cloneForStorage(dataset['dm-colors']);
+                }
+                if (Array.isArray(dataset['dm-types'])) {
+                    storageCache.types = cloneForStorage(dataset['dm-types']);
+                }
+                if (Array.isArray(dataset['dm-statuses'])) {
+                    storageCache.statuses = cloneForStorage(dataset['dm-statuses']);
+                }
+                if (Array.isArray(dataset['dm-projects'])) {
+                    storageCache.projects = cloneForStorage(dataset['dm-projects']);
+                }
+                if (Array.isArray(dataset['dm-expanded-projects'])) {
+                    storageCache.expanded = [...dataset['dm-expanded-projects']];
+                }
+                if (dataset['dm-images'] && typeof dataset['dm-images'] === 'object') {
+                    storageCache.images = { ...dataset['dm-images'] };
+                }
+            }
+        } catch (error) {
+            console.warn('[Developer Map] Failed to hydrate storage', error);
+        }
+        if (!Array.isArray(storageCache.expanded) || storageCache.expanded.length === 0) {
+            try {
+                const expandedResponse = await storage.get('dm-expanded-projects');
+                if (expandedResponse && Array.isArray(expandedResponse.value)) {
+                    storageCache.expanded = [...expandedResponse.value];
+                }
+            } catch (getError) {
+                console.warn('[Developer Map] Failed to fetch expanded projects', getError);
+            }
         }
     }
+
+    await hydrateStorage();
 
     function normaliseTypes() {
         if (!Array.isArray(data.types)) {
@@ -481,31 +678,39 @@ export function initDeveloperMap(options) {
         data.statuses = savedStatuses;
     }
     normaliseStatuses();
+    applyStatusStyles(data.statuses);
 
-    // Initialize projects from localStorage
+    // Initialize projects from storage
     const savedProjects = loadProjects();
     if (savedProjects) {
         // Check if projects have images (for backward compatibility)
-        const hasImages = savedProjects.some(p => p.image || p.imageUrl);
+        const hasImages = savedProjects.some(p => p.image || p.imageUrl || p.imageurl);
         if (!hasImages) {
             console.info('[Developer Map] Saved projects missing images, refreshing from demo data');
-            // Clear localStorage and use fresh demo data
-            localStorage.removeItem('dm-projects');
+            // Clear persisted projects and use fresh demo data
+            removePersistedValue('dm-projects');
             // data.projects already contains fresh demo data from createDemoData()
-            // Save the fresh data to localStorage
+            // Save the fresh data to persistence
             saveProjects(data.projects);
         } else {
             data.projects = savedProjects;
-            console.info('[Developer Map] Loaded projects from localStorage', savedProjects.length, 'projects');
+            const repairedSchema = repairProjectSchema(data.projects);
+            if (repairedSchema) {
+                console.info('[Developer Map] Repairing stored project schema for compatibility');
+                saveProjects(data.projects);
+            }
+            console.info('[Developer Map] Loaded projects from storage', savedProjects.length, 'projects');
         }
     }
     const repairedProjects = ensureFloorStatusReferences();
     if (repairedProjects) {
         saveProjects(data.projects);
     }
+    applyStoredImages(data.projects);
 
     // Clear expanded projects on page load (fresh start)
-    localStorage.removeItem('dm-expanded-projects');
+    removePersistedValue('dm-expanded-projects');
+    storageCache.expanded = [];
 
     const state = {
         view: APP_VIEWS.MAPS,
@@ -522,6 +727,7 @@ export function initDeveloperMap(options) {
 
     let customSelectControllers = [];
     let customSelectDocEventsBound = false;
+    let mediaFrame = null;
 
     function findMapItem(itemId) {
         if (!itemId) {
@@ -820,6 +1026,8 @@ export function initDeveloperMap(options) {
                             targetType: 'floor',
                             statusId: sanitiseStatusId(result.item.statusId || result.item.statusKey || ''),
                             status: String(result.item.status ?? result.item.statusLabel ?? '').trim(),
+                            imageSelection: getEntityImageSelection(result.item),
+                            imagePreview: result.item.image ?? result.item.imageUrl ?? null,
                         },
                     });
                     return;
@@ -829,7 +1037,8 @@ export function initDeveloperMap(options) {
                         type: normalizedType,
                         payload: String(result.item.id),
                         parentId: result.type === 'floor' && result.parent ? String(result.parent.id) : null,
-                        imagePreview: null,
+                        imageSelection: getEntityImageSelection(result.item),
+                        imagePreview: result.item.image ?? result.item.imageUrl ?? null,
                         targetType: result.type,
                     },
                 });
@@ -848,6 +1057,8 @@ export function initDeveloperMap(options) {
                         targetType: 'floor',
                         statusId: sanitiseStatusId(result.item.statusId || result.item.statusKey || ''),
                         status: String(result.item.status ?? result.item.statusLabel ?? '').trim(),
+                        imageSelection: getEntityImageSelection(result.item),
+                        imagePreview: result.item.image ?? result.item.imageUrl ?? null,
                     },
                 });
                 return;
@@ -861,6 +1072,7 @@ export function initDeveloperMap(options) {
                     payload: null,
                     parentId: null,
                     imagePreview: null,
+                    imageSelection: null,
                     targetType: 'project',
                 },
             });
@@ -874,6 +1086,8 @@ export function initDeveloperMap(options) {
                     type: normalizedType,
                     payload: null,
                     parentId,
+                    imageSelection: null,
+                    imagePreview: null,
                     targetType: 'floor',
                 },
             });
@@ -1310,9 +1524,9 @@ export function initDeveloperMap(options) {
     }
 
     function bindMapModalEvents() {
-        const uploadInput = root.querySelector('#dm-modal-upload');
-        if (uploadInput) {
-            uploadInput.addEventListener('change', handleFileInputChange);
+        const mediaTrigger = root.querySelector('[data-dm-media-trigger]');
+        if (mediaTrigger) {
+            mediaTrigger.addEventListener('click', handleMediaTriggerClick);
         }
 
         const parentSelect = root.querySelector('select[data-dm-field="parent"]');
@@ -1343,53 +1557,64 @@ export function initDeveloperMap(options) {
         }
     }
 
-    function handleFileInputChange(event) {
-        const input = event.currentTarget;
-        const file = input.files && input.files[0];
-
-        if (!file) {
-            if (state.modal?.imagePreview) {
-                setState((prev) => {
-                    if (!prev.modal) {
-                        return {};
-                    }
-                    return {
-                        modal: {
-                            ...prev.modal,
-                            imagePreview: null,
-                        },
-                    };
-                });
-            }
+    function handleMediaTriggerClick(event) {
+        event.preventDefault();
+        if (typeof window === 'undefined' || !window.wp || typeof window.wp.media !== 'function') {
+            console.warn('[Developer Map] WordPress media frame nie je dostupný.');
+            return;
+        }
+        if (!state.modal) {
             return;
         }
 
-        if (!file.type || !file.type.startsWith('image/')) {
-            console.warn('[Developer Map] Vyberte prosím súbor typu obrázok.');
-            input.value = '';
-            return;
+        if (!mediaFrame) {
+            mediaFrame = window.wp.media({
+                frame: 'select',
+                title: 'Vyberte obrázok',
+                multiple: false,
+                library: {
+                    type: 'image',
+                },
+                button: {
+                    text: 'Použiť obrázok',
+                },
+            });
         }
 
-        const reader = new FileReader();
-        reader.addEventListener('load', () => {
-            if (typeof reader.result === 'string') {
-                setState((prev) => {
-                    if (!prev.modal) {
-                        return {};
-                    }
-                    return {
-                        modal: {
-                            ...prev.modal,
-                            imagePreview: reader.result,
-                        },
-                    };
-                });
+        mediaFrame.off('select');
+        mediaFrame.on('select', () => {
+            const selection = mediaFrame.state().get('selection');
+            const attachment = selection && typeof selection.first === 'function' ? selection.first() : null;
+            if (!attachment || typeof attachment.toJSON !== 'function') {
+                return;
             }
+            const details = attachment.toJSON();
+            const url =
+                details.url ||
+                details?.sizes?.full?.url ||
+                details?.sizes?.large?.url ||
+                details?.sizes?.medium_large?.url ||
+                '';
+            const nextSelection = {
+                id: details.id,
+                url,
+                alt: details.alt || details.title || '',
+            };
+            setState((prev) => {
+                if (!prev.modal) {
+                    return {};
+                }
+                return {
+                    modal: {
+                        ...prev.modal,
+                        imageSelection: nextSelection,
+                        imagePreview: nextSelection.url,
+                    },
+                };
+            });
         });
-        reader.addEventListener('error', () => {
-            console.warn('[Developer Map] Nepodarilo sa načítať obrázok.', reader.error);
-        });
-        reader.readAsDataURL(file);
+
+        mediaFrame.open();
     }
 
     function bindTypeModalEvents() {
@@ -1509,14 +1734,29 @@ export function initDeveloperMap(options) {
         const nextName = fields.name;
         const nextType = fields.type;
         const targetParentId = fields.parentId ? String(fields.parentId) : null;
-        const imageData = modalState.imagePreview;
+        const imageSelection = modalState.imageSelection ?? null;
+        const imageData = imageSelection?.url ?? modalState.imagePreview ?? null;
 
         if (result.type === 'project') {
+            const previousImageId = result.item.image_id ?? null;
             result.item.name = nextName;
             result.item.type = nextType;
             result.item.badge = ensureBadge(nextName, result.item.badge);
             if (imageData) {
                 result.item.image = imageData;
+                result.item.imageUrl = imageData;
+                if (imageSelection?.id) {
+                    result.item.image_id = imageSelection.id;
+                }
+                if (imageSelection?.alt) {
+                    result.item.imageAlt = imageSelection.alt;
+                }
+            }
+            if (
+                imageSelection?.id &&
+                String(imageSelection.id) !== String(previousImageId ?? '')
+            ) {
+                persistEntityImage('project', result.item.id, imageSelection);
             }
             saveProjects(data.projects);
             setState({ modal: null });
@@ -1524,6 +1764,7 @@ export function initDeveloperMap(options) {
         }
 
         const currentParentId = result.parent ? String(result.parent.id) : null;
+        const previousImageId = result.item.image_id ?? null;
         result.item.name = nextName;
         result.item.type = nextType;
         if (!result.item.label || result.item.label === result.item.name) {
@@ -1531,6 +1772,19 @@ export function initDeveloperMap(options) {
         }
         if (imageData) {
             result.item.image = imageData;
+            result.item.imageUrl = imageData;
+            if (imageSelection?.id) {
+                result.item.image_id = imageSelection.id;
+            }
+            if (imageSelection?.alt) {
+                result.item.imageAlt = imageSelection.alt;
+            }
+        }
+        if (
+            imageSelection?.id &&
+            String(imageSelection.id) !== String(previousImageId ?? '')
+        ) {
+            persistEntityImage('floor', result.item.id, imageSelection);
         }
 
         let newActiveProjectId = currentParentId ?? state.activeProjectId;
@@ -1564,14 +1818,21 @@ export function initDeveloperMap(options) {
                 const newProjectId = generateId('project');
                 const projectImage = imageData || result.item.image || MEDIA.building;
                 const badge = ensureBadge(nextName);
-                data.projects.push({
+                const newProject = {
                     id: newProjectId,
                     name: nextName,
                     type: nextType,
                     badge,
                     image: projectImage,
+                    imageUrl: projectImage,
+                    image_id: imageSelection?.id ?? null,
+                    imageAlt: imageSelection?.alt || nextName,
                     floors: [result.item],
-                });
+                };
+                data.projects.push(newProject);
+                if (imageSelection?.id) {
+                    persistEntityImage('project', newProjectId, imageSelection);
+                }
                 newActiveProjectId = newProjectId;
             }
         }
@@ -1631,9 +1892,24 @@ export function initDeveloperMap(options) {
         result.item.price = fields.price;
 
         // Handle image upload
-        const imageData = modalState.imagePreview;
+        const imageSelection = modalState.imageSelection ?? null;
+        const previousImageId = result.item.image_id ?? null;
+        const imageData = imageSelection?.url ?? modalState.imagePreview ?? null;
         if (imageData) {
             result.item.image = imageData;
+            result.item.imageUrl = imageData;
+            if (imageSelection?.id) {
+                result.item.image_id = imageSelection.id;
+            }
+            if (imageSelection?.alt) {
+                result.item.imageAlt = imageSelection.alt;
+            }
+        }
+        if (
+            imageSelection?.id &&
+            String(imageSelection.id) !== String(previousImageId ?? '')
+        ) {
+            persistEntityImage(result.type, result.item.id, imageSelection);
         }
 
         let newActiveProjectId = currentParentId ?? state.activeProjectId;
@@ -1677,6 +1953,7 @@ export function initDeveloperMap(options) {
         if (!modalState) {
             return;
         }
+        const imageSelection = modalState.imageSelection ?? null;
 
         // Handle add-location with location-specific fields
         if (modalState.type === 'add-location') {
@@ -1716,6 +1993,7 @@ export function initDeveloperMap(options) {
             }
 
             const newFloorId = generateId('floor');
+            const floorImage = imageSelection?.url ?? modalState.imagePreview ?? MEDIA.floor;
             parentProject.floors.push({
                 id: newFloorId,
                 name: fields.name,
@@ -1730,9 +2008,15 @@ export function initDeveloperMap(options) {
                 designation: fields.designation,
                 rent: fields.rent,
                 price: fields.price,
-                image: modalState.imagePreview || MEDIA.floor,
+                image: floorImage,
+                imageUrl: floorImage,
+                image_id: imageSelection?.id ?? null,
+                imageAlt: imageSelection?.alt || fields.name,
                 statusId: sanitiseStatusId(fields.statusId || data.statuses.find((s) => String(s.label ?? '').trim() === String(fields.status ?? '').trim())?.id),
             });
+            if (imageSelection?.id) {
+                persistEntityImage('floor', newFloorId, imageSelection);
+            }
 
             saveProjects(data.projects);
             setState({ modal: null, activeProjectId: String(parentProject.id) });
@@ -1756,20 +2040,27 @@ export function initDeveloperMap(options) {
         }
 
         const { name, type, parentId } = fields;
-        const imageData = modalState.imagePreview;
+        const imageData = imageSelection?.url ?? modalState.imagePreview ?? null;
         let newActiveProjectId = state.activeProjectId;
 
         if (!parentId) {
             const newProjectId = generateId('project');
             const badge = ensureBadge(name);
+            const projectImage = imageData || MEDIA.building;
             data.projects.push({
                 id: newProjectId,
                 name,
                 type,
                 badge,
-                image: imageData || MEDIA.building,
+                image: projectImage,
+                imageUrl: projectImage,
+                image_id: imageSelection?.id ?? null,
+                imageAlt: imageSelection?.alt || name,
                 floors: [],
             });
+            if (imageSelection?.id) {
+                persistEntityImage('project', newProjectId, imageSelection);
+            }
             newActiveProjectId = newProjectId;
         } else {
             const parentProject = data.projects.find((project) => String(project.id) === String(parentId));
@@ -1781,14 +2072,21 @@ export function initDeveloperMap(options) {
                 parentProject.floors = [];
             }
             const newFloorId = generateId('floor');
+            const floorImage = imageData || MEDIA.floor;
             parentProject.floors.push({
                 id: newFloorId,
                 name,
                 type,
                 label: name,
-                image: imageData || MEDIA.floor,
+                image: floorImage,
+                imageUrl: floorImage,
+                image_id: imageSelection?.id ?? null,
+                imageAlt: imageSelection?.alt || name,
                 statusId: sanitiseStatusId(data.statuses[0]?.id),
             });
+            if (imageSelection?.id) {
+                persistEntityImage('floor', newFloorId, imageSelection);
+            }
             newActiveProjectId = String(parentProject.id);
         }
 

@@ -10,6 +10,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once plugin_dir_path(__FILE__) . 'includes/class-dm-storage.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-dm-rest-controller.php';
+
 /**
  * Handle POST requests made from the admin screen.
  */
@@ -49,31 +52,8 @@ function dm_handle_admin_post(): void
 }
 add_action('admin_init', 'dm_handle_admin_post');
 
-/**
- * REST permission callback.
- */
-function dm_rest_permission_check(): bool
-{
-    return current_user_can(DM_SETTINGS_CAPABILITY);
-}
-
-/**
- * REST callback for ping route.
- */
-function dm_rest_handle_ping(): array
-{
-    return [
-        'ok' => true,
-        'ts' => time(),
-    ];
-}
-
 add_action('rest_api_init', function (): void {
-    register_rest_route('dm/v1', '/ping', [
-        'methods'             => 'GET',
-        'callback'            => 'dm_rest_handle_ping',
-        'permission_callback' => 'dm_rest_permission_check',
-    ]);
+    DM_Rest_Controller::register_routes();
 });
 
 /**
@@ -206,6 +186,8 @@ function dm_register_assets(): void
         $base_path . 'core/app.js',
         $base_path . 'core/constants.js',
         $base_path . 'core/data.js',
+        $base_path . 'core/storage-client.js',
+        $base_path . 'core/storage-migration.js',
         $base_path . 'core/layout/header.js',
         $base_path . 'core/views/maps-view.js',
         $base_path . 'core/views/settings-view.js',
@@ -323,14 +305,15 @@ function dm_enqueue_admin_assets(): void
     wp_add_inline_style(DM_PLUGIN_STYLE_HANDLE, dm_get_critical_css());
 
     $config = [
-        'slug'       => DM_DEV_PAGE_SLUG,
-        'screenId'   => dm_get_admin_screen_id(),
-        'restBase'   => esc_url_raw(rest_url('dm/v1/')),
-        'restNonce'  => wp_create_nonce('wp_rest'),
-        'ajaxUrl'    => esc_url_raw(admin_url('admin-ajax.php')),
-        'ajaxNonce'  => wp_create_nonce(DM_NONCE_ACTION_AJAX),
-        'ajaxAction' => 'dm_ping',
-        'ver'        => isset($GLOBALS['dm_assets_ver']) ? $GLOBALS['dm_assets_ver'] : time(),
+        'slug'          => DM_DEV_PAGE_SLUG,
+        'screenId'      => dm_get_admin_screen_id(),
+        'restBase'      => esc_url_raw(rest_url(DM_Rest_Controller::NAMESPACE . '/')),
+        'restNamespace' => DM_Rest_Controller::NAMESPACE,
+        'restNonce'     => wp_create_nonce('wp_rest'),
+        'ajaxUrl'       => esc_url_raw(admin_url('admin-ajax.php')),
+        'ajaxNonce'     => wp_create_nonce(DM_NONCE_ACTION_AJAX),
+        'ajaxAction'    => 'dm_ping',
+        'ver'           => isset($GLOBALS['dm_assets_ver']) ? $GLOBALS['dm_assets_ver'] : time(),
     ];
 
     wp_add_inline_script(

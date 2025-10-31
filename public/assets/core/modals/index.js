@@ -68,13 +68,18 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
         }
     }
 
-    const selectedPreview = modalState?.imagePreview ?? null;
-    let imageUrl = selectedPreview || (editItem?.image ?? null);
+    const imageSelection = modalState?.imageSelection ?? null;
+    const selectedPreview = imageSelection?.url ?? modalState?.imagePreview ?? null;
+    let imageUrl = selectedPreview || (editItem?.image ?? editItem?.imageUrl ?? null);
     if (!imageUrl && isEdit) {
         imageUrl = editType === 'floor' ? MEDIA.floor : MEDIA.building;
     }
 
     const uploadLabel = isEdit ? 'Zmeniť obrázok' : 'Nahrať obrázok';
+
+    const resolvedName = editItem?.name ?? '';
+    const selectionId = imageSelection?.id ?? editItem?.image_id ?? '';
+    const selectionAlt = imageSelection?.alt ?? editItem?.imageAlt ?? (resolvedName || '');
 
     const targetContext = modalState?.targetType ?? editType ?? 'project';
     const canChangeParent = !isEdit || targetContext === 'floor';
@@ -108,8 +113,6 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
 
     const placeholderSelected = resolvedParentValue === '' ? ' selected' : '';
     const noneSelected = resolvedParentValue === 'none' ? ' selected' : '';
-
-    const resolvedName = editItem?.name ?? '';
 
     const typeOptionsSource = Array.isArray(data.types) ? data.types : [];
     const resolvedType = editItem?.type ?? '';
@@ -158,11 +161,12 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
                                         </svg>
                                     </div>
                                 `}
-                                <label for="dm-modal-upload" class="dm-upload-card__footer">
+                                <button type="button" class="dm-upload-card__footer" data-dm-media-trigger>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-icon lucide-upload"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
                                     <p>${uploadLabel}</p>
-                                </label>
-                                <input id="dm-modal-upload" type="file" accept="image/*" class="dm-upload-card__input" />
+                                </button>
+                                <input type="hidden" data-dm-media-id value="${selectionId ? escapeHtml(String(selectionId)) : ''}">
+                                <input type="hidden" data-dm-media-alt value="${escapeHtml(selectionAlt)}">
                             </div>
                             <div class="dm-modal__form-fields">
                                 <div class="dm-form__grid">
@@ -282,13 +286,17 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
         }
     }
 
-    const selectedPreview = modalState?.imagePreview ?? null;
-    let imageUrl = selectedPreview || (editLocation?.image ?? null);
+    const nameValue = editLocation?.name ?? '';
+    const imageSelection = modalState?.imageSelection ?? null;
+    const selectedPreview = imageSelection?.url ?? modalState?.imagePreview ?? null;
+    let imageUrl = selectedPreview || (editLocation?.image ?? editLocation?.imageUrl ?? null);
     if (!imageUrl && isEdit) {
         imageUrl = MEDIA.floor;
     }
 
     const uploadLabel = isEdit ? 'Zmeniť obrázok' : 'Nahrať obrázok';
+    const selectionId = imageSelection?.id ?? editLocation?.image_id ?? '';
+    const selectionAlt = imageSelection?.alt ?? editLocation?.imageAlt ?? (nameValue || '');
 
     // Parent project select
     const parentValue = modalState?.parentId ?? (editParent ? String(editParent.id) : '');
@@ -349,7 +357,6 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
         .join('');
 
     // Field values - always set, even if empty (like in renderFormModal)
-    const nameValue = editLocation?.name ?? '';
     const urlValue = editLocation?.url ?? '';
     const areaValue = editLocation?.area ?? '';
     const suffixValue = editLocation?.suffix ?? '';
@@ -387,11 +394,12 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                         </svg>
                                     </div>
                                 `}
-                                <label for="dm-modal-upload" class="dm-upload-card__footer">
+                                <button type="button" class="dm-upload-card__footer" data-dm-media-trigger>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-icon lucide-upload"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
                                     <p>${uploadLabel}</p>
-                                </label>
-                                <input id="dm-modal-upload" type="file" accept="image/*" class="dm-upload-card__input" />
+                                </button>
+                                <input type="hidden" data-dm-media-id value="${selectionId ? escapeHtml(String(selectionId)) : ''}">
+                                <input type="hidden" data-dm-media-alt value="${escapeHtml(selectionAlt)}">
                             </div>
                             <div class="dm-modal__form-fields">
                                 <div class="dm-form__grid">

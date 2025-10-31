@@ -1,3 +1,6 @@
+import { createStorageClient } from './core/storage-client.js';
+import { migrateLocalStorage } from './core/storage-migration.js';
+
 /**
  * Developer Map — ES module entry (len pre [devmap] na dev stránke).
  * Dynamicky načíta core/app.js s cache-busting verziou a má bezpečný fallback.
@@ -41,6 +44,24 @@ async function boot() {
   }
 
   try {
+    let storageClient = null;
+    try {
+      storageClient = createStorageClient(runtimeConfig);
+    } catch (storageError) {
+      console.warn('[DM] storage client init failed', storageError);
+    }
+
+    if (storageClient) {
+      try {
+        const migrationResult = await migrateLocalStorage(storageClient);
+        if (migrationResult?.queued) {
+          console.info('[DM] storage migration queued for retry');
+        }
+      } catch (migrationError) {
+        console.warn('[DM] storage migration failed', migrationError);
+      }
+    }
+
     const base = new URL('./', import.meta.url);
     const ver  = runtimeConfig.ver || Date.now();
     const appUrl = new URL(`./core/app.js?ver=${ver}`, base).href;
@@ -54,7 +75,7 @@ async function boot() {
     if (typeof init !== 'function') throw new Error('initDeveloperMap missing');
 
     console.log('[DM] App loaded successfully, initializing...');
-    init({ root, runtimeConfig });
+    await init({ root, runtimeConfig, storageClient });
     console.log('[DM] App initialized successfully');
   } catch (err) {
     console.error('[DM] app import/init failed:', err);
