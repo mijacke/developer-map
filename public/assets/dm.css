@@ -20,7 +20,7 @@
     --dm-shadow-sm: 0 16px 40px rgba(22, 22, 29, 0.08);
     --dm-shadow-md: 0 28px 60px rgba(22, 22, 29, 0.12);
 
-    /* Dynamic theme colors (loaded from localStorage) */
+    /* Dynamic theme colors (loaded from persistent storage) */
     --dm-button-color: #7c3aed;
     --dm-heading-color: #1C134F;
     --dm-content-text-color: #1C134F;
@@ -4048,4 +4048,3 @@
         padding: 6px 8px;
     }
 }
-
