@@ -666,22 +666,191 @@ function renderConfirmModal(state) {
 
 function renderDrawModal(state, data) {
     const payload = state.modal?.payload ?? null;
-    const project = data.projects[0];
-    const floors = project?.floors ?? [];
-    const activeFloor = payload ? floors.find((floor) => floor.id === payload) : floors[0];
-    const floorLabel = activeFloor?.name ?? 'Lokalita';
-    const projectBadge = project && typeof project.badge === 'string' ? project.badge : 'A';
-    const floorBadge = projectBadge.trim().slice(0, 2).toUpperCase() || 'A';
-    const npSorted = floors
-        .filter((floor) => /NP$/i.test(floor.label ?? ''))
-        .sort((a, b) => {
-            const aNum = parseInt(String(a.label).replace(/\D/g, ''), 10) || 0;
-            const bNum = parseInt(String(b.label).replace(/\D/g, ''), 10) || 0;
-            return bNum - aNum;
-        });
+    const projects = Array.isArray(data.projects) ? data.projects : [];
+
+    if (!projects.length) {
+        return renderSimpleModal('Nakresliť súradnice', '<p>Najprv pridajte mapu alebo lokalitu.</p>');
+    }
+
+    let activeProject = projects[0];
+    let activeFloor = null;
+    let contextType = 'project';
+
+    for (const project of projects) {
+        if (String(project.id) === String(payload)) {
+            activeProject = project;
+            contextType = 'project';
+            activeFloor = null;
+            break;
+        }
+        const floors = Array.isArray(project?.floors) ? project.floors : [];
+        const foundFloor = floors.find((floor) => String(floor.id) === String(payload));
+        if (foundFloor) {
+            activeProject = project;
+            activeFloor = foundFloor;
+            contextType = 'floor';
+            break;
+        }
+    }
+
+    if (contextType === 'floor' && !activeFloor && activeProject?.floors?.length) {
+        activeFloor = activeProject.floors[0];
+    }
+
+    const regionOwner = contextType === 'floor' ? activeFloor : activeProject;
+
+    const rendererSizeSource =
+        regionOwner && typeof regionOwner === 'object' && regionOwner.renderer && typeof regionOwner.renderer === 'object'
+            ? regionOwner.renderer.size
+            : activeProject && typeof activeProject === 'object' && activeProject.renderer && typeof activeProject.renderer === 'object'
+                ? activeProject.renderer.size
+                : null;
+
+    const sanitiseViewboxDimension = (value) => {
+        const num = Number(value);
+        return Number.isFinite(num) && num > 0 ? num : null;
+    };
+
+    const initialViewboxWidth = sanitiseViewboxDimension(rendererSizeSource?.width);
+    const initialViewboxHeight = sanitiseViewboxDimension(rendererSizeSource?.height);
+    const defaultViewboxWidth = initialViewboxWidth ?? DRAW_VIEWBOX.width;
+    const defaultViewboxHeight = initialViewboxHeight ?? DRAW_VIEWBOX.height;
+
+    const regions = Array.isArray(regionOwner?.regions) ? regionOwner.regions : [];
+    const floorsForChildren = Array.isArray(activeProject?.floors) ? activeProject.floors : [];
+
+    const surfaceLabel =
+        contextType === 'floor'
+            ? activeFloor?.name ?? 'Lokalita'
+            : activeProject?.name ?? activeProject?.title ?? 'Mapa projektu';
+    const projectBadge = activeProject && typeof activeProject.badge === 'string' ? activeProject.badge : 'A';
+    const badgeLabel = projectBadge.trim().slice(0, 2).toUpperCase() || 'A';
+
+    const npSorted =
+        contextType === 'project'
+            ? floorsForChildren
+                  .filter((floor) => /NP$/i.test(floor.label ?? ''))
+                  .sort((a, b) => {
+                      const aNum = parseInt(String(a.label).replace(/\D/g, ''), 10) || 0;
+                      const bNum = parseInt(String(b.label).replace(/\D/g, ''), 10) || 0;
+                      return bNum - aNum;
+                  })
+            : [];
     const npLabels = (npSorted.length > 4 ? npSorted.slice(1, 5) : npSorted.slice(0, 4)).map((floor) => floor.label);
-    const ppLabel = floors.find((floor) => /PP$/i.test(floor.label ?? ''))?.label;
-    const levelLabels = Array.from(new Set(ppLabel ? [...npLabels, ppLabel] : npLabels));
+    const ppLabel =
+        contextType === 'project'
+            ? floorsForChildren.find((floor) => /PP$/i.test(floor.label ?? ''))?.label
+            : null;
+    const levelLabels =
+        contextType === 'project'
+            ? Array.from(new Set(ppLabel ? [...npLabels, ppLabel] : npLabels))
+            : [];
+
+    const statusOptionsSource = Array.isArray(data.statuses) ? data.statuses : [];
+
+    const activeRegionId = state.modal?.regionId ?? (regions[0]?.id ? String(regions[0].id) : null);
+    const activeRegion = activeRegionId
+        ? regions.find((region) => String(region.id) === String(activeRegionId)) ?? regions[0] ?? null
+        : regions[0] ?? null;
+
+    const resolveStatusLabel = (region) => {
+        const statusKey = String(region?.statusId ?? region?.status ?? '');
+        if (!statusKey) {
+            return '';
+        }
+        const match =
+            statusOptionsSource.find((status) => String(status.id) === statusKey) ??
+            statusOptionsSource.find((status) => String(status.key) === statusKey);
+        return match?.label ?? region?.statusLabel ?? '';
+    };
+
+    const regionChildrenValues = Array.isArray(activeRegion?.children)
+        ? activeRegion.children.map((id) => String(id))
+        : [];
+
+    const regionListMarkup = regions.length
+        ? regions
+              .map((region, index) => {
+                  const id = String(region.id ?? region.lotId ?? `region-${index + 1}`);
+                  const isActive = activeRegion
+                      ? String(activeRegion.id ?? '') === id
+                      : index === 0 && !activeRegionId;
+                  const label = region.label ?? region.name ?? `Zóna ${index + 1}`;
+                  const statusLabel = resolveStatusLabel(region);
+                  const childCount = Array.isArray(region.children) ? region.children.length : 0;
+                  const childMeta = childCount
+                      ? `<span class="dm-draw__region-meta"><span class="dm-draw__region-meta-badge">${childCount}</span><span>prepojené</span></span>`
+                      : '';
+                  return `
+                        <li class="dm-draw__region-item${isActive ? ' is-active' : ''}" data-dm-region-item="${escapeHtml(id)}">
+                            <button type="button" class="dm-draw__region-button" data-dm-region-trigger="${escapeHtml(id)}">
+                                <span class="dm-draw__region-index">${index + 1}.</span>
+                                <span class="dm-draw__region-name">${escapeHtml(label)}</span>
+                                ${statusLabel ? `<span class="dm-draw__region-status">${escapeHtml(statusLabel)}</span>` : ''}
+                                ${childMeta}
+                            </button>
+                        </li>
+                    `;
+              })
+              .join('')
+        : `
+                <li class="dm-draw__region-item dm-draw__region-item--empty">
+                    <span>Žiadne zóny zatiaľ nevytvorené.</span>
+                </li>
+            `;
+
+    const regionNameValue = activeRegion?.label ?? activeRegion?.name ?? '';
+    const regionStatusValue = String(activeRegion?.statusId ?? activeRegion?.status ?? '');
+    const hasStatuses = statusOptionsSource.length > 0;
+    const statusPlaceholderLabel = hasStatuses ? 'Vyberte stav' : 'Najprv pridajte stav v nastaveniach';
+    const statusPlaceholderSelected = regionStatusValue ? '' : ' selected';
+    const statusSelectDisabledAttr = hasStatuses ? '' : ' disabled aria-disabled="true"';
+    const statusOptions = statusOptionsSource
+        .map((status) => {
+            const value = String(status.id ?? status.key ?? '');
+            if (!value) {
+                return '';
+            }
+            const isSelected = value === regionStatusValue;
+            return `<option value="${escapeHtml(value)}"${isSelected ? ' selected' : ''}>${escapeHtml(
+                status.label ?? value,
+            )}</option>`;
+        })
+        .filter(Boolean)
+        .join('');
+
+    const childSelectorMarkup =
+        contextType === 'project' && floorsForChildren.length
+            ? `
+                <fieldset class="dm-draw__children" data-dm-region-children>
+                    <legend>Naviazané lokality</legend>
+                    <div class="dm-draw__children-list">
+                        ${floorsForChildren
+                            .map((floor) => {
+                                const value = String(floor.id);
+                                const checked = regionChildrenValues.includes(value) ? ' checked' : '';
+                                return `
+                                    <label class="dm-draw__child-option">
+                                        <input type="checkbox" data-dm-region-child value="${escapeHtml(value)}"${checked}>
+                                        <span>${escapeHtml(floor.name ?? value)}</span>
+                                    </label>
+                                `;
+                            })
+                            .join('')}
+                    </div>
+                </fieldset>
+            `
+            : contextType === 'project'
+                ? `<p class="dm-draw__child-empty">Zóny môžete prepojiť s poschodiami projektu.</p>`
+                : '';
+
+    const canRemoveRegion = regions.length > 1;
+    const backgroundImage =
+        contextType === 'floor'
+            ? activeFloor?.image ?? activeFloor?.imageUrl ?? activeFloor?.imageurl ?? MEDIA.draw
+            : activeProject?.image ?? activeProject?.imageUrl ?? activeProject?.imageurl ?? MEDIA.draw;
+    const backgroundAlt = surfaceLabel ? `${surfaceLabel} - podklad mapy` : 'Podklad mapy';
+
     return `
         <div class="dm-modal-overlay">
             <div class="dm-modal dm-modal--draw">
@@ -694,19 +863,60 @@ function renderDrawModal(state, data) {
                     </button>
                 </header>
                 <div class="dm-modal__body dm-modal__body--draw">
-                    <div class="dm-draw" data-dm-draw-root data-dm-floor="${activeFloor ? escapeHtml(activeFloor.id) : ''}" data-dm-floor-name="${escapeHtml(floorLabel)}">
-                        <div class="dm-draw__stage">
-                            <img src="${MEDIA.draw}" alt="Ukážkový objekt na zakreslenie súradníc" class="dm-draw__image" draggable="false" />
-                            <svg class="dm-draw__overlay" viewBox="0 0 ${DRAW_VIEWBOX.width} ${DRAW_VIEWBOX.height}" preserveAspectRatio="xMidYMid slice" data-role="overlay">
+                    <div
+                        class="dm-draw"
+                        data-dm-draw-root
+                        data-dm-owner="${escapeHtml(contextType)}"
+                        data-dm-owner-id="${escapeHtml(
+                            contextType === 'floor'
+                                ? activeFloor?.id ?? ''
+                                : activeProject?.id ?? '',
+                        )}"
+                        data-dm-project-id="${escapeHtml(activeProject?.id ?? '')}"
+                        data-dm-floor-name="${escapeHtml(surfaceLabel)}"
+                        data-dm-active-region="${activeRegion ? escapeHtml(String(activeRegion.id)) : ''}"
+                        data-dm-viewbox-width="${initialViewboxWidth ? escapeHtml(String(initialViewboxWidth)) : ''}"
+                        data-dm-viewbox-height="${initialViewboxHeight ? escapeHtml(String(initialViewboxHeight)) : ''}"
+                    >
+                        <div class="dm-draw__layout">
+                            <aside class="dm-draw__aside">
+                                <div class="dm-draw__aside-header">
+                                    <h3>Segmenty mapy</h3>
+                                    <button type="button" class="dm-button dm-button--outline dm-draw__add-region" data-dm-add-region>+ Pridať zónu</button>
+                                </div>
+                                <ul class="dm-draw__regions" data-dm-region-list>
+                                    ${regionListMarkup}
+                                </ul>
+                                <div class="dm-draw__region-form" data-dm-region-form>
+                                    <div class="dm-field">
+                                        <input type="text" autocomplete="off" class="dm-field__input" data-dm-region-name placeholder=" " value="${escapeHtml(regionNameValue)}">
+                                        <label class="dm-field__label">Názov zóny</label>
+                                    </div>
+                                    <div class="dm-field">
+                                        <select class="dm-field__input" data-dm-region-status${statusSelectDisabledAttr}>
+                                            <option value="" disabled${statusPlaceholderSelected} hidden>${escapeHtml(statusPlaceholderLabel)}</option>
+                                            ${statusOptions}
+                                        </select>
+                                        <label class="dm-field__label">Stav zóny</label>
+                                    </div>
+                                    ${childSelectorMarkup}
+                                    <button type="button" class="dm-button dm-button--outline dm-draw__remove-region" data-dm-remove-region${canRemoveRegion ? '' : ' disabled aria-disabled="true"'}>Odstrániť zónu</button>
+                                </div>
+                            </aside>
+                            <div class="dm-draw__main">
+                                <div class="dm-draw__stage">
+                            <img src="${escapeHtml(backgroundImage)}" alt="${escapeHtml(backgroundAlt)}" class="dm-draw__image" draggable="false" />
+                            <svg class="dm-draw__overlay" viewBox="0 0 ${escapeHtml(String(defaultViewboxWidth))} ${escapeHtml(String(defaultViewboxHeight))}" preserveAspectRatio="xMidYMid meet" data-role="overlay">
                                 <polygon class="dm-draw__shape-fill" data-role="fill" points=""></polygon>
                                 <polyline class="dm-draw__shape-outline" data-role="outline" points=""></polyline>
                                 <polyline class="dm-draw__shape-baseline" data-role="baseline" points=""></polyline>
                                 <g class="dm-draw__handles" data-role="handles"></g>
                             </svg>
-                            <div class="dm-draw__badge">${escapeHtml(floorBadge)}</div>
+                            <div class="dm-draw__badge">${escapeHtml(badgeLabel)}</div>
                             <div class="dm-draw__cursor" aria-hidden="true">
                                 <img src="${MEDIA.cursor}" alt="" draggable="false" />
                             </div>
+                            ${levelLabels.length ? `
                             <ul class="dm-draw__levels">
                                 ${levelLabels
                                     .map(
@@ -717,19 +927,21 @@ function renderDrawModal(state, data) {
                                         `,
                                     )
                                     .join('')}
-                            </ul>
+                            </ul>` : ''}
                         </div>
                         <div class="dm-draw__toolbar">
                             <div class="dm-draw__toolbar-left">
-                                <span class="dm-draw__floor-label">${escapeHtml(floorLabel)}</span>
-                                <span class="dm-draw__hint">Kliknite pre pridanie bodu • potiahnite bod pre úpravu</span>
+                                <span class="dm-draw__floor-label">${escapeHtml(surfaceLabel)}</span>
+                                <span class="dm-draw__hint">Kliknite pre pridanie bodu • použite Reset pre zmazanie</span>
                             </div>
                             <code class="dm-draw__output" data-role="output"></code>
+                        </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <footer class="dm-modal__actions dm-modal__actions--split dm-modal__actions--draw">
-                    <button type="button" class="dm-button dm-button--outline" data-dm-reset-draw>Vrátiť zmeny</button>
+                    <button type="button" class="dm-button dm-button--outline" data-dm-reset-draw>Reset</button>
                     <button type="button" class="dm-button dm-button--dark" data-dm-save-draw>Uložiť a zatvoriť</button>
                 </footer>
             </div>

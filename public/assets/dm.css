@@ -2565,7 +2565,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 56px 48px;
+    padding: clamp(32px, 5vw, 64px);
     z-index: 1000;
     overflow-y: auto;
 }
@@ -2592,7 +2592,8 @@
 }
 
 .dm-modal--draw {
-    max-width: 1040px;
+    width: min(90vw, 1440px);
+    max-width: 1440px;
     border-radius: 32px;
     box-shadow: 0 32px 84px rgba(15, 18, 28, 0.28);
 }
@@ -2699,7 +2700,7 @@
 }
 
 .dm-modal__body--draw {
-    padding: 0 56px 40px;
+    padding: 0 clamp(32px, 4vw, 56px) clamp(32px, 5vw, 48px);
 }
 
 .dm-modal__media-wrapper {
@@ -3583,12 +3584,219 @@
     gap: 24px;
 }
 
+.dm-draw__layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.dm-draw__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 20px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(24, 24, 32, 0.08);
+    box-shadow: 0 18px 40px rgba(18, 18, 26, 0.12);
+}
+
+.dm-draw__aside-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.dm-draw__add-region {
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 14px;
+}
+
+.dm-draw__regions {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.dm-draw__region-item {
+    margin: 0;
+}
+
+.dm-draw__region-item--empty {
+    font-size: 14px;
+    color: var(--dm-text-muted);
+    padding: 12px 0;
+}
+
+.dm-draw__region-button {
+    width: 100%;
+    border: 1px solid rgba(24, 24, 32, 0.08);
+    background: rgba(248, 248, 255, 0.9);
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px 16px;
+    transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    text-align: left;
+}
+
+.dm-draw__region-button:hover,
+.dm-draw__region-button:focus-visible {
+    border-color: color-mix(in srgb, var(--dm-button-color, #7c3aed) 45%, #ffffff);
+    background: rgba(245, 242, 255, 0.94);
+    transform: translateY(-1px);
+}
+
+.dm-draw__region-item.is-active .dm-draw__region-button {
+    border-color: var(--dm-button-color, #7c3aed);
+    background: rgba(124, 58, 237, 0.12);
+}
+
+.dm-draw__region-index {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--dm-text-muted);
+    letter-spacing: 0.06em;
+}
+
+.dm-draw__region-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--dm-toolbar-text-color, #1C134F);
+}
+
+.dm-draw__region-status {
+    font-size: 13px;
+    color: var(--dm-text-muted);
+}
+
+.dm-draw__region-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.dm-draw__region-form .dm-field__label {
+    font-size: 13px;
+}
+
+.dm-draw__children {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dm-draw__children legend {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dm-toolbar-text-color, #1C134F);
+    margin: 0;
+}
+
+.dm-draw__children-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.dm-draw__child-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(24, 24, 32, 0.08);
+    background: rgba(248, 248, 255, 0.6);
+    transition: border-color 0.18s ease, background 0.18s ease;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.dm-draw__child-option input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--dm-button-color, #7c3aed);
+}
+
+.dm-draw__child-option:hover {
+    border-color: color-mix(in srgb, var(--dm-button-color, #7c3aed) 45%, #ffffff);
+    background: rgba(245, 242, 255, 0.94);
+}
+
+.dm-draw__child-empty {
+    font-size: 13px;
+    color: var(--dm-text-muted);
+}
+
+.dm-draw__region-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dm-text-muted);
+}
+
+.dm-draw__region-meta-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--dm-button-color, #7c3aed);
+    font-weight: 600;
+}
+
+.dm-draw__remove-region {
+    align-self: flex-start;
+    padding: 8px 14px;
+    font-size: 13px;
+    border-color: rgba(239, 68, 68, 0.6);
+    color: #ef4444;
+}
+
+.dm-draw__remove-region:hover,
+.dm-draw__remove-region:focus-visible {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+
+.dm-draw__remove-region[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.dm-draw__main {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
 .dm-draw__stage {
     position: relative;
     border-radius: 28px;
     overflow: hidden;
     box-shadow: 0 26px 58px rgba(18, 18, 26, 0.22);
     border: 1px solid rgba(24, 24, 32, 0.12);
+    touch-action: none;
 }
 
 .dm-draw__image {
@@ -3605,6 +3813,7 @@
     width: 100%;
     height: 100%;
     cursor: crosshair;
+    touch-action: none;
 }
 
 .dm-draw__shape-fill {
@@ -3710,6 +3919,7 @@
     align-items: center;
     gap: 24px;
     padding: 0 6px;
+    flex-wrap: wrap;
 }
 
 .dm-draw__toolbar-left {
@@ -3735,10 +3945,12 @@
     border-radius: 14px;
     padding: 12px 16px;
     font-size: 14px;
-    min-width: 260px;
     text-align: right;
     white-space: nowrap;
     overflow-x: auto;
+    flex: 1 1 260px;
+    min-width: 0;
+    max-width: clamp(240px, 40vw, 520px);
 }
 
 /* === responsive.css === */
@@ -3756,6 +3968,20 @@
     .dm-board__row:not(.dm-board__row--child) .dm-board__cell--shortcode code {
         font-size: clamp(9.5px, 1.3vw, 13px);
         padding: clamp(7px, 1vw, 12px) clamp(9px, 1.4vw, 14px);
+    }
+}
+
+@media (max-width: 1080px) {
+    .dm-draw__layout {
+        grid-template-columns: 1fr;
+    }
+
+    .dm-draw__main {
+        order: 1;
+    }
+
+    .dm-draw__aside {
+        order: 2;
     }
 }
 

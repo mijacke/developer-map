@@ -349,6 +349,67 @@ if (DM_ENABLE_SHORTCODE_COMPAT) {
     });
 }
 
+add_shortcode('fuudobre_map', 'dm_render_fuudobre_map_shortcode');
+
+function dm_register_frontend_map_assets(): void
+{
+    static $registered = false;
+
+    if ($registered) {
+        return;
+    }
+
+    $base_url = plugin_dir_url(__FILE__) . 'public/assets/frontend/';
+    wp_register_script(
+        'developer-map-frontend',
+        $base_url . 'map-viewer.js',
+        [],
+        DM_PLUGIN_VERSION,
+        true
+    );
+
+    $registered = true;
+}
+
+function dm_render_fuudobre_map_shortcode($atts = []): string
+{
+    $atts = shortcode_atts(
+        [
+            'map_key' => '',
+        ],
+        $atts,
+        'fuudobre_map'
+    );
+
+    $map_key = sanitize_text_field($atts['map_key']);
+
+    if ('' === $map_key) {
+        return '<p class="dm-map-viewer__error">Prosím, zadajte atribút <code>map_key</code>.</p>';
+    }
+
+    dm_register_frontend_map_assets();
+    wp_enqueue_script('developer-map-frontend');
+
+    static $localized = false;
+    if (!$localized) {
+        wp_localize_script(
+            'developer-map-frontend',
+            'dmFrontendConfig',
+            [
+                'endpoint' => rest_url(DM_Rest_Controller::NAMESPACE . '/project'),
+            ]
+        );
+        $localized = true;
+    }
+
+    $html = sprintf(
+        '<div class="dm-map-viewer__root" data-dm-map-key="%s"></div>',
+        esc_attr($map_key)
+    );
+
+    return $html;
+}
+
 /**
  * Render shortcode output in compatibility mode.
  */

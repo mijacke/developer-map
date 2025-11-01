@@ -13,20 +13,23 @@ export interface DMGeometry {
     points: Array<[number, number]>;
 }
 
-export interface DMLotMeta {
+export interface DMRegionMeta {
     area?: number;
     ctaEnabled?: boolean;
     maskColor?: string;
 }
 
-export interface DMLotDefinition {
+export interface DMRegionDefinition {
     id: string;
     label: string;
     type: string;
     status: DMStatusKey;
+    statusId?: string;
     tags?: string[];
     geometry: DMGeometry;
-    meta?: DMLotMeta;
+    hatchClass?: string;
+    meta?: DMRegionMeta;
+    children?: string[];
 }
 
 export interface DMRendererConfig {
@@ -50,12 +53,13 @@ export interface DMProjectConfig {
     id: string;
     title: string;
     description?: string;
+    publicKey: string;
     adapter: DMAdapterConfig;
     renderer: DMRendererConfig;
     palette: {
         statuses: DMStatusDefinition[];
     };
-    lots: DMLotDefinition[];
+    regions: DMRegionDefinition[];
 }
 
 export declare const demoProjectConfig: DMProjectConfig;

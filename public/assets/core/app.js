@@ -1,4 +1,4 @@
-import { APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX, DEFAULT_DRAW_POINTS, MEDIA } from './constants.js';
+import { APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX, MEDIA } from './constants.js';
 import { createDemoData } from './data.js';
 import { renderAppShell } from './layout/app-shell.js';
 import { renderModal } from './modals/index.js';
@@ -609,6 +609,235 @@ export async function initDeveloperMap(options) {
         }
     }
 
+    function normaliseRegionGeometryPoints(points) {
+        if (!Array.isArray(points)) {
+            return [];
+        }
+        return points
+            .map((point) => {
+                if (Array.isArray(point) && point.length >= 2) {
+                    const x = Number(point[0]);
+                    const y = Number(point[1]);
+                    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                        return null;
+                    }
+                    return [Number(x.toFixed(4)), Number(y.toFixed(4))];
+                }
+                if (point && typeof point === 'object') {
+                    const x = Number(point.x ?? point[0]);
+                    const y = Number(point.y ?? point[1]);
+                    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                        return null;
+                    }
+                    return [Number(x.toFixed(4)), Number(y.toFixed(4))];
+                }
+                return null;
+            })
+            .filter(Boolean);
+    }
+
+    function normaliseRegionDefinition(region, fallbackLabel, index) {
+        if (!region || typeof region !== 'object') {
+            return null;
+        }
+
+        const geometrySource =
+            region.geometry && typeof region.geometry === 'object' ? region.geometry : region;
+        const points = normaliseRegionGeometryPoints(geometrySource.points ?? geometrySource);
+
+        const id =
+            typeof region.id === 'string' && region.id.trim()
+                ? region.id.trim()
+                : generateId('region');
+        const label =
+            typeof region.label === 'string' && region.label.trim()
+                ? region.label.trim()
+                : `${fallbackLabel || 'Region'} ${index + 1}`;
+        const statusId = sanitiseStatusId(region.statusId ?? region.status ?? '');
+        const statusLabel =
+            typeof region.statusLabel === 'string' && region.statusLabel.trim()
+                ? region.statusLabel.trim()
+                : '';
+
+        const children = Array.isArray(region.children)
+            ? region.children
+                  .map((childId) => {
+                      const str = String(childId ?? '').trim();
+                      return str ? str : null;
+                  })
+                  .filter(Boolean)
+            : [];
+
+        const next = {
+            id,
+            label,
+            statusId,
+            status: statusId,
+            statusLabel,
+            geometry: {
+                type: 'polygon',
+                points,
+            },
+            children,
+        };
+
+        if (region.meta && typeof region.meta === 'object') {
+            const metaCopy = { ...region.meta };
+            if (Object.prototype.hasOwnProperty.call(metaCopy, 'hatchClass')) {
+                delete metaCopy.hatchClass;
+            }
+            if (Object.keys(metaCopy).length) {
+                next.meta = metaCopy;
+            }
+        }
+
+        const extras = { ...region };
+        delete extras.id;
+        delete extras.label;
+        delete extras.status;
+        delete extras.statusId;
+        delete extras.statusLabel;
+        delete extras.hatchClass;
+        delete extras.geometry;
+        delete extras.meta;
+        delete extras.children;
+        Object.keys(extras).forEach((key) => {
+            if (!Object.prototype.hasOwnProperty.call(next, key)) {
+                next[key] = extras[key];
+            }
+        });
+
+        return next;
+    }
+
+    function ensureEntityRegions(entity, index, contextLabel) {
+        if (!entity || typeof entity !== 'object') {
+            return false;
+        }
+
+        const fallbackLabel =
+            (typeof entity.label === 'string' && entity.label.trim()) ||
+            (typeof entity.name === 'string' && entity.name.trim()) ||
+            contextLabel ||
+            'Region';
+
+        const regionsSource = Array.isArray(entity.regions) ? entity.regions : [];
+        const nextRegions = [];
+
+        regionsSource.forEach((region, regionIndex) => {
+            const normalised = normaliseRegionDefinition(region, fallbackLabel, regionIndex);
+            if (normalised) {
+                nextRegions.push(normalised);
+            }
+        });
+
+        if (!nextRegions.length && entity.geometry && typeof entity.geometry === 'object') {
+            const legacyRegion = normaliseRegionDefinition(
+                {
+                    label: fallbackLabel,
+                    status: entity.status ?? entity.statusKey ?? '',
+                    statusId: entity.statusId ?? entity.status ?? '',
+                    statusLabel: entity.statusLabel ?? '',
+                    geometry: entity.geometry,
+                    meta:
+                        entity.meta && typeof entity.meta === 'object'
+                            ? (() => {
+                                  const metaCopy = { ...entity.meta };
+                                  if (Object.prototype.hasOwnProperty.call(metaCopy, 'hatchClass')) {
+                                      delete metaCopy.hatchClass;
+                                  }
+                                  return metaCopy;
+                              })()
+                            : undefined,
+                },
+                fallbackLabel,
+                0
+            );
+            if (legacyRegion) {
+                nextRegions.push(legacyRegion);
+            }
+        }
+
+        const previousSerialised = JSON.stringify(Array.isArray(entity.regions) ? entity.regions : []);
+        const nextSerialised = JSON.stringify(nextRegions);
+
+        const hadGeometry = Boolean(entity.geometry);
+        if (hadGeometry) {
+            delete entity.geometry;
+        }
+
+        entity.regions = nextRegions;
+
+        return previousSerialised !== nextSerialised || hadGeometry;
+    }
+
+    function ensureProjectRegions(projects) {
+        if (!Array.isArray(projects)) {
+            return false;
+        }
+
+        let mutated = false;
+        projects.forEach((project, projectIndex) => {
+            const projectChanged = ensureEntityRegions(
+                project,
+                projectIndex,
+                `Projekt ${projectIndex + 1}`
+            );
+            if (projectChanged) {
+                mutated = true;
+            }
+            if (Array.isArray(project?.floors)) {
+                project.floors.forEach((floor, floorIndex) => {
+                    const floorChanged = ensureEntityRegions(
+                        floor,
+                        floorIndex,
+                        project?.name ?? `Projekt ${projectIndex + 1}`
+                    );
+                    if (floorChanged) {
+                        mutated = true;
+                    }
+                });
+            }
+        });
+
+        return mutated;
+    }
+
+    function ensureProjectPublicKeys(projects) {
+        if (!Array.isArray(projects)) {
+            return false;
+        }
+
+        let mutated = false;
+        const used = new Set();
+
+        projects.forEach((project, index) => {
+            if (!project || typeof project !== 'object') {
+                return;
+            }
+            let candidate = typeof project.publicKey === 'string' ? project.publicKey.trim() : '';
+            if (!candidate) {
+                candidate = slugifyKey(project.name ?? project.title ?? `mapa-${index + 1}`);
+            } else {
+                candidate = slugifyKey(candidate);
+            }
+            const base = candidate || `mapa-${index + 1}`;
+            let unique = base;
+            let suffix = 1;
+            while (used.has(unique)) {
+                unique = `${base}-${suffix}`;
+                suffix += 1;
+            }
+            if (project.publicKey !== unique) {
+                project.publicKey = unique;
+                mutated = true;
+            }
+            used.add(unique);
+        });
+
+        return mutated;
+    }
+
     function ensureFloorStatusReferences() {
         if (!Array.isArray(data.projects) || data.projects.length === 0) {
             return false;
@@ -666,6 +895,61 @@ export async function initDeveloperMap(options) {
                     floor.statusId = nextId;
                     updated = true;
                 }
+
+                if (Array.isArray(floor.regions)) {
+                    floor.regions = floor.regions.map((region, regionIndex) => {
+                        if (!region || typeof region !== 'object') {
+                            return region;
+                        }
+                        const existingStatusId = sanitiseStatusId(region.statusId ?? region.status ?? '');
+                        let resolvedStatusId = existingStatusId;
+                        if (resolvedStatusId && !validIds.has(resolvedStatusId)) {
+                            const labelKey =
+                                typeof region.statusLabel === 'string'
+                                    ? region.statusLabel.trim().toLowerCase()
+                                    : '';
+                            const fallbackMatch = labelKey ? labelLookup.get(labelKey) : '';
+                            resolvedStatusId = fallbackMatch || '';
+                        }
+                        if (!resolvedStatusId && fallbackId) {
+                            resolvedStatusId = fallbackId;
+                        }
+                        if (resolvedStatusId && !validIds.has(resolvedStatusId)) {
+                            resolvedStatusId = '';
+                        }
+
+                        const statusLabel =
+                            resolvedStatusId && validIds.has(resolvedStatusId)
+                                ? data.statuses.find(
+                                      (status) => sanitiseStatusId(status?.id) === resolvedStatusId,
+                                  )?.label ?? region.statusLabel ?? ''
+                                : region.statusLabel ?? '';
+
+                        const normalisedGeometry = normaliseRegionGeometryPoints(
+                            (region.geometry && region.geometry.points) || region.geometry || [],
+                        );
+
+                        const nextRegion = {
+                            ...region,
+                            statusId: resolvedStatusId,
+                            status: resolvedStatusId,
+                            statusLabel,
+                            geometry: {
+                                type: 'polygon',
+                                points: normalisedGeometry.length ? normalisedGeometry : [],
+                            },
+                        };
+
+                        if (
+                            nextRegion.statusId !== (region.statusId ?? '') ||
+                            nextRegion.status !== (region.status ?? '') ||
+                            nextRegion.statusLabel !== (region.statusLabel ?? '')
+                        ) {
+                            updated = true;
+                        }
+                        return nextRegion;
+                    });
+                }
             });
         });
 
@@ -681,29 +965,52 @@ export async function initDeveloperMap(options) {
     applyStatusStyles(data.statuses);
 
     // Initialize projects from storage
+    let projectsDirty = false;
     const savedProjects = loadProjects();
-    if (savedProjects) {
+    if (savedProjects && savedProjects.length) {
         // Check if projects have images (for backward compatibility)
-        const hasImages = savedProjects.some(p => p.image || p.imageUrl || p.imageurl);
+        const hasImages = savedProjects.some((p) => p?.image || p?.imageUrl || p?.imageurl);
         if (!hasImages) {
             console.info('[Developer Map] Saved projects missing images, refreshing from demo data');
-            // Clear persisted projects and use fresh demo data
             removePersistedValue('dm-projects');
-            // data.projects already contains fresh demo data from createDemoData()
-            // Save the fresh data to persistence
-            saveProjects(data.projects);
+            if (ensureProjectRegions(data.projects)) {
+                projectsDirty = true;
+            }
+            if (ensureProjectPublicKeys(data.projects)) {
+                projectsDirty = true;
+            }
+            projectsDirty = true;
         } else {
             data.projects = savedProjects;
             const repairedSchema = repairProjectSchema(data.projects);
             if (repairedSchema) {
                 console.info('[Developer Map] Repairing stored project schema for compatibility');
-                saveProjects(data.projects);
+                projectsDirty = true;
+            }
+            if (ensureProjectRegions(data.projects)) {
+                console.info('[Developer Map] Migrated legacy geometry to regions schema');
+                projectsDirty = true;
+            }
+            if (ensureProjectPublicKeys(data.projects)) {
+                projectsDirty = true;
             }
             console.info('[Developer Map] Loaded projects from storage', savedProjects.length, 'projects');
         }
+    } else {
+        if (ensureProjectRegions(data.projects)) {
+            projectsDirty = true;
+        }
+        if (ensureProjectPublicKeys(data.projects)) {
+            projectsDirty = true;
+        }
+        projectsDirty = true;
     }
+
     const repairedProjects = ensureFloorStatusReferences();
     if (repairedProjects) {
+        projectsDirty = true;
+    }
+    if (projectsDirty) {
         saveProjects(data.projects);
     }
     applyStoredImages(data.projects);
@@ -762,6 +1069,37 @@ export async function initDeveloperMap(options) {
             return name.trim().charAt(0).toUpperCase();
         }
         return fallback || 'M';
+    }
+
+    function slugifyKey(input, fallback = 'mapa') {
+        if (typeof input !== 'string') {
+            return fallback;
+        }
+        const normalised = input
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .replace(/-{2,}/g, '-');
+        return normalised || fallback;
+    }
+
+    function generateProjectPublicKey(sourceName, exclude = []) {
+        const used = new Set(
+            exclude
+                .map((project) => (project && typeof project.publicKey === 'string' ? project.publicKey.trim() : ''))
+                .filter(Boolean),
+        );
+        const base = slugifyKey(sourceName || 'mapa');
+        let candidate = base;
+        let suffix = 1;
+        while (used.has(candidate)) {
+            candidate = `${base}-${suffix}`;
+            suffix += 1;
+        }
+        used.add(candidate);
+        return candidate;
     }
 
     function collectModalFields() {
@@ -1818,11 +2156,13 @@ export async function initDeveloperMap(options) {
                 const newProjectId = generateId('project');
                 const projectImage = imageData || result.item.image || MEDIA.building;
                 const badge = ensureBadge(nextName);
+                const publicKey = generateProjectPublicKey(nextName, data.projects);
                 const newProject = {
                     id: newProjectId,
                     name: nextName,
                     type: nextType,
                     badge,
+                    publicKey,
                     image: projectImage,
                     imageUrl: projectImage,
                     image_id: imageSelection?.id ?? null,
@@ -2013,6 +2353,7 @@ export async function initDeveloperMap(options) {
                 image_id: imageSelection?.id ?? null,
                 imageAlt: imageSelection?.alt || fields.name,
                 statusId: sanitiseStatusId(fields.statusId || data.statuses.find((s) => String(s.label ?? '').trim() === String(fields.status ?? '').trim())?.id),
+                regions: [],
             });
             if (imageSelection?.id) {
                 persistEntityImage('floor', newFloorId, imageSelection);
@@ -2047,11 +2388,13 @@ export async function initDeveloperMap(options) {
             const newProjectId = generateId('project');
             const badge = ensureBadge(name);
             const projectImage = imageData || MEDIA.building;
+            const publicKey = generateProjectPublicKey(name, data.projects);
             data.projects.push({
                 id: newProjectId,
                 name,
                 type,
                 badge,
+                publicKey,
                 image: projectImage,
                 imageUrl: projectImage,
                 image_id: imageSelection?.id ?? null,
@@ -2083,6 +2426,7 @@ export async function initDeveloperMap(options) {
                 image_id: imageSelection?.id ?? null,
                 imageAlt: imageSelection?.alt || name,
                 statusId: sanitiseStatusId(data.statuses[0]?.id),
+                regions: [],
             });
             if (imageSelection?.id) {
                 persistEntityImage('floor', newFloorId, imageSelection);
@@ -2813,13 +3157,200 @@ export async function initDeveloperMap(options) {
         const stage = drawRoot.querySelector('.dm-draw__stage');
         const resetButton = root.querySelector('[data-dm-reset-draw]');
         const saveButton = root.querySelector('[data-dm-save-draw]');
+        const regionList = drawRoot.querySelector('[data-dm-region-list]');
+        const addRegionButton = drawRoot.querySelector('[data-dm-add-region]');
+        const removeRegionButton = drawRoot.querySelector('[data-dm-remove-region]');
+        const regionNameInput = drawRoot.querySelector('[data-dm-region-name]');
+        const regionStatusSelect = drawRoot.querySelector('[data-dm-region-status]');
+        const regionChildrenFieldset = drawRoot.querySelector('[data-dm-region-children]');
+        const ownerTypeAttr = drawRoot.dataset.dmOwner ?? 'project';
+        const ownerIdAttr = drawRoot.dataset.dmOwnerId ?? '';
+        const projectIdAttr = drawRoot.dataset.dmProjectId ?? '';
         const floorName = drawRoot.dataset.dmFloorName ?? 'Lokalita';
+        const initialRegionId = drawRoot.dataset.dmActiveRegion ?? '';
 
         if (!overlay || !fill || !outline || !baseline || !handlesLayer || !output || !stage) {
             return;
         }
 
-        let points = clonePoints(DEFAULT_DRAW_POINTS);
+        const imageEl = drawRoot.querySelector('.dm-draw__image');
+
+        const parseViewboxDimension = (value) => {
+            const number = Number(value);
+            return Number.isFinite(number) && number > 0 ? number : null;
+        };
+
+        let viewBoxWidth = parseViewboxDimension(drawRoot.dataset.dmViewboxWidth) ?? DRAW_VIEWBOX.width;
+        let viewBoxHeight = parseViewboxDimension(drawRoot.dataset.dmViewboxHeight) ?? DRAW_VIEWBOX.height;
+
+        const updateOverlayViewBox = () => {
+            overlay.setAttribute('viewBox', `0 0 ${viewBoxWidth} ${viewBoxHeight}`);
+        };
+
+        const syncRootDatasetViewbox = () => {
+            drawRoot.dataset.dmViewboxWidth = String(viewBoxWidth);
+            drawRoot.dataset.dmViewboxHeight = String(viewBoxHeight);
+        };
+
+        updateOverlayViewBox();
+        syncRootDatasetViewbox();
+
+        let points = [];
+
+        const statusOptionsSource = Array.isArray(data.statuses) ? data.statuses : [];
+        const statusLookupById = new Map();
+        statusOptionsSource.forEach((status) => {
+            const id = sanitiseStatusId(status.id ?? status.key ?? '');
+            if (id && !statusLookupById.has(id)) {
+                statusLookupById.set(id, status.label ?? id);
+            }
+        });
+
+        const ownerResult = ownerIdAttr ? findMapItem(ownerIdAttr) : null;
+        let targetEntity = null;
+        let parentProject = null;
+
+        if (ownerResult) {
+            targetEntity = ownerResult.item;
+            parentProject = ownerResult.type === 'floor' ? ownerResult.parent : ownerResult.item;
+        } else {
+            parentProject =
+                data.projects.find((project) => String(project.id) === String(projectIdAttr)) ??
+                data.projects[0] ?? null;
+            if (ownerTypeAttr === 'floor') {
+                targetEntity =
+                    parentProject?.floors?.find((floor) => String(floor.id) === String(ownerIdAttr)) ?? null;
+            } else {
+                targetEntity = parentProject;
+            }
+        }
+
+        if (!targetEntity) {
+            console.warn(
+                '[Developer Map] Map owner not found while initialising draw modal',
+                ownerIdAttr || ownerTypeAttr,
+            );
+            return;
+        }
+
+        function setViewBoxSize(width, height, options = {}) {
+            const { preservePoints = true } = options;
+            const parsedWidth = parseViewboxDimension(width);
+            const parsedHeight = parseViewboxDimension(height);
+            if (!parsedWidth || !parsedHeight) {
+                return false;
+            }
+            if (parsedWidth === viewBoxWidth && parsedHeight === viewBoxHeight) {
+                return false;
+            }
+            const previousWidth = viewBoxWidth;
+            const previousHeight = viewBoxHeight;
+            viewBoxWidth = parsedWidth;
+            viewBoxHeight = parsedHeight;
+            updateOverlayViewBox();
+            syncRootDatasetViewbox();
+            if (Array.isArray(points)) {
+                if (points.length && preservePoints) {
+                    points = points.map((point) => ({
+                        x: Math.round((point.x / previousWidth) * viewBoxWidth),
+                        y: Math.round((point.y / previousHeight) * viewBoxHeight),
+                    }));
+                    commitActiveRegionPoints();
+                } else if (!preservePoints) {
+                    points = ensurePointsFromRegion(getActiveRegion());
+                }
+            }
+            buildHandles();
+            redraw();
+            return true;
+        }
+
+        function getStatusLabel(statusId) {
+            const key = sanitiseStatusId(statusId);
+            if (!key) {
+                return '';
+            }
+            return statusLookupById.get(key) ?? '';
+        }
+
+        function createRegionTemplate(index) {
+            const id = generateId('region');
+            return {
+                id,
+                label: `Zóna ${index + 1}`,
+                status: '',
+                statusId: '',
+                statusLabel: '',
+                geometry: {
+                    type: 'polygon',
+                    points: [],
+                },
+                meta: {},
+                children: [],
+            };
+        }
+
+        function cloneRegion(region, index) {
+            if (!region || typeof region !== 'object') {
+                return createRegionTemplate(index);
+            }
+            const id = region.id ? String(region.id) : generateId('region');
+            const label =
+                typeof region.label === 'string' && region.label.trim()
+                    ? region.label.trim()
+                    : typeof region.name === 'string' && region.name.trim()
+                        ? region.name.trim()
+                        : `Zóna ${index + 1}`;
+            const statusId = sanitiseStatusId(region.statusId ?? region.status ?? '');
+            const geometryPoints = normaliseRegionGeometryPoints(
+                (region.geometry && region.geometry.points) || region.geometry || [],
+            );
+            const children = Array.isArray(region.children)
+                ? region.children
+                      .map((childId) => {
+                          const str = String(childId ?? '').trim();
+                          return str ? str : null;
+                      })
+                      .filter(Boolean)
+                : [];
+            const meta = region.meta && typeof region.meta === 'object' ? { ...region.meta } : {};
+            if (meta && Object.prototype.hasOwnProperty.call(meta, 'hatchClass')) {
+                delete meta.hatchClass;
+            }
+            const clone = {
+                ...region,
+                id,
+                label,
+                status: statusId,
+                statusId,
+                statusLabel: region.statusLabel ?? getStatusLabel(statusId),
+                geometry: {
+                    type: 'polygon',
+                    points: geometryPoints,
+                },
+                meta,
+                children,
+            };
+            if (Array.isArray(region.tags)) {
+                clone.tags = [...region.tags];
+            }
+            return clone;
+        }
+
+        let workingRegions = Array.isArray(targetEntity?.regions)
+            ? targetEntity.regions.map((region, index) => cloneRegion(region, index))
+            : [];
+        if (!workingRegions.length) {
+            workingRegions = [createRegionTemplate(0)];
+        }
+
+        let activeRegionId = (() => {
+            if (initialRegionId && workingRegions.some((region) => String(region.id) === String(initialRegionId))) {
+                return String(initialRegionId);
+            }
+            return String(workingRegions[0].id);
+        })();
+
         let handleElements = [];
         let activeHandle = null;
         let activeIndex = -1;
@@ -2828,6 +3359,12 @@ export async function initDeveloperMap(options) {
 
         const handleResize = () => positionCursor();
         window.addEventListener('resize', handleResize);
+
+        const preventWheelZoom = (event) => {
+            if (event.ctrlKey || event.metaKey) {
+                event.preventDefault();
+            }
+        };
 
         const observer = new MutationObserver(() => {
             if (!root.contains(drawRoot)) {
@@ -2839,23 +3376,276 @@ export async function initDeveloperMap(options) {
         function teardown() {
             window.removeEventListener('resize', handleResize);
             observer.disconnect();
+            stage.removeEventListener('wheel', preventWheelZoom);
+            overlay.removeEventListener('wheel', preventWheelZoom);
         }
 
         function clonePoints(source) {
             return source.map((point) => ({ x: point.x, y: point.y }));
         }
 
+        function ensurePointsFromRegion(region) {
+            if (!region || !region.geometry || !Array.isArray(region.geometry.points)) {
+                return [];
+            }
+            const converted = region.geometry.points
+                .map((point) => {
+                    const x = Number(point?.[0]);
+                    const y = Number(point?.[1]);
+                    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                        return null;
+                    }
+                    return {
+                        x: Math.round(x * viewBoxWidth),
+                        y: Math.round(y * viewBoxHeight),
+                    };
+                })
+                .filter(Boolean);
+            return clonePoints(converted);
+        }
+
+        function getActiveRegion() {
+            return workingRegions.find((region) => String(region.id) === String(activeRegionId)) ?? null;
+        }
+
+        points = ensurePointsFromRegion(getActiveRegion());
+
+        stage.addEventListener('wheel', preventWheelZoom, { passive: false });
+        overlay.addEventListener('wheel', preventWheelZoom, { passive: false });
+
+        if (imageEl) {
+            const syncFromImage = () => {
+                if (imageEl.naturalWidth > 0 && imageEl.naturalHeight > 0) {
+                    setViewBoxSize(imageEl.naturalWidth, imageEl.naturalHeight, { preservePoints: true });
+                }
+            };
+            if (imageEl.complete) {
+                syncFromImage();
+            } else {
+                imageEl.addEventListener('load', syncFromImage, { once: true });
+            }
+        }
+
+        function commitActiveRegionPoints() {
+            const region = getActiveRegion();
+            if (!region) {
+                return;
+            }
+            const normalised = points.map((point) => [
+                Number((point.x / viewBoxWidth).toFixed(4)),
+                Number((point.y / viewBoxHeight).toFixed(4)),
+            ]);
+            region.geometry = {
+                type: 'polygon',
+                points: normalised,
+            };
+        }
+
+        function setActiveRegion(regionId, options = {}) {
+            const { commit = true } = options;
+            const nextRegion = workingRegions.find((region) => String(region.id) === String(regionId));
+            if (!nextRegion) {
+                return;
+            }
+            if (commit) {
+                commitActiveRegionPoints();
+            }
+            activeRegionId = String(nextRegion.id);
+            drawRoot.dataset.dmActiveRegion = activeRegionId;
+            if (state.modal && state.modal.type === 'draw-coordinates') {
+                state.modal.regionId = activeRegionId;
+            }
+            points = ensurePointsFromRegion(nextRegion);
+            cursorAnchorIndex = 0;
+            buildHandles();
+            redraw();
+            syncRegionForm();
+            refreshRegionList();
+        }
+
+        function refreshRegionList() {
+            if (!regionList) {
+                return;
+            }
+            regionList.innerHTML = '';
+            if (!workingRegions.length) {
+                const emptyItem = document.createElement('li');
+                emptyItem.className = 'dm-draw__region-item dm-draw__region-item--empty';
+                emptyItem.textContent = 'Žiadne zóny zatiaľ nevytvorené.';
+                regionList.append(emptyItem);
+                return;
+            }
+            workingRegions.forEach((region, index) => {
+                const id = String(region.id);
+                const item = document.createElement('li');
+                item.className = 'dm-draw__region-item';
+                item.dataset.dmRegionItem = id;
+                if (id === String(activeRegionId)) {
+                    item.classList.add('is-active');
+                }
+                const trigger = document.createElement('button');
+                trigger.type = 'button';
+                trigger.className = 'dm-draw__region-button';
+                trigger.dataset.dmRegionTrigger = id;
+                const indexEl = document.createElement('span');
+                indexEl.className = 'dm-draw__region-index';
+                indexEl.textContent = `${index + 1}.`;
+                const nameEl = document.createElement('span');
+                nameEl.className = 'dm-draw__region-name';
+                nameEl.textContent = region.label ?? region.name ?? `Zóna ${index + 1}`;
+                trigger.append(indexEl, nameEl);
+                const statusLabel = getStatusLabel(region.statusId ?? region.status ?? '') || region.statusLabel;
+                if (statusLabel) {
+                    const statusEl = document.createElement('span');
+                    statusEl.className = 'dm-draw__region-status';
+                    statusEl.textContent = statusLabel;
+                    trigger.append(statusEl);
+                }
+                const childCount = Array.isArray(region.children) ? region.children.length : 0;
+                if (childCount) {
+                    const metaWrapper = document.createElement('span');
+                    metaWrapper.className = 'dm-draw__region-meta';
+                    const badge = document.createElement('span');
+                    badge.className = 'dm-draw__region-meta-badge';
+                    badge.textContent = String(childCount);
+                    const metaLabel = document.createElement('span');
+                    metaLabel.textContent = 'prepojené';
+                    metaWrapper.append(badge, metaLabel);
+                    trigger.append(metaWrapper);
+                }
+                item.append(trigger);
+                regionList.append(item);
+            });
+        }
+
+        function syncRegionForm() {
+            const region = getActiveRegion();
+            if (regionNameInput) {
+                regionNameInput.value = region?.label ?? region?.name ?? '';
+                updateFieldFilledState(regionNameInput);
+            }
+            if (regionStatusSelect) {
+                const statusValue = sanitiseStatusId(region?.statusId ?? region?.status ?? '');
+                regionStatusSelect.value = statusValue;
+                updateFieldFilledState(regionStatusSelect);
+            }
+            if (regionChildrenFieldset) {
+                const selected = new Set(
+                    Array.isArray(region?.children) ? region.children.map((child) => String(child)) : [],
+                );
+                regionChildrenFieldset
+                    .querySelectorAll('input[data-dm-region-child]')
+                    .forEach((input) => {
+                        input.checked = selected.has(input.value);
+                    });
+            }
+            if (removeRegionButton) {
+                if (workingRegions.length > 1) {
+                    removeRegionButton.disabled = false;
+                    removeRegionButton.setAttribute('aria-disabled', 'false');
+                } else {
+                    removeRegionButton.disabled = true;
+                    removeRegionButton.setAttribute('aria-disabled', 'true');
+                }
+            }
+        }
+
+        if (regionList) {
+            regionList.addEventListener('click', (event) => {
+                const trigger = event.target.closest('[data-dm-region-trigger]');
+                if (!trigger) return;
+                const regionId = trigger.getAttribute('data-dm-region-trigger');
+                if (!regionId || regionId === String(activeRegionId)) return;
+                setActiveRegion(regionId);
+            });
+        }
+
+        if (addRegionButton) {
+            addRegionButton.addEventListener('click', () => {
+                commitActiveRegionPoints();
+                const newRegion = createRegionTemplate(workingRegions.length);
+                workingRegions.push(newRegion);
+                setActiveRegion(newRegion.id, { commit: false });
+            });
+        }
+
+        if (removeRegionButton) {
+            removeRegionButton.addEventListener('click', () => {
+                if (workingRegions.length <= 1) {
+                    return;
+                }
+                const indexToRemove = workingRegions.findIndex(
+                    (region) => String(region.id) === String(activeRegionId),
+                );
+                if (indexToRemove === -1) {
+                    return;
+                }
+                commitActiveRegionPoints();
+                workingRegions.splice(indexToRemove, 1);
+                const nextRegion = workingRegions[Math.max(0, indexToRemove - 1)] ?? workingRegions[0];
+                setActiveRegion(nextRegion.id, { commit: false });
+            });
+        }
+
+        if (regionNameInput) {
+            regionNameInput.addEventListener('input', (event) => {
+                const region = getActiveRegion();
+                if (!region) return;
+                region.label = String(event.target.value ?? '').trim();
+                refreshRegionList();
+            });
+        }
+
+        if (regionStatusSelect) {
+            regionStatusSelect.addEventListener('change', (event) => {
+                const region = getActiveRegion();
+                if (!region) return;
+                const value = sanitiseStatusId(event.target.value);
+                region.statusId = value;
+                region.status = value;
+                region.statusLabel = getStatusLabel(value);
+                refreshRegionList();
+            });
+        }
+
+        if (regionChildrenFieldset) {
+            regionChildrenFieldset.addEventListener('change', (event) => {
+                const input = event.target.closest('input[data-dm-region-child]');
+                if (!input) {
+                    return;
+                }
+                const region = getActiveRegion();
+                if (!region) {
+                    return;
+                }
+                const value = String(input.value ?? '').trim();
+                if (!value) {
+                    return;
+                }
+                const current = new Set(
+                    Array.isArray(region.children) ? region.children.map((child) => String(child)) : [],
+                );
+                if (input.checked) {
+                    current.add(value);
+                } else {
+                    current.delete(value);
+                }
+                region.children = Array.from(current);
+                refreshRegionList();
+            });
+        }
+
         function clampPoint(point) {
             return {
-                x: Math.max(0, Math.min(DRAW_VIEWBOX.width, Math.round(point.x))),
-                y: Math.max(0, Math.min(DRAW_VIEWBOX.height, Math.round(point.y))),
+                x: Math.max(0, Math.min(viewBoxWidth, Math.round(point.x))),
+                y: Math.max(0, Math.min(viewBoxHeight, Math.round(point.y))),
             };
         }
 
         function toViewBoxCoordinates(event) {
             const rect = overlay.getBoundingClientRect();
-            const scaleX = DRAW_VIEWBOX.width / rect.width;
-            const scaleY = DRAW_VIEWBOX.height / rect.height;
+            const scaleX = viewBoxWidth / rect.width;
+            const scaleY = viewBoxHeight / rect.height;
             return {
                 x: (event.clientX - rect.left) * scaleX,
                 y: (event.clientY - rect.top) * scaleY,
@@ -2877,9 +3667,10 @@ export async function initDeveloperMap(options) {
         function updateShapes() {
             const pointString = pointsToString(points);
             const closedString = pointsToClosedString(points);
-            fill.setAttribute('points', pointString);
-            outline.setAttribute('points', closedString);
-            baseline.setAttribute('points', closedString);
+            const hasPolygon = points.length >= 3;
+            fill.setAttribute('points', hasPolygon ? pointString : '');
+            outline.setAttribute('points', hasPolygon ? closedString : pointString);
+            baseline.setAttribute('points', points.length >= 2 ? pointString : '');
             points.forEach((point, index) => {
                 const handle = handleElements[index];
                 if (handle) {
@@ -2890,11 +3681,19 @@ export async function initDeveloperMap(options) {
         }
 
         function updateOutput() {
+            const region = getActiveRegion();
+            const regionLabel = region?.label ?? region?.name ?? region?.id ?? 'Zóna';
             const normalised = points.map((point) => [
-                Number((point.x / DRAW_VIEWBOX.width).toFixed(4)),
-                Number((point.y / DRAW_VIEWBOX.height).toFixed(4)),
+                Number((point.x / viewBoxWidth).toFixed(4)),
+                Number((point.y / viewBoxHeight).toFixed(4)),
             ]);
-            output.textContent = `${floorName}: ${JSON.stringify(normalised)}`;
+            if (region) {
+                region.geometry = {
+                    type: 'polygon',
+                    points: normalised,
+                };
+            }
+            output.textContent = `${floorName} • ${regionLabel}: ${JSON.stringify(normalised)}`;
         }
 
         function positionCursor() {
@@ -2911,8 +3710,8 @@ export async function initDeveloperMap(options) {
             const anchor = points[cursorAnchorIndex];
             const overlayRect = overlay.getBoundingClientRect();
             const stageRect = stage.getBoundingClientRect();
-            const scaleX = overlayRect.width / DRAW_VIEWBOX.width;
-            const scaleY = overlayRect.height / DRAW_VIEWBOX.height;
+            const scaleX = overlayRect.width / viewBoxWidth;
+            const scaleY = overlayRect.height / viewBoxHeight;
             const x = (anchor.x * scaleX) + (overlayRect.left - stageRect.left) - 28;
             const y = (anchor.y * scaleY) + (overlayRect.top - stageRect.top) - 28;
             cursor.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
@@ -2928,7 +3727,7 @@ export async function initDeveloperMap(options) {
             handlesLayer.innerHTML = points
                 .map(
                     (point, index) => `
-                        <circle tabindex="0" role="button" aria-label="Bod ${index + 1}" data-index="${index}" cx="${point.x}" cy="${point.y}" r="14"></circle>
+                        <circle data-index="${index}" cx="${point.x}" cy="${point.y}" r="14" aria-hidden="true"></circle>
                     `,
                 )
                 .join('');
@@ -2937,8 +3736,7 @@ export async function initDeveloperMap(options) {
                 cursorAnchorIndex = Math.max(0, points.length - 1);
             }
             handleElements.forEach((handle) => {
-                handle.addEventListener('pointerdown', startDrag);
-                handle.addEventListener('keydown', handleHandleKeydown);
+                handle.setAttribute('pointer-events', 'none');
             });
         }
 
@@ -2954,7 +3752,7 @@ export async function initDeveloperMap(options) {
                     changed = true;
                     break;
                 case 'ArrowDown':
-                    points[index].y = Math.min(DRAW_VIEWBOX.height, points[index].y + step);
+                    points[index].y = Math.min(viewBoxHeight, points[index].y + step);
                     changed = true;
                     break;
                 case 'ArrowLeft':
@@ -2962,7 +3760,7 @@ export async function initDeveloperMap(options) {
                     changed = true;
                     break;
                 case 'ArrowRight':
-                    points[index].x = Math.min(DRAW_VIEWBOX.width, points[index].x + step);
+                    points[index].x = Math.min(viewBoxWidth, points[index].x + step);
                     changed = true;
                     break;
                 case 'Delete':
@@ -3040,46 +3838,16 @@ export async function initDeveloperMap(options) {
         }
 
         function insertPoint(point) {
-            if (points.length < 3) {
-                points.push(point);
-                buildHandles();
-                redraw();
-                return;
-            }
-            let bestIndex = 0;
-            let bestDistance = Number.POSITIVE_INFINITY;
-            for (let i = 0; i < points.length; i += 1) {
-                const a = points[i];
-                const b = points[(i + 1) % points.length];
-                const distance = distanceToSegment(point, a, b);
-                if (distance < bestDistance) {
-                    bestDistance = distance;
-                    bestIndex = i + 1;
-                }
-            }
-            points.splice(bestIndex, 0, point);
-            cursorAnchorIndex = bestIndex;
+            points.push(point);
+            cursorAnchorIndex = points.length - 1;
             buildHandles();
             redraw();
         }
 
-        function distanceToSegment(point, a, b) {
-            const abx = b.x - a.x;
-            const aby = b.y - a.y;
-            const apx = point.x - a.x;
-            const apy = point.y - a.y;
-            const ab2 = (abx * abx) + (aby * aby);
-            const t = ab2 === 0 ? 0 : Math.max(0, Math.min(1, ((apx * abx) + (apy * aby)) / ab2));
-            const closestX = a.x + (abx * t);
-            const closestY = a.y + (aby * t);
-            const dx = point.x - closestX;
-            const dy = point.y - closestY;
-            return Math.sqrt((dx * dx) + (dy * dy));
-        }
-
         if (resetButton) {
+            resetButton.textContent = 'Reset';
             resetButton.addEventListener('click', () => {
-                points = clonePoints(DEFAULT_DRAW_POINTS);
+                points = [];
                 cursorAnchorIndex = 0;
                 buildHandles();
                 redraw();
@@ -3088,14 +3856,80 @@ export async function initDeveloperMap(options) {
 
         if (saveButton) {
             saveButton.addEventListener('click', () => {
-                const normalised = points.map((point) => ({
-                    x: Number((point.x / DRAW_VIEWBOX.width).toFixed(4)),
-                    y: Number((point.y / DRAW_VIEWBOX.height).toFixed(4)),
-                }));
-                console.info(`[Developer Map] ${floorName} – uložené súradnice`, normalised);
+                commitActiveRegionPoints();
+                if (targetEntity) {
+                    targetEntity.regions = workingRegions.map((region, index) => {
+                        const statusId = sanitiseStatusId(region.statusId ?? region.status ?? '');
+                        const statusLabel = getStatusLabel(statusId) || region.statusLabel || '';
+                        const geometryPoints = Array.isArray(region.geometry?.points)
+                            ? region.geometry.points
+                                  .map((point) => {
+                                      const x = Number(point?.[0]);
+                                      const y = Number(point?.[1]);
+                                      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                                          return null;
+                                      }
+                                      return [
+                                          Number(x.toFixed(4)),
+                                          Number(y.toFixed(4)),
+                                      ];
+                                  })
+                                  .filter(Boolean)
+                            : [];
+                        const meta = region.meta && typeof region.meta === 'object' ? { ...region.meta } : {};
+                        if (meta && Object.prototype.hasOwnProperty.call(meta, 'hatchClass')) {
+                            delete meta.hatchClass;
+                        }
+                        const children =
+                            Array.isArray(region.children)
+                                ? region.children
+                                      .map((child) => {
+                                          const value = String(child ?? '').trim();
+                                          return value || null;
+                                      })
+                                      .filter(Boolean)
+                                : [];
+                        const payload = {
+                            id: String(region.id ?? generateId('region')),
+                            label: region.label ?? region.name ?? `Zóna ${index + 1}`,
+                            type: region.type ?? '',
+                            status: statusId,
+                            statusId,
+                            statusLabel,
+                            geometry: {
+                                type: 'polygon',
+                                points: geometryPoints,
+                            },
+                            children,
+                        };
+                        if (Array.isArray(region.tags)) {
+                            payload.tags = [...region.tags];
+                        }
+                        if (Object.keys(meta).length) {
+                            payload.meta = meta;
+                        }
+                        return payload;
+                    });
+
+                    if (Number.isFinite(viewBoxWidth) && Number.isFinite(viewBoxHeight)) {
+                        const rendererConfig =
+                            targetEntity.renderer && typeof targetEntity.renderer === 'object'
+                                ? { ...targetEntity.renderer }
+                                : {};
+                        rendererConfig.size = {
+                            width: Math.round(viewBoxWidth),
+                            height: Math.round(viewBoxHeight),
+                        };
+                        targetEntity.renderer = rendererConfig;
+                    }
+                }
+                saveProjects(data.projects);
                 setState({ modal: null });
             });
         }
+
+        refreshRegionList();
+        syncRegionForm();
 
         overlay.addEventListener('click', handleOverlayClick);
 

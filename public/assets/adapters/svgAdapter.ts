@@ -8,19 +8,21 @@ export interface SvgAdapterOptions {
     };
     runtimeConfig?: Record<string, unknown>;
     state: {
-        lots: Array<Record<string, unknown>>;
-        lotsMap: Map<string, Record<string, unknown>>;
-        selectedLotId: string | null;
+        regions: Array<Record<string, unknown>>;
+        regionsMap: Map<string, Record<string, unknown>>;
+        selectedRegionId: string | null;
     };
 }
 
 export interface SvgAdapterInstance {
     mount: () => void;
-    highlight: (lotId: string | null) => void;
-    setStatus: (lotId: string, statusKey: string) => void;
-    updateLotColor: (lotId: string, color: string) => void;
+    highlight: (regionId: string | null) => void;
+    setStatus: (regionId: string, statusKey: string) => void;
+    updateLotColor: (regionId: string, color: string) => void;
+    updateRegionMaskColor: (regionId: string, color: string) => void;
     updatePalette: (palette: DMProjectConfig['palette']) => void;
-    removeLot: (lotId: string) => void;
+    removeLot: (regionId: string) => void;
+    removeRegion: (regionId: string) => void;
     destroy: () => void;
 }
 

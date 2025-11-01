@@ -78,7 +78,8 @@ function renderMapList(data, state) {
                     ${renderColumnHeader('Vloženie na web', 'embed')}
                 </div>
                 ${projects.map((project) => {
-                    const shortcode = `[fuudobre_map map_id="${project.id}"]`;
+                    const publicKey = project.publicKey ?? project.id;
+                    const shortcode = `[fuudobre_map map_key="${publicKey}"]`;
                     const floors = project.floors ?? [];
                     const filteredFloors = filterTerm
                         ? floors.filter((floor) => `${floor.name} ${floor.type}`.toLowerCase().includes(filterTerm))
@@ -190,4 +191,3 @@ function renderFloorRow(floor, shortcode) {
         </div>
     `;
 }
-
