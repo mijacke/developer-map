@@ -711,10 +711,21 @@ function renderDrawModal(state, data) {
         return Number.isFinite(num) && num > 0 ? num : null;
     };
 
+    const sanitiseZoomValue = (value) => {
+        const num = Number(value);
+        if (!Number.isFinite(num)) {
+            return null;
+        }
+        return Math.min(1.5, Math.max(0.35, num));
+    };
+
     const initialViewboxWidth = sanitiseViewboxDimension(rendererSizeSource?.width);
     const initialViewboxHeight = sanitiseViewboxDimension(rendererSizeSource?.height);
     const defaultViewboxWidth = initialViewboxWidth ?? DRAW_VIEWBOX.width;
     const defaultViewboxHeight = initialViewboxHeight ?? DRAW_VIEWBOX.height;
+    const initialZoom = sanitiseZoomValue(
+        state?.modal?.zoom ?? regionOwner?.renderer?.zoom ?? activeProject?.renderer?.zoom ?? null,
+    ) ?? 0.65;
 
     const regions = Array.isArray(regionOwner?.regions) ? regionOwner.regions : [];
     const floorsForChildren = Array.isArray(activeProject?.floors) ? activeProject.floors : [];
@@ -877,6 +888,7 @@ function renderDrawModal(state, data) {
                         data-dm-active-region="${activeRegion ? escapeHtml(String(activeRegion.id)) : ''}"
                         data-dm-viewbox-width="${initialViewboxWidth ? escapeHtml(String(initialViewboxWidth)) : ''}"
                         data-dm-viewbox-height="${initialViewboxHeight ? escapeHtml(String(initialViewboxHeight)) : ''}"
+                        data-dm-zoom="${escapeHtml(String(initialZoom))}"
                     >
                         <div class="dm-draw__layout">
                             <aside class="dm-draw__aside">
@@ -933,6 +945,15 @@ function renderDrawModal(state, data) {
                             <div class="dm-draw__toolbar-left">
                                 <span class="dm-draw__floor-label">${escapeHtml(surfaceLabel)}</span>
                                 <span class="dm-draw__hint">Kliknite pre pridanie bodu • použite Reset pre zmazanie</span>
+                            </div>
+                            <div class="dm-draw__toolbar-right">
+                                <button type="button" class="dm-draw__zoom-button" data-dm-zoom-out aria-label="Oddialiť">
+                                    &minus;
+                                </button>
+                                <span class="dm-draw__zoom-value" data-dm-zoom-value>${Math.round(initialZoom * 100)}%</span>
+                                <button type="button" class="dm-draw__zoom-button" data-dm-zoom-in aria-label="Priblížiť">
+                                    +
+                                </button>
                             </div>
                             <code class="dm-draw__output" data-role="output"></code>
                         </div>

@@ -3462,6 +3462,9 @@ export async function initDeveloperMap(options) {
         const regionNameInput = drawRoot.querySelector('[data-dm-region-name]');
         const regionStatusSelect = drawRoot.querySelector('[data-dm-region-status]');
         const regionChildrenFieldset = drawRoot.querySelector('[data-dm-region-children]');
+        const zoomOutButton = drawRoot.querySelector('[data-dm-zoom-out]');
+        const zoomInButton = drawRoot.querySelector('[data-dm-zoom-in]');
+        const zoomValueEl = drawRoot.querySelector('[data-dm-zoom-value]');
         const ownerTypeAttr = drawRoot.dataset.dmOwner ?? 'project';
         const ownerIdAttr = drawRoot.dataset.dmOwnerId ?? '';
         const projectIdAttr = drawRoot.dataset.dmProjectId ?? '';
@@ -3474,9 +3477,56 @@ export async function initDeveloperMap(options) {
 
         const imageEl = drawRoot.querySelector('.dm-draw__image');
 
+        const ZOOM_MIN = 0.35;
+        const ZOOM_MAX = 1.5;
+        const ZOOM_STEP = 0.1;
+        const DEFAULT_ZOOM = 0.65;
+
+        const parseZoomValue = (value) => {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric)) {
+                return null;
+            }
+            return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, numeric));
+        };
+
+        let stageZoom = parseZoomValue(drawRoot.dataset.dmZoom) ?? DEFAULT_ZOOM;
+
         const parseViewboxDimension = (value) => {
             const number = Number(value);
             return Number.isFinite(number) && number > 0 ? number : null;
+        };
+
+        const updateStageZoom = () => {
+            stage.style.setProperty('--dm-draw-zoom', String(stageZoom));
+            if (zoomValueEl) {
+                zoomValueEl.textContent = `${Math.round(stageZoom * 100)}%`;
+            }
+            if (zoomOutButton) {
+                const disabled = stageZoom <= ZOOM_MIN + 0.01;
+                zoomOutButton.disabled = disabled;
+                zoomOutButton.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+            }
+            if (zoomInButton) {
+                const disabled = stageZoom >= ZOOM_MAX - 0.01;
+                zoomInButton.disabled = disabled;
+                zoomInButton.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+            }
+            drawRoot.dataset.dmZoom = String(stageZoom);
+            if (state.modal && state.modal.type === 'draw-coordinates') {
+                state.modal.zoom = stageZoom;
+            }
+        };
+
+        const adjustStageZoom = (delta) => {
+            const nextZoom = Number((stageZoom + delta).toFixed(2));
+            const clamped = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, nextZoom));
+            if (clamped === stageZoom) {
+                return;
+            }
+            stageZoom = clamped;
+            updateStageZoom();
+            redraw();
         };
 
         let viewBoxWidth = parseViewboxDimension(drawRoot.dataset.dmViewboxWidth) ?? DRAW_VIEWBOX.width;
@@ -4026,7 +4076,7 @@ export async function initDeveloperMap(options) {
             handlesLayer.innerHTML = points
                 .map(
                     (point, index) => `
-                        <circle data-index="${index}" cx="${point.x}" cy="${point.y}" r="14" aria-hidden="true"></circle>
+                        <circle data-index="${index}" cx="${point.x}" cy="${point.y}" r="14"></circle>
                     `,
                 )
                 .join('');
@@ -4035,7 +4085,24 @@ export async function initDeveloperMap(options) {
                 cursorAnchorIndex = Math.max(0, points.length - 1);
             }
             handleElements.forEach((handle) => {
-                handle.setAttribute('pointer-events', 'none');
+                handle.setAttribute('tabindex', '0');
+                handle.setAttribute('role', 'button');
+                handle.addEventListener(
+                    'pointerdown',
+                    (event) => {
+                        event.stopPropagation();
+                        startDrag(event);
+                    },
+                    { passive: false },
+                );
+                handle.addEventListener('keydown', handleHandleKeydown);
+                handle.addEventListener('focus', () => {
+                    const focusIndex = Number(handle.getAttribute('data-index'));
+                    if (Number.isFinite(focusIndex)) {
+                        cursorAnchorIndex = focusIndex;
+                        positionCursor();
+                    }
+                });
             });
         }
 
@@ -4153,34 +4220,64 @@ export async function initDeveloperMap(options) {
             });
         }
 
+        if (zoomOutButton) {
+            zoomOutButton.addEventListener('click', () => {
+                adjustStageZoom(-ZOOM_STEP);
+            });
+        }
+
+        if (zoomInButton) {
+            zoomInButton.addEventListener('click', () => {
+                adjustStageZoom(ZOOM_STEP);
+            });
+        }
+
         if (saveButton) {
             saveButton.addEventListener('click', () => {
                 commitActiveRegionPoints();
                 if (targetEntity) {
-                    targetEntity.regions = workingRegions.map((region, index) => {
-                        const statusId = sanitiseStatusId(region.statusId ?? region.status ?? '');
-                        const statusLabel = getStatusLabel(statusId) || region.statusLabel || '';
-                        const geometryPoints = Array.isArray(region.geometry?.points)
-                            ? region.geometry.points
-                                  .map((point) => {
-                                      const x = Number(point?.[0]);
-                                      const y = Number(point?.[1]);
-                                      if (!Number.isFinite(x) || !Number.isFinite(y)) {
-                                          return null;
-                                      }
-                                      return [
-                                          Number(x.toFixed(4)),
-                                          Number(y.toFixed(4)),
-                                      ];
-                                  })
-                                  .filter(Boolean)
-                            : [];
-                        const meta = region.meta && typeof region.meta === 'object' ? { ...region.meta } : {};
-                        if (meta && Object.prototype.hasOwnProperty.call(meta, 'hatchClass')) {
-                            delete meta.hatchClass;
-                        }
-                        const children =
-                            Array.isArray(region.children)
+                    const previousRegionsMap = new Map(
+                        (Array.isArray(targetEntity.regions) ? targetEntity.regions : []).map((region) => [
+                            String(region?.id ?? ''),
+                            region,
+                        ]),
+                    );
+                    const nextRegions = workingRegions
+                        .map((region, index) => {
+                            const statusId = sanitiseStatusId(region.statusId ?? region.status ?? '');
+                            const statusLabel = getStatusLabel(statusId) || region.statusLabel || '';
+                            let geometryPoints = Array.isArray(region.geometry?.points)
+                                ? region.geometry.points
+                                      .map((point) => {
+                                          const x = Number(point?.[0]);
+                                          const y = Number(point?.[1]);
+                                          if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                                              return null;
+                                          }
+                                          return [Number(x.toFixed(4)), Number(y.toFixed(4))];
+                                      })
+                                      .filter(Boolean)
+                                : [];
+                            if (geometryPoints.length < 3) {
+                                const previousRegion = previousRegionsMap.get(String(region.id ?? ''));
+                                if (previousRegion && Array.isArray(previousRegion.geometry?.points)) {
+                                    geometryPoints = previousRegion.geometry.points
+                                        .map((point) => {
+                                            const x = Number(point?.[0]);
+                                            const y = Number(point?.[1]);
+                                            if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                                                return null;
+                                            }
+                                            return [Number(x.toFixed(4)), Number(y.toFixed(4))];
+                                        })
+                                        .filter(Boolean);
+                                }
+                            }
+                            const meta = region.meta && typeof region.meta === 'object' ? { ...region.meta } : {};
+                            if (meta && Object.prototype.hasOwnProperty.call(meta, 'hatchClass')) {
+                                delete meta.hatchClass;
+                            }
+                            const children = Array.isArray(region.children)
                                 ? region.children
                                       .map((child) => {
                                           const value = String(child ?? '').trim();
@@ -4188,27 +4285,30 @@ export async function initDeveloperMap(options) {
                                       })
                                       .filter(Boolean)
                                 : [];
-                        const payload = {
-                            id: String(region.id ?? generateId('region')),
-                            label: region.label ?? region.name ?? `Zóna ${index + 1}`,
-                            type: region.type ?? '',
-                            status: statusId,
-                            statusId,
-                            statusLabel,
-                            geometry: {
-                                type: 'polygon',
-                                points: geometryPoints,
-                            },
-                            children,
-                        };
-                        if (Array.isArray(region.tags)) {
-                            payload.tags = [...region.tags];
-                        }
-                        if (Object.keys(meta).length) {
-                            payload.meta = meta;
-                        }
-                        return payload;
-                    });
+                            const payload = {
+                                id: String(region.id ?? generateId('region')),
+                                label: region.label ?? region.name ?? `Zóna ${index + 1}`,
+                                type: region.type ?? '',
+                                status: statusId,
+                                statusId,
+                                statusLabel,
+                                geometry: {
+                                    type: 'polygon',
+                                    points: geometryPoints,
+                                },
+                                children,
+                            };
+                            if (Array.isArray(region.tags)) {
+                                payload.tags = [...region.tags];
+                            }
+                            if (Object.keys(meta).length) {
+                                payload.meta = meta;
+                            }
+                            return payload;
+                        })
+                        .filter(Boolean);
+
+                    targetEntity.regions = nextRegions;
 
                     if (Number.isFinite(viewBoxWidth) && Number.isFinite(viewBoxHeight)) {
                         const rendererConfig =
@@ -4219,6 +4319,7 @@ export async function initDeveloperMap(options) {
                             width: Math.round(viewBoxWidth),
                             height: Math.round(viewBoxHeight),
                         };
+                        rendererConfig.zoom = Number(stageZoom.toFixed(2));
                         targetEntity.renderer = rendererConfig;
                     }
                 }
@@ -4233,6 +4334,7 @@ export async function initDeveloperMap(options) {
         overlay.addEventListener('click', handleOverlayClick);
 
         buildHandles();
+        updateStageZoom();
         redraw();
         positionCursor();
     }
