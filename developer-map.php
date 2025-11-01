@@ -301,6 +301,14 @@ function dm_enqueue_admin_assets(): void
         wp_enqueue_media();
     }
 
+    // Enqueue Google Fonts for admin interface
+    wp_enqueue_style(
+        'dm-google-fonts',
+        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Playfair+Display:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap',
+        [],
+        null
+    );
+
     wp_enqueue_style(DM_PLUGIN_STYLE_HANDLE);
     wp_add_inline_style(DM_PLUGIN_STYLE_HANDLE, dm_get_critical_css());
 

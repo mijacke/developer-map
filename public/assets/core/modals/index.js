@@ -1,4 +1,4 @@
-import { MEDIA, DRAW_VIEWBOX } from '../constants.js';
+import { DRAW_VIEWBOX } from '../constants.js';
 import { escapeHtml } from '../utils/html.js';
 
 export function renderModal(state, data) {
@@ -72,7 +72,7 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
     const selectedPreview = imageSelection?.url ?? modalState?.imagePreview ?? null;
     let imageUrl = selectedPreview || (editItem?.image ?? editItem?.imageUrl ?? null);
     if (!imageUrl && isEdit) {
-        imageUrl = editType === 'floor' ? MEDIA.floor : MEDIA.building;
+        imageUrl = '';
     }
 
     const uploadLabel = isEdit ? 'Zmeniť obrázok' : 'Nahrať obrázok';
@@ -291,7 +291,7 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
     const selectedPreview = imageSelection?.url ?? modalState?.imagePreview ?? null;
     let imageUrl = selectedPreview || (editLocation?.image ?? editLocation?.imageUrl ?? null);
     if (!imageUrl && isEdit) {
-        imageUrl = MEDIA.floor;
+        imageUrl = '';
     }
 
     const uploadLabel = isEdit ? 'Zmeniť obrázok' : 'Nahrať obrázok';
@@ -847,8 +847,8 @@ function renderDrawModal(state, data) {
     const canRemoveRegion = regions.length > 1;
     const backgroundImage =
         contextType === 'floor'
-            ? activeFloor?.image ?? activeFloor?.imageUrl ?? activeFloor?.imageurl ?? MEDIA.draw
-            : activeProject?.image ?? activeProject?.imageUrl ?? activeProject?.imageurl ?? MEDIA.draw;
+            ? activeFloor?.image ?? activeFloor?.imageUrl ?? activeFloor?.imageurl ?? ''
+            : activeProject?.image ?? activeProject?.imageUrl ?? activeProject?.imageurl ?? '';
     const backgroundAlt = surfaceLabel ? `${surfaceLabel} - podklad mapy` : 'Podklad mapy';
 
     return `
@@ -914,7 +914,7 @@ function renderDrawModal(state, data) {
                             </svg>
                             <div class="dm-draw__badge">${escapeHtml(badgeLabel)}</div>
                             <div class="dm-draw__cursor" aria-hidden="true">
-                                <img src="${MEDIA.cursor}" alt="" draggable="false" />
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z" fill="currentColor"/></svg>
                             </div>
                             ${levelLabels.length ? `
                             <ul class="dm-draw__levels">

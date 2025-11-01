@@ -52,6 +52,7 @@ function renderSettingsOverview() {
         { label: 'Typ', icon: ICONS.edit, target: SETTINGS_SECTIONS.TYPES },
         { label: 'Stav', icon: ICONS.edit, target: SETTINGS_SECTIONS.STATUSES },
         { label: 'Základné farby mapy', icon: ICONS.edit, target: SETTINGS_SECTIONS.COLORS },
+        { label: 'Fonty', icon: ICONS.edit, target: SETTINGS_SECTIONS.FONTS },
     ];
     return `
         <div class="dm-card dm-card--settings">
@@ -159,10 +160,10 @@ function renderSettingsColors(data) {
                             <div class="dm-settings__item">
                                 <div class="dm-pill">
                                     <span class="dm-pill__dot" style="background:${item.value}"></span>
-                                    ${item.label}
+                                    ${item.name || item.label}
                                 </div>
                                 <div class="dm-settings__item-actions">
-                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-color" data-dm-payload="${item.id}" aria-label="Upraviť ${item.label}" title="Upraviť">
+                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-color" data-dm-payload="${item.id}" aria-label="Upraviť ${item.name || item.label}" title="Upraviť">
                                         <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.edit}</span>
                                     </button>
                                 </div>
@@ -176,19 +177,53 @@ function renderSettingsColors(data) {
 }
 
 function renderSettingsFonts(data) {
+    const fonts = [
+        { id: 'inter', label: 'Inter (predvolený)', value: "'Inter', 'Segoe UI', sans-serif", description: 'Moderný, čitateľný sans-serif' },
+        { id: 'roboto', label: 'Roboto', value: "'Roboto', 'Segoe UI', sans-serif", description: 'Google Material Design font' },
+        { id: 'poppins', label: 'Poppins', value: "'Poppins', sans-serif", description: 'Geometrický, výrazný sans-serif' },
+        { id: 'playfair', label: 'Playfair Display', value: "'Playfair Display', Georgia, serif", description: 'Elegantný serif pre luxusný vzhľad' },
+        { id: 'fira-code', label: 'Fira Code', value: "'Fira Code', 'Courier New', monospace", description: 'Monospace font pre technický vzhľad' },
+        { id: 'courier', label: 'Courier Prime', value: "'Courier Prime', 'Courier New', monospace", description: 'Klasický písací stroj' },
+    ];
+    
+    const selectedFont = (data.selectedFont && data.selectedFont.id) || 'inter';
+    
     return `
         <div class="dm-card dm-card--settings">
-            <h2>Font písma</h2>
+            <h2>Fonty</h2>
+            <p style="margin-bottom: 16px; color: var(--dm-text-muted);">Vyberte font, ktorý sa použije vo všetkých častiach administračného rozhrania pluginu.</p>
             <div class="dm-settings__list">
-                ${data.fonts
+                ${fonts
                     .map(
                         (item) => `
-                            <div class="dm-settings__item">
-                                <span>${item.label}</span>
-                                <div class="dm-settings__item-actions">
-                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-font" aria-label="Upraviť ${item.label}" title="Upraviť">
-                                        <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.edit}</span>
-                                    </button>
+                            <div class="dm-settings__item ${selectedFont === item.id ? 'dm-settings__item--selected' : ''}" style="flex-direction: column; align-items: flex-start;">
+                                <div style="display: flex; align-items: center; gap: 12px; width: 100%; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                                        ${selectedFont === item.id ? 
+                                            '<span style="color: var(--dm-action); font-weight: 600; font-size: 18px;">✓</span>' : 
+                                            '<span style="width: 20px;"></span>'
+                                        }
+                                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                                            <span style="font-family: ${item.value}; font-size: 18px; font-weight: 600;">${escapeHtml(item.label)}</span>
+                                            <span style="font-size: 12px; color: var(--dm-text-muted);">${escapeHtml(item.description)}</span>
+                                        </div>
+                                    </div>
+                                    <div class="dm-settings__item-actions">
+                                        <button 
+                                            type="button" 
+                                            class="dm-button ${selectedFont === item.id ? 'dm-button--secondary' : 'dm-button--dark'}" 
+                                            data-dm-select-font="${escapeHtml(item.id)}"
+                                            ${selectedFont === item.id ? 'disabled' : ''}
+                                            aria-label="Vybrať ${escapeHtml(item.label)}" 
+                                            title="${selectedFont === item.id ? 'Aktuálne vybraný' : 'Vybrať'}">
+                                            ${selectedFont === item.id ? 'Vybraný' : 'Vybrať'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 8px; padding: 12px; background: rgba(99, 102, 241, 0.05); border-radius: 8px; width: 100%; font-family: ${item.value};">
+                                    <p style="margin: 0; font-size: 14px; line-height: 1.6;">
+                                        Vzorový text: Developer Map je nástroj pre správu projektov. Čísla: 0123456789
+                                    </p>
                                 </div>
                             </div>
                         `,

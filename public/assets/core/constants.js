@@ -16,13 +16,6 @@ export const SETTINGS_SECTIONS = {
     FONTS: 'fonts',
 };
 
-export const MEDIA = {
-    building: new URL('../media/demo-building-placeholder.svg', import.meta.url).href,
-    draw: new URL('../media/demo-building-draw.svg', import.meta.url).href,
-    floor: new URL('../media/demo-floorplan-placeholder.svg', import.meta.url).href,
-    cursor: new URL('../media/demo-pointer.svg', import.meta.url).href,
-};
-
 export const DRAW_VIEWBOX = { width: 1280, height: 720 };
 
 export const DEFAULT_DRAW_POINTS = [

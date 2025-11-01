@@ -1,302 +1,48 @@
 /**
- * Demo data pre Developer Map plugin
- * Obsahuje hierarchickú štruktúru projektov (budovy) a ich poschodí
+ * Initial data structure for Developer Map plugin
+ * Contains hierarchical structure of projects (buildings) and their floors
  */
-import { MEDIA } from './constants.js';
-
-export function createDemoData() {
+export function createInitialData() {
     return {
-        projects: [
-            // Projekt 1: Bytovka s 6 poschodiami
-            {
-                id: '1',
-                name: 'Bytový dom A',
-                type: 'Rezidenčný projekt',
-                badge: 'A',
-                image: MEDIA.building, // Pridaný obrázok projektu
-                floors: [
-                    {
-                        id: 'floor-1',
-                        name: '1. poschodie',
-                        type: 'Byty 2+kk',
-                        label: '1. NP',
-                        designation: '1.01',
-                        area: '629.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-1',
-                        image: MEDIA.floor,
-                    },
-                    {
-                        id: 'floor-2',
-                        name: '2. poschodie',
-                        type: 'Byty 3+kk',
-                        label: '2. NP',
-                        designation: '1.02',
-                        area: '578.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-2',
-                        image: MEDIA.floor,
-                    },
-                    {
-                        id: 'floor-3',
-                        name: '3. poschodie',
-                        type: 'Byty 3+kk',
-                        label: '3. NP',
-                        designation: '1.03',
-                        area: '722.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-1',
-                    },
-                    {
-                        id: 'floor-4',
-                        name: '4. poschodie',
-                        type: 'Byty 4+kk',
-                        label: '4. NP',
-                        designation: '1.04',
-                        area: '708.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-3',
-                        image: MEDIA.floor,
-                    },
-                    {
-                        id: 'floor-5',
-                        name: '5. poschodie',
-                        type: 'Penthousy',
-                        label: '5. NP',
-                        designation: '1.05',
-                        area: '616.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-1',
-                    },
-                    {
-                        id: 'floor-6',
-                        name: 'Suterén',
-                        type: 'Parkovanie',
-                        label: '1. PP',
-                        designation: '1.06',
-                        area: '658.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-2',
-                        image: MEDIA.floor,
-                    },
-                ],
-            },
-            // Projekt 2: Obchodné centrum s 3 podlažiami
-            {
-                id: '2',
-                name: 'Shopping Park',
-                type: 'Komerčný projekt',
-                badge: 'B',
-                image: MEDIA.building, // Pridaný obrázok projektu
-                floors: [
-                    {
-                        id: 'floor-7',
-                        name: 'Prízemie',
-                        type: 'Retail',
-                        label: 'Prízemie',
-                        designation: '2.01',
-                        area: '1245.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-1',
-                        image: MEDIA.floor,
-                    },
-                    {
-                        id: 'floor-8',
-                        name: '1. poschodie',
-                        type: 'Food court',
-                        label: '1. NP',
-                        designation: '2.02',
-                        area: '892.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-3',
-                    },
-                    {
-                        id: 'floor-9',
-                        name: 'Parkovisko',
-                        type: 'Parkovacie miesta',
-                        label: '1. PP',
-                        designation: '2.03',
-                        area: '1580.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-2',
-                        image: MEDIA.floor,
-                    },
-                ],
-            },
-            // Projekt 3: Kancelárska budova s 8 podlažiami
-            {
-                id: '3',
-                name: 'Business Tower',
-                type: 'Administratívna budova',
-                badge: 'C',
-                image: MEDIA.building, // Pridaný obrázok projektu
-                floors: [
-                    {
-                        id: 'floor-10',
-                        name: 'Prízemie',
-                        type: 'Recepcia',
-                        label: 'Prízemie',
-                        designation: '3.01',
-                        area: '425.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-1',
-                    },
-                    {
-                        id: 'floor-11',
-                        name: '1. - 3. poschodie',
-                        type: 'Open space',
-                        label: '1-3 NP',
-                        designation: '3.02',
-                        area: '1890.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-2',
-                        image: MEDIA.floor,
-                    },
-                    {
-                        id: 'floor-12',
-                        name: '4. - 6. poschodie',
-                        type: 'Kancelárie',
-                        label: '4-6 NP',
-                        designation: '3.03',
-                        area: '1756.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-3',
-                    },
-                    {
-                        id: 'floor-13',
-                        name: '7. poschodie',
-                        type: 'Meeting rooms',
-                        label: '7. NP',
-                        designation: '3.04',
-                        area: '612.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-1',
-                        image: MEDIA.floor,
-                    },
-                    {
-                        id: 'floor-14',
-                        name: '8. poschodie',
-                        type: 'Executive floor',
-                        label: '8. NP',
-                        designation: '3.05',
-                        area: '598.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-2',
-                    },
-                    {
-                        id: 'floor-15',
-                        name: 'Strecha',
-                        type: 'Terasa',
-                        label: 'Strecha',
-                        designation: '3.06',
-                        area: '340.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-1',
-                        image: MEDIA.floor,
-                    },
-                    {
-                        id: 'floor-16',
-                        name: 'Suterén -1',
-                        type: 'Technické priestory',
-                        label: '1. PP',
-                        designation: '3.07',
-                        area: '520.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-3',
-                    },
-                    {
-                        id: 'floor-17',
-                        name: 'Suterén -2',
-                        type: 'Parkovanie',
-                        label: '2. PP',
-                        designation: '3.08',
-                        area: '980.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-2',
-                        image: MEDIA.floor,
-                    },
-                ],
-            },
-            // Projekt 4: Rodinné domy (bez poschodí - ukážka bez hierarchie)
-            {
-                id: '4',
-                name: 'Rodinné domy Záhradná',
-                type: 'Rodinné domy',
-                badge: 'D',
-                floors: [], // Žiadne poschodia - toggle button sa nezobrazí
-            },
-            // Projekt 5: Vila s bazénom (malý projekt s 2 podlažiami)
-            {
-                id: '5',
-                name: 'Luxury Villa Resort',
-                type: 'Luxusné vily',
-                badge: 'E',
-                image: MEDIA.building, // Pridaný obrázok projektu
-                floors: [
-                    {
-                        id: 'floor-18',
-                        name: 'Prízemie + terasa',
-                        type: 'Obývacia časť',
-                        label: 'Prízemie',
-                        designation: '5.01',
-                        area: '285.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-1',
-                        image: MEDIA.floor,
-                    },
-                    {
-                        id: 'floor-19',
-                        name: '1. poschodie',
-                        type: 'Spálne',
-                        label: '1. NP',
-                        designation: '5.02',
-                        area: '218.00 m²',
-                        price: '0.00€',
-                        rent: '0.00€',
-                        statusId: 'status-2',
-                    },
-                ],
-            },
-        ],
-        types: [
-            { id: 'type-1', label: 'Bytovka', color: '#22c55e' },
-            { id: 'type-2', label: 'Dom', color: '#3b82f6' },
-            { id: 'type-3', label: 'Pozemok', color: '#f59e0b' },
-            { id: 'type-4', label: 'Komerčný priestor', color: '#8b5cf6' },
-            { id: 'type-5', label: 'Kancelária', color: '#ec4899' },
-        ],
-        statuses: [
-            { id: 'status-1', label: 'Voľné', color: '#22c55e' },
-            { id: 'status-2', label: 'Obsadené', color: '#ef4444' },
-            { id: 'status-3', label: 'Rezervované', color: '#f59e0b' },
-        ],
-        colors: [
-            { id: 'color-1', label: 'Farba tlačidiel', value: '#7c3aed' },
-            { id: 'color-2', label: 'Farba nadpisov', value: '#1C134F' },
-            { id: 'color-3', label: 'Farba obsahových textov', value: '#1C134F' },
-        ],
-        fonts: [
-            { id: 'font-1', label: 'Font nadpisov' },
-            { id: 'font-2', label: 'Font popisových textov' },
-            { id: 'font-3', label: 'Font tlačidiel' },
-        ],
+        projects: [],
+        types: [],
+        statuses: [],
+        colors: [],
+        fonts: [],
     };
+}
+
+/**
+ * Default types for new installations
+ */
+export function getDefaultTypes() {
+    return [
+        { id: 'type-1', name: 'Bytovka', label: 'Bytovka', color: '#405ECD' },
+        { id: 'type-2', name: 'Dom', label: 'Dom', color: '#AE40CD' },
+        { id: 'type-3', name: 'Pozemok', label: 'Pozemok', color: '#40AECD' },
+        { id: 'type-4', name: 'Poschodie', label: 'Poschodie', color: '#1c9967ff' },
+        { id: 'type-5', name: 'Byt', label: 'Byt', color: '#8c1726ff' },
+    ];
+}
+
+/**
+ * Default statuses for new installations
+ */
+export function getDefaultStatuses() {
+    return [
+        { id: 'status-1', label: 'Voľný', color: '#49CD40' },
+        { id: 'status-2', label: 'Rezervovaný', color: '#D79E21' },
+        { id: 'status-3', label: 'Predaný', color: '#CD4040' },
+    ];
+}
+
+/**
+ * Default colors for new installations
+ */
+export function getDefaultColors() {
+    return [
+        { id: 'color-1', name: 'Farba tlačidiel', value: '#7c3aed' },
+        { id: 'color-2', name: 'Farba nadpisov', value: '#1C134F' },
+        { id: 'color-3', name: 'Farba obsahových textov', value: '#6b7280' },
+    ];
 }

@@ -1,4 +1,4 @@
-import { MAP_SECTIONS, MEDIA } from '../constants.js';
+import { MAP_SECTIONS } from '../constants.js';
 import { escapeHtml } from '../utils/html.js';
 
 export function renderMapsView(state, data) {
@@ -104,7 +104,7 @@ function renderProjectRow(project, shortcode, floors = []) {
             <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
     `;
-    const projectImage = project.image ?? MEDIA.building;
+    const projectImage = project.image ?? '';
     
     return `
         <div class="dm-board__row dm-board__row--project dm-board__row--parent" role="row" data-dm-parent-id="${project.id}">
@@ -155,7 +155,7 @@ function renderProjectRow(project, shortcode, floors = []) {
 }
 
 function renderFloorRow(floor, shortcode) {
-    const floorImage = floor.image ?? MEDIA.floor;
+    const floorImage = floor.image ?? '';
     return `
         <div class="dm-board__row dm-board__row--floor dm-board__row--child" role="row" data-dm-child-id="${floor.id}">
             <div class="dm-board__cell dm-board__cell--main" role="cell">

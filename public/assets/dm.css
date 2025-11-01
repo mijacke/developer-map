@@ -1633,7 +1633,7 @@
     }
 
     .dm-hero--building {
-        background: url("media/demo-building-placeholder.svg") center / cover no-repeat;
+        background: center / cover no-repeat;
     }
 
     .dm-hero--building::after {
@@ -2535,6 +2535,11 @@
     border-radius: 12px;
     border: 1px solid var(--dm-border);
     background: #fafafb;
+}
+
+.dm-settings__item--selected {
+    border-color: var(--dm-action);
+    background: rgba(77, 56, 255, 0.05);
 }
 
 .dm-settings__item-actions {

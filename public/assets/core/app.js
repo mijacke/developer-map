@@ -1,5 +1,5 @@
-import { APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX, MEDIA } from './constants.js';
-import { createDemoData } from './data.js';
+import { APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX } from './constants.js';
+import { createInitialData, getDefaultTypes, getDefaultStatuses, getDefaultColors } from './data.js';
 import { renderAppShell } from './layout/app-shell.js';
 import { renderModal } from './modals/index.js';
 import { createStorageClient } from './storage-client.js';
@@ -40,9 +40,10 @@ export async function initDeveloperMap(options) {
         projects: null,
         expanded: [],
         images: {},
+        selectedFont: null,
     };
 
-    const data = createDemoData();
+    const data = createInitialData();
 
     function cloneForStorage(value) {
         if (value === null || value === undefined) {
@@ -89,6 +90,153 @@ export async function initDeveloperMap(options) {
         if (payload.alt) {
             entity.imageAlt = payload.alt;
         }
+    }
+
+    function cleanDemoImages(projects) {
+        if (!Array.isArray(projects)) {
+            return false;
+        }
+        let changed = false;
+        const demoPatterns = [
+            'demo-building-placeholder',
+            'demo-floorplan-placeholder',
+            'demo-building-draw',
+            'demo-pointer',
+            'Screenshot-2025-10-18'
+        ];
+        
+        projects.forEach((project) => {
+            if (project.image && typeof project.image === 'string') {
+                const hasDemo = demoPatterns.some(pattern => project.image.includes(pattern));
+                if (hasDemo) {
+                    project.image = '';
+                    changed = true;
+                }
+            }
+            if (Array.isArray(project.floors)) {
+                project.floors.forEach((floor) => {
+                    if (floor.image && typeof floor.image === 'string') {
+                        const hasDemo = demoPatterns.some(pattern => floor.image.includes(pattern));
+                        if (hasDemo) {
+                            floor.image = '';
+                            changed = true;
+                        }
+                    }
+                });
+            }
+        });
+        
+        return changed;
+    }
+
+    function migrateHashIdsToSequential() {
+        let changed = false;
+        
+        // Migrate types
+        if (Array.isArray(data.types)) {
+            const typeIdMap = new Map();
+            let typeCounter = 1;
+            
+            data.types.forEach((type, index) => {
+                if (type && type.id) {
+                    const oldId = String(type.id);
+                    // Check if it's a hash ID (contains dash followed by random chars)
+                    if (/^type-[a-z0-9]{6,}-[a-z0-9]+$/.test(oldId) || /^type-[a-z0-9]{6,}$/.test(oldId)) {
+                        const newId = `type-${typeCounter++}`;
+                        typeIdMap.set(oldId, newId);
+                        type.id = newId;
+                        changed = true;
+                    } else if (/^type-(\d+)$/.test(oldId)) {
+                        // It's already sequential, track the counter
+                        const num = parseInt(oldId.match(/^type-(\d+)$/)[1], 10);
+                        if (num >= typeCounter) {
+                            typeCounter = num + 1;
+                        }
+                    }
+                }
+            });
+            
+            // Update type references in projects/floors
+            if (changed && data.projects) {
+                data.projects.forEach(project => {
+                    if (project.type && typeIdMap.has(project.type)) {
+                        project.type = typeIdMap.get(project.type);
+                    }
+                    if (Array.isArray(project.floors)) {
+                        project.floors.forEach(floor => {
+                            if (floor.type && typeIdMap.has(floor.type)) {
+                                floor.type = typeIdMap.get(floor.type);
+                            }
+                        });
+                    }
+                });
+            }
+        }
+        
+        // Migrate statuses
+        if (Array.isArray(data.statuses)) {
+            const statusIdMap = new Map();
+            let statusCounter = 1;
+            
+            data.statuses.forEach((status, index) => {
+                if (status && status.id) {
+                    const oldId = String(status.id);
+                    // Check if it's a hash ID
+                    if (/^status-[a-z0-9]{6,}-[a-z0-9]+$/.test(oldId) || /^status-[a-z0-9]{6,}$/.test(oldId)) {
+                        const newId = `status-${statusCounter++}`;
+                        statusIdMap.set(oldId, newId);
+                        status.id = newId;
+                        changed = true;
+                    } else if (/^status-(\d+)$/.test(oldId)) {
+                        // It's already sequential, track the counter
+                        const num = parseInt(oldId.match(/^status-(\d+)$/)[1], 10);
+                        if (num >= statusCounter) {
+                            statusCounter = num + 1;
+                        }
+                    }
+                }
+            });
+            
+            // Update status references in floors
+            if (changed && data.projects) {
+                data.projects.forEach(project => {
+                    if (Array.isArray(project.floors)) {
+                        project.floors.forEach(floor => {
+                            if (floor.status && statusIdMap.has(floor.status)) {
+                                floor.status = statusIdMap.get(floor.status);
+                            }
+                            if (floor.statusLabel && statusIdMap.has(floor.statusLabel)) {
+                                floor.statusLabel = statusIdMap.get(floor.statusLabel);
+                            }
+                        });
+                    }
+                });
+            }
+        }
+        
+        // Migrate colors
+        if (Array.isArray(data.colors)) {
+            let colorCounter = 1;
+            
+            data.colors.forEach((color, index) => {
+                if (color && color.id) {
+                    const oldId = String(color.id);
+                    // Check if it's a hash ID
+                    if (/^color-[a-z0-9]{6,}-[a-z0-9]+$/.test(oldId) || /^color-[a-z0-9]{6,}$/.test(oldId)) {
+                        color.id = `color-${colorCounter++}`;
+                        changed = true;
+                    } else if (/^color-(\d+)$/.test(oldId)) {
+                        // It's already sequential, track the counter
+                        const num = parseInt(oldId.match(/^color-(\d+)$/)[1], 10);
+                        if (num >= colorCounter) {
+                            colorCounter = num + 1;
+                        }
+                    }
+                }
+            });
+        }
+        
+        return changed;
     }
 
     function applyStoredImages(projects) {
@@ -273,6 +421,42 @@ export async function initDeveloperMap(options) {
         persistValue('dm-colors', storageCache.colors);
     }
 
+    // Load selected font from storage cache
+    function loadSelectedFont() {
+        if (storageCache.selectedFont && typeof storageCache.selectedFont === 'object') {
+            return cloneForStorage(storageCache.selectedFont);
+        }
+        return null;
+    }
+
+    // Apply selected font to CSS
+    function applySelectedFont(fontData) {
+        if (!fontData || !fontData.value) return;
+        
+        // Apply font to root element - this will cascade to all children
+        const fontFamily = fontData.value;
+        
+        let fontStyleElement = document.getElementById('dm-font-styles');
+        if (!fontStyleElement) {
+            fontStyleElement = document.createElement('style');
+            fontStyleElement.id = 'dm-font-styles';
+            document.head.appendChild(fontStyleElement);
+        }
+        
+        // Use CSS custom property to make font changes easier
+        fontStyleElement.textContent = `
+            #dm-root.dm-root {
+                font-family: ${fontFamily} !important;
+            }
+        `;
+    }
+
+    // Save selected font via storage client
+    function saveSelectedFont(fontData) {
+        storageCache.selectedFont = cloneForStorage(fontData);
+        persistValue('dm-selected-font', storageCache.selectedFont);
+    }
+
     // Convert status label to CSS class name
     function slugifyStatus(label) {
         if (!label) return 'unknown';
@@ -413,6 +597,9 @@ export async function initDeveloperMap(options) {
                 if (dataset['dm-images'] && typeof dataset['dm-images'] === 'object') {
                     storageCache.images = { ...dataset['dm-images'] };
                 }
+                if (dataset['dm-selected-font'] && typeof dataset['dm-selected-font'] === 'object') {
+                    storageCache.selectedFont = cloneForStorage(dataset['dm-selected-font']);
+                }
             }
         } catch (error) {
             console.warn('[Developer Map] Failed to hydrate storage', error);
@@ -496,15 +683,37 @@ export async function initDeveloperMap(options) {
 
     // Initialize colors
     const savedColors = loadColors();
-    if (savedColors) {
+    if (savedColors && savedColors.length > 0) {
         data.colors = savedColors;
+    } else {
+        // Create default colors on first installation
+        data.colors = getDefaultColors();
+        saveColors(data.colors);
+        console.log('[Developer Map] Created default colors');
     }
     applyColors(data.colors);
 
+    // Initialize fonts
+    const savedFont = loadSelectedFont();
+    if (savedFont) {
+        data.selectedFont = savedFont;
+    } else {
+        // Set default font
+        data.selectedFont = { id: 'inter', label: 'Inter (predvolený)', value: "'Inter', 'Segoe UI', sans-serif", description: 'Moderný, čitateľný sans-serif' };
+        saveSelectedFont(data.selectedFont);
+        console.log('[Developer Map] Created default font');
+    }
+    applySelectedFont(data.selectedFont);
+
     // Initialize types
     const savedTypes = loadTypes();
-    if (savedTypes) {
+    if (savedTypes && savedTypes.length > 0) {
         data.types = savedTypes;
+    } else {
+        // Create default types on first installation
+        data.types = getDefaultTypes();
+        saveTypes(data.types);
+        console.log('[Developer Map] Created default types');
     }
     normaliseTypes();
 
@@ -958,8 +1167,13 @@ export async function initDeveloperMap(options) {
 
     // Initialize statuses
     const savedStatuses = loadStatuses();
-    if (savedStatuses) {
+    if (savedStatuses && savedStatuses.length > 0) {
         data.statuses = savedStatuses;
+    } else {
+        // Create default statuses on first installation
+        data.statuses = getDefaultStatuses();
+        saveStatuses(data.statuses);
+        console.log('[Developer Map] Created default statuses');
     }
     normaliseStatuses();
     applyStatusStyles(data.statuses);
@@ -971,7 +1185,7 @@ export async function initDeveloperMap(options) {
         // Check if projects have images (for backward compatibility)
         const hasImages = savedProjects.some((p) => p?.image || p?.imageUrl || p?.imageurl);
         if (!hasImages) {
-            console.info('[Developer Map] Saved projects missing images, refreshing from demo data');
+            console.info('[Developer Map] Saved projects missing images, refreshing from initial data');
             removePersistedValue('dm-projects');
             if (ensureProjectRegions(data.projects)) {
                 projectsDirty = true;
@@ -993,6 +1207,21 @@ export async function initDeveloperMap(options) {
             }
             if (ensureProjectPublicKeys(data.projects)) {
                 projectsDirty = true;
+            }
+            // Clean demo images from storage
+            if (cleanDemoImages(data.projects)) {
+                console.info('[Developer Map] Cleaned demo images from projects');
+                projectsDirty = true;
+            }
+            // Migrate hash IDs to sequential IDs
+            const migratedIds = migrateHashIdsToSequential();
+            if (migratedIds) {
+                console.info('[Developer Map] Migrated hash IDs to sequential IDs');
+                projectsDirty = true;
+                // Save migrated types, statuses, and colors
+                saveTypes(data.types);
+                saveStatuses(data.statuses);
+                saveColors(data.colors);
             }
             console.info('[Developer Map] Loaded projects from storage', savedProjects.length, 'projects');
         }
@@ -1056,12 +1285,56 @@ export async function initDeveloperMap(options) {
 
     function generateId(prefix) {
         const safePrefix = prefix || 'entity';
-        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-            return `${safePrefix}-${crypto.randomUUID()}`;
+        
+        // Get the appropriate collection based on prefix
+        let collection = [];
+        switch (safePrefix) {
+            case 'type':
+                collection = data.types || [];
+                break;
+            case 'status':
+                collection = data.statuses || [];
+                break;
+            case 'color':
+                collection = data.colors || [];
+                break;
+            case 'project':
+                collection = data.projects || [];
+                break;
+            case 'floor':
+                // Get all floors from all projects
+                collection = (data.projects || []).flatMap(p => p.floors || []);
+                break;
+            case 'region':
+                // Get all regions from all floors in all projects
+                collection = (data.projects || []).flatMap(p => 
+                    (p.floors || []).flatMap(f => f.regions || [])
+                );
+                break;
+            default:
+                // For unknown types, use random ID as fallback
+                const randomPart = Math.random().toString(36).slice(2, 8);
+                return `${safePrefix}-${randomPart}`;
         }
-        const randomPart = Math.random().toString(36).slice(2, 8);
-        const timePart = Date.now().toString(36);
-        return `${safePrefix}-${randomPart}-${timePart}`;
+        
+        // Find the highest numeric ID in the collection
+        let maxNumber = 0;
+        const pattern = new RegExp(`^${safePrefix}-(\\d+)$`);
+        
+        collection.forEach(item => {
+            if (item && item.id) {
+                const match = String(item.id).match(pattern);
+                if (match && match[1]) {
+                    const num = parseInt(match[1], 10);
+                    if (num > maxNumber) {
+                        maxNumber = num;
+                    }
+                }
+            }
+        });
+        
+        // Return next sequential ID
+        return `${safePrefix}-${maxNumber + 1}`;
     }
 
     function ensureBadge(name, fallback = 'M') {
@@ -1727,6 +2000,32 @@ export async function initDeveloperMap(options) {
             });
         });
 
+        // Font selection buttons
+        const fontSelectButtons = root.querySelectorAll('[data-dm-select-font]');
+        fontSelectButtons.forEach((button) => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                const fontId = button.getAttribute('data-dm-select-font');
+                
+                const fonts = [
+                    { id: 'inter', label: 'Inter (predvolený)', value: "'Inter', 'Segoe UI', sans-serif", description: 'Moderný, čitateľný sans-serif' },
+                    { id: 'roboto', label: 'Roboto', value: "'Roboto', 'Segoe UI', sans-serif", description: 'Google Material Design font' },
+                    { id: 'poppins', label: 'Poppins', value: "'Poppins', sans-serif", description: 'Geometrický, výrazný sans-serif' },
+                    { id: 'playfair', label: 'Playfair Display', value: "'Playfair Display', Georgia, serif", description: 'Elegantný serif pre luxusný vzhľad' },
+                    { id: 'fira-code', label: 'Fira Code', value: "'Fira Code', 'Courier New', monospace", description: 'Monospace font pre technický vzhľad' },
+                    { id: 'courier', label: 'Courier Prime', value: "'Courier Prime', 'Courier New', monospace", description: 'Klasický písací stroj' },
+                ];
+                
+                const selectedFont = fonts.find(f => f.id === fontId);
+                if (selectedFont) {
+                    data.selectedFont = selectedFont;
+                    saveSelectedFont(selectedFont);
+                    applySelectedFont(selectedFont);
+                    render();
+                }
+            });
+        });
+
         const searchInput = root.querySelector('[data-dm-role="search"]');
         if (searchInput) {
             searchInput.addEventListener('input', (event) => {
@@ -2154,7 +2453,7 @@ export async function initDeveloperMap(options) {
                 }
             } else {
                 const newProjectId = generateId('project');
-                const projectImage = imageData || result.item.image || MEDIA.building;
+                const projectImage = imageData || result.item.image || '';
                 const badge = ensureBadge(nextName);
                 const publicKey = generateProjectPublicKey(nextName, data.projects);
                 const newProject = {
@@ -2333,7 +2632,7 @@ export async function initDeveloperMap(options) {
             }
 
             const newFloorId = generateId('floor');
-            const floorImage = imageSelection?.url ?? modalState.imagePreview ?? MEDIA.floor;
+            const floorImage = imageSelection?.url ?? modalState.imagePreview ?? '';
             parentProject.floors.push({
                 id: newFloorId,
                 name: fields.name,
@@ -2387,7 +2686,7 @@ export async function initDeveloperMap(options) {
         if (!parentId) {
             const newProjectId = generateId('project');
             const badge = ensureBadge(name);
-            const projectImage = imageData || MEDIA.building;
+            const projectImage = imageData || '';
             const publicKey = generateProjectPublicKey(name, data.projects);
             data.projects.push({
                 id: newProjectId,
@@ -2415,7 +2714,7 @@ export async function initDeveloperMap(options) {
                 parentProject.floors = [];
             }
             const newFloorId = generateId('floor');
-            const floorImage = imageData || MEDIA.floor;
+            const floorImage = imageData || '';
             parentProject.floors.push({
                 id: newFloorId,
                 name,

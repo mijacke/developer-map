@@ -1,4 +1,4 @@
-import type { DMProjectConfig } from '../config/demo.config';
+import type { DMProjectConfig } from '../config/types';
 
 export interface GeoJsonAdapterOptions {
     host: HTMLElement;
