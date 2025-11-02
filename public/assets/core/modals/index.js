@@ -790,15 +790,17 @@ function renderDrawModal(state, data) {
                   const statusLabel = resolveStatusLabel(region);
                   const childCount = Array.isArray(region.children) ? region.children.length : 0;
                   const childMeta = childCount
-                      ? `<span class="dm-draw__region-meta"><span class="dm-draw__region-meta-badge">${childCount}</span><span>prepojené</span></span>`
+                      ? `<span class="dm-draw__region-meta">${childCount} prepojené</span>`
                       : '';
                   return `
                         <li class="dm-draw__region-item${isActive ? ' is-active' : ''}" data-dm-region-item="${escapeHtml(id)}">
                             <button type="button" class="dm-draw__region-button" data-dm-region-trigger="${escapeHtml(id)}">
-                                <span class="dm-draw__region-index">${index + 1}.</span>
-                                <span class="dm-draw__region-name">${escapeHtml(label)}</span>
-                                ${statusLabel ? `<span class="dm-draw__region-status">${escapeHtml(statusLabel)}</span>` : ''}
-                                ${childMeta}
+                                <span class="dm-draw__region-main">
+                                    <span class="dm-draw__region-index">${index + 1}.</span>
+                                    <span class="dm-draw__region-name">${escapeHtml(label)}</span>
+                                    ${statusLabel ? `<span class="dm-draw__region-status">${escapeHtml(statusLabel)}</span>` : ''}
+                                </span>
+                                ${childMeta ? `<span class="dm-draw__region-footer">${childMeta}</span>` : ''}
                             </button>
                         </li>
                     `;
@@ -876,19 +878,11 @@ function renderDrawModal(state, data) {
                             <aside class="dm-draw__aside">
                                 <div class="dm-draw__aside-header">
                                     <h3>Segmenty mapy</h3>
-                                    <button type="button" class="dm-button dm-button--outline dm-draw__add-region" data-dm-add-region>+ Pridať zónu</button>
                                 </div>
                                 <ul class="dm-draw__regions" data-dm-region-list>
                                     ${regionListMarkup}
                                 </ul>
-                                <div class="dm-draw__region-form" data-dm-region-form>
-                                    <div class="dm-field">
-                                        <input type="text" autocomplete="off" class="dm-field__input" data-dm-region-name placeholder=" " value="${escapeHtml(regionNameValue)}">
-                                        <label class="dm-field__label">Názov zóny</label>
-                                    </div>
-                                    ${childSelectorMarkup}
-                                    <button type="button" class="dm-button dm-button--outline dm-draw__remove-region" data-dm-remove-region${canRemoveRegion ? '' : ' disabled aria-disabled="true"'}>Odstrániť zónu</button>
-                                </div>
+                                <button type="button" class="dm-button dm-button--primary dm-draw__add-region" data-dm-add-region>+ Pridať zónu</button>
                             </aside>
                             <div class="dm-draw__main">
                                 <div class="dm-draw__stage">
@@ -928,6 +922,26 @@ function renderDrawModal(state, data) {
                                 </svg>
                             </button>
                         </div>
+                            </div>
+                        </div>
+                        <div class="dm-draw__bottom">
+                            <div class="dm-draw__region-form" data-dm-region-form>
+                                <div class="dm-draw__region-form-header">
+                                    <h3>Detail zóny</h3>
+                                    <button type="button" class="dm-button dm-button--outline dm-button--small dm-draw__remove-region" data-dm-remove-region${canRemoveRegion ? '' : ' disabled aria-disabled="true"'}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                                        </svg>
+                                        Vymazať
+                                    </button>
+                                </div>
+                                <div class="dm-draw__region-form-content">
+                                    <div class="dm-field">
+                                        <input type="text" autocomplete="off" class="dm-field__input" data-dm-region-name placeholder=" " value="${escapeHtml(regionNameValue)}">
+                                        <label class="dm-field__label">Názov zóny</label>
+                                    </div>
+                                    ${childSelectorMarkup}
+                                </div>
                             </div>
                         </div>
                     </div>
