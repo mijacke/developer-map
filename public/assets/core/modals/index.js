@@ -905,7 +905,6 @@ function renderDrawModal(state, data) {
                                 <polyline class="dm-draw__shape-baseline" data-role="baseline" points=""></polyline>
                                 <g class="dm-draw__handles" data-role="handles"></g>
                             </svg>
-                            <div class="dm-draw__badge">${escapeHtml(badgeLabel)}</div>
                             <div class="dm-draw__cursor" aria-hidden="true">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z" fill="currentColor"/></svg>
                             </div>

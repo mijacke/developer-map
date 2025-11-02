@@ -3906,16 +3906,11 @@
 
 .dm-draw__overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
     cursor: crosshair;
     touch-action: none;
     z-index: 2;
     pointer-events: auto;
+    /* Position and size are set dynamically by syncOverlayWithImage() */
 }
 
 .dm-draw__shape-fill {
@@ -4096,7 +4091,7 @@ body.dm-draw-fullscreen-active {
     right: 32px;
     width: auto;
     max-width: 1400px;
-    height: calc(100vh - 96px);
+    height: auto;
     max-height: calc(100vh - 96px);
     margin: 0 auto;
     border-radius: 24px;
@@ -4109,21 +4104,9 @@ body.dm-draw-fullscreen-active {
 
 .dm-draw__stage--fullscreen .dm-draw__image {
     width: 100%;
-    height: 100%;
+    height: auto;
     max-height: calc(100vh - 96px);
     object-fit: contain;
-}
-
-.dm-draw__stage--fullscreen .dm-draw__overlay {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.dm-draw__stage--fullscreen .dm-draw__badge {
-    top: 36px;
-    right: 36px;
 }
 
 .dm-draw__stage--fullscreen .dm-draw__levels {
