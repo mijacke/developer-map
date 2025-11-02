@@ -892,8 +892,9 @@ function renderDrawModal(state, data) {
                             </aside>
                             <div class="dm-draw__main">
                                 <div class="dm-draw__stage">
-                            <img src="${escapeHtml(backgroundImage)}" alt="${escapeHtml(backgroundAlt)}" class="dm-draw__image" draggable="false" />
-                            <svg class="dm-draw__overlay" viewBox="0 0 ${escapeHtml(String(defaultViewboxWidth))} ${escapeHtml(String(defaultViewboxHeight))}" preserveAspectRatio="xMidYMid meet" data-role="overlay" data-dm-hatch-id="${escapeHtml(hatchPatternId)}">
+                            <div class="dm-draw__canvas">
+                                <img src="${escapeHtml(backgroundImage)}" alt="${escapeHtml(backgroundAlt)}" class="dm-draw__image" draggable="false" />
+                                <svg class="dm-draw__overlay" viewBox="0 0 ${escapeHtml(String(defaultViewboxWidth))} ${escapeHtml(String(defaultViewboxHeight))}" preserveAspectRatio="xMidYMid meet" data-role="overlay" data-dm-hatch-id="${escapeHtml(hatchPatternId)}">
                                 <defs>
                                     <pattern id="${escapeHtml(hatchPatternId)}" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(45)">
                                         <rect width="16" height="16" fill="rgba(72, 198, 116, 0.18)"></rect>
@@ -905,6 +906,7 @@ function renderDrawModal(state, data) {
                                 <polyline class="dm-draw__shape-baseline" data-role="baseline" points=""></polyline>
                                 <g class="dm-draw__handles" data-role="handles"></g>
                             </svg>
+                            </div>
                             <div class="dm-draw__cursor" aria-hidden="true">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z" fill="currentColor"/></svg>
                             </div>

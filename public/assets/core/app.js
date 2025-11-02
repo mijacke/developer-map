@@ -3453,6 +3453,7 @@ export async function initDeveloperMap(options) {
         const handlesLayer = drawRoot.querySelector('[data-role="handles"]');
         const cursor = drawRoot.querySelector('.dm-draw__cursor');
         const stage = drawRoot.querySelector('.dm-draw__stage');
+        const canvas = drawRoot.querySelector('.dm-draw__canvas');
         const resetButton = root.querySelector('[data-dm-reset-draw]');
         const saveButton = root.querySelector('[data-dm-save-draw]');
         const regionList = drawRoot.querySelector('[data-dm-region-list]');
@@ -3466,7 +3467,7 @@ export async function initDeveloperMap(options) {
         const projectIdAttr = drawRoot.dataset.dmProjectId ?? '';
         const initialRegionId = drawRoot.dataset.dmActiveRegion ?? '';
 
-        if (!overlay || !fill || !outline || !baseline || !handlesLayer || !stage) {
+        if (!overlay || !fill || !outline || !baseline || !handlesLayer || !stage || !canvas) {
             return;
         }
 
@@ -3692,45 +3693,10 @@ export async function initDeveloperMap(options) {
         let fullscreenScrollTop = 0;
         let isFullscreen = false;
 
-        function syncOverlayWithImage() {
-            if (!imageEl) return;
-            
-            const imageRect = imageEl.getBoundingClientRect();
-            const stageRect = stage.getBoundingClientRect();
-            
-            // Position overlay exactly over the image
-            overlay.style.top = `${imageRect.top - stageRect.top}px`;
-            overlay.style.left = `${imageRect.left - stageRect.left}px`;
-            overlay.style.width = `${imageRect.width}px`;
-            overlay.style.height = `${imageRect.height}px`;
-            
-            console.log('[syncOverlayWithImage]', {
-                imageRect: { width: imageRect.width, height: imageRect.height },
-                stageRect: { width: stageRect.width, height: stageRect.height },
-                offset: { top: imageRect.top - stageRect.top, left: imageRect.left - stageRect.left }
-            });
-        }
-
         const handleResize = () => {
-            syncOverlayWithImage();
             positionCursor();
         };
         window.addEventListener('resize', handleResize);
-
-        // ResizeObserver to handle stage size changes (e.g., fullscreen toggle)
-        const resizeObserver = new ResizeObserver(() => {
-            // Sync overlay with image and reposition cursor
-            requestAnimationFrame(() => {
-                syncOverlayWithImage();
-                positionCursor();
-            });
-        });
-        resizeObserver.observe(stage);
-        
-        // Also observe image directly
-        if (imageEl) {
-            resizeObserver.observe(imageEl);
-        }
 
         const preventWheelZoom = (event) => {
             if (event.ctrlKey || event.metaKey) {
@@ -3752,7 +3718,6 @@ export async function initDeveloperMap(options) {
             }
             
             window.removeEventListener('resize', handleResize);
-            resizeObserver.disconnect();
             mutationObserver.disconnect();
             stage.removeEventListener('wheel', preventWheelZoom);
             overlay.removeEventListener('wheel', preventWheelZoom);
@@ -3802,11 +3767,6 @@ export async function initDeveloperMap(options) {
                         currentViewBox: { width: viewBoxWidth, height: viewBoxHeight }
                     });
                     setViewBoxSize(imageEl.naturalWidth, imageEl.naturalHeight, { preservePoints: true });
-                    
-                    // Initial overlay sync after image loads
-                    requestAnimationFrame(() => {
-                        syncOverlayWithImage();
-                    });
                 }
             };
             if (imageEl.complete) {
@@ -4017,19 +3977,27 @@ export async function initDeveloperMap(options) {
         }
 
         function toViewBoxCoordinates(event) {
-            // Use image bounding rect for accurate positioning
-            // especially in fullscreen with object-fit: contain
-            const imageRect = imageEl ? imageEl.getBoundingClientRect() : overlay.getBoundingClientRect();
-            const rect = overlay.getBoundingClientRect();
+            // Use overlay bounding rect since it's positioned exactly over the image
+            const overlayRect = overlay.getBoundingClientRect();
             
-            // Calculate scale based on actual image display size
-            const scaleX = viewBoxWidth / imageRect.width;
-            const scaleY = viewBoxHeight / imageRect.height;
+            // Calculate scale based on viewBox vs overlay display size
+            const scaleX = viewBoxWidth / overlayRect.width;
+            const scaleY = viewBoxHeight / overlayRect.height;
             
-            return {
-                x: (event.clientX - imageRect.left) * scaleX,
-                y: (event.clientY - imageRect.top) * scaleY,
-            };
+            // Calculate position relative to overlay (which is positioned over image)
+            const x = (event.clientX - overlayRect.left) * scaleX;
+            const y = (event.clientY - overlayRect.top) * scaleY;
+            
+            console.log('[toViewBoxCoordinates]', {
+                clientX: event.clientX,
+                clientY: event.clientY,
+                overlayRect: { left: overlayRect.left, top: overlayRect.top, width: overlayRect.width, height: overlayRect.height },
+                viewBox: { width: viewBoxWidth, height: viewBoxHeight },
+                scale: { x: scaleX, y: scaleY },
+                result: { x, y }
+            });
+            
+            return { x, y };
         }
 
         function pointsToString(list) {
@@ -4527,9 +4495,8 @@ export async function initDeveloperMap(options) {
             fullscreenToggle.setAttribute('aria-pressed', 'true');
             fullscreenToggle.setAttribute('aria-label', 'Ukončiť režim celej obrazovky');
             
-            // Sync overlay and reposition cursor after layout change
+            // Reposition cursor after layout change
             requestAnimationFrame(() => {
-                syncOverlayWithImage();
                 positionCursor();
             });
         }
@@ -4559,9 +4526,8 @@ export async function initDeveloperMap(options) {
             
             window.scrollTo(0, fullscreenScrollTop);
             
-            // Sync overlay and reposition cursor after layout change
+            // Reposition cursor after layout change
             requestAnimationFrame(() => {
-                syncOverlayWithImage();
                 positionCursor();
             });
         }
