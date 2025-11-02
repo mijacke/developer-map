@@ -811,25 +811,6 @@ function renderDrawModal(state, data) {
             `;
 
     const regionNameValue = activeRegion?.label ?? activeRegion?.name ?? '';
-    const regionStatusValue = String(activeRegion?.statusId ?? activeRegion?.status ?? '');
-    const hasStatuses = statusOptionsSource.length > 0;
-    const statusPlaceholderLabel = hasStatuses ? 'Vyberte stav' : 'Najprv pridajte stav v nastaveniach';
-    const statusPlaceholderSelected = regionStatusValue ? '' : ' selected';
-    const statusSelectDisabledAttr = hasStatuses ? '' : ' disabled aria-disabled="true"';
-    const statusOptions = statusOptionsSource
-        .map((status) => {
-            const value = String(status.id ?? status.key ?? '');
-            if (!value) {
-                return '';
-            }
-            const isSelected = value === regionStatusValue;
-            return `<option value="${escapeHtml(value)}"${isSelected ? ' selected' : ''}>${escapeHtml(
-                status.label ?? value,
-            )}</option>`;
-        })
-        .filter(Boolean)
-        .join('');
-
     const childSelectorMarkup =
         contextType === 'project' && floorsForChildren.length
             ? `
@@ -861,6 +842,7 @@ function renderDrawModal(state, data) {
             ? activeFloor?.image ?? activeFloor?.imageUrl ?? activeFloor?.imageurl ?? ''
             : activeProject?.image ?? activeProject?.imageUrl ?? activeProject?.imageurl ?? '';
     const backgroundAlt = surfaceLabel ? `${surfaceLabel} - podklad mapy` : 'Podklad mapy';
+    const hatchPatternId = `dm-hatch-${Math.random().toString(36).slice(2, 8)}`;
 
     return `
         <div class="dm-modal-overlay">
@@ -904,13 +886,6 @@ function renderDrawModal(state, data) {
                                         <input type="text" autocomplete="off" class="dm-field__input" data-dm-region-name placeholder=" " value="${escapeHtml(regionNameValue)}">
                                         <label class="dm-field__label">Názov zóny</label>
                                     </div>
-                                    <div class="dm-field">
-                                        <select class="dm-field__input" data-dm-region-status${statusSelectDisabledAttr}>
-                                            <option value="" disabled${statusPlaceholderSelected} hidden>${escapeHtml(statusPlaceholderLabel)}</option>
-                                            ${statusOptions}
-                                        </select>
-                                        <label class="dm-field__label">Stav zóny</label>
-                                    </div>
                                     ${childSelectorMarkup}
                                     <button type="button" class="dm-button dm-button--outline dm-draw__remove-region" data-dm-remove-region${canRemoveRegion ? '' : ' disabled aria-disabled="true"'}>Odstrániť zónu</button>
                                 </div>
@@ -918,7 +893,13 @@ function renderDrawModal(state, data) {
                             <div class="dm-draw__main">
                                 <div class="dm-draw__stage">
                             <img src="${escapeHtml(backgroundImage)}" alt="${escapeHtml(backgroundAlt)}" class="dm-draw__image" draggable="false" />
-                            <svg class="dm-draw__overlay" viewBox="0 0 ${escapeHtml(String(defaultViewboxWidth))} ${escapeHtml(String(defaultViewboxHeight))}" preserveAspectRatio="xMidYMid meet" data-role="overlay">
+                            <svg class="dm-draw__overlay" viewBox="0 0 ${escapeHtml(String(defaultViewboxWidth))} ${escapeHtml(String(defaultViewboxHeight))}" preserveAspectRatio="xMidYMid meet" data-role="overlay" data-dm-hatch-id="${escapeHtml(hatchPatternId)}">
+                                <defs>
+                                    <pattern id="${escapeHtml(hatchPatternId)}" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(45)">
+                                        <rect width="16" height="16" fill="rgba(72, 198, 116, 0.18)"></rect>
+                                        <path d="M0 16L16 0" stroke="#32d26e" stroke-width="3" stroke-linecap="round"></path>
+                                    </pattern>
+                                </defs>
                                 <polygon class="dm-draw__shape-fill" data-role="fill" points=""></polygon>
                                 <polyline class="dm-draw__shape-outline" data-role="outline" points=""></polyline>
                                 <polyline class="dm-draw__shape-baseline" data-role="baseline" points=""></polyline>
@@ -940,22 +921,11 @@ function renderDrawModal(state, data) {
                                     )
                                     .join('')}
                             </ul>` : ''}
-                        </div>
-                        <div class="dm-draw__toolbar">
-                            <div class="dm-draw__toolbar-left">
-                                <span class="dm-draw__floor-label">${escapeHtml(surfaceLabel)}</span>
-                                <span class="dm-draw__hint">Kliknite pre pridanie bodu • použite Reset pre zmazanie</span>
-                            </div>
-                            <div class="dm-draw__toolbar-right">
-                                <button type="button" class="dm-draw__zoom-button" data-dm-zoom-out aria-label="Oddialiť">
-                                    &minus;
-                                </button>
-                                <span class="dm-draw__zoom-value" data-dm-zoom-value>${Math.round(initialZoom * 100)}%</span>
-                                <button type="button" class="dm-draw__zoom-button" data-dm-zoom-in aria-label="Priblížiť">
-                                    +
-                                </button>
-                            </div>
-                            <code class="dm-draw__output" data-role="output"></code>
+                            <button type="button" class="dm-draw__fullscreen-toggle" data-dm-fullscreen-toggle aria-pressed="false" aria-label="Zobraziť na celú obrazovku">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </button>
                         </div>
                             </div>
                         </div>

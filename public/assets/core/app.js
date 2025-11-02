@@ -3451,7 +3451,6 @@ export async function initDeveloperMap(options) {
         const outline = drawRoot.querySelector('[data-role="outline"]');
         const baseline = drawRoot.querySelector('[data-role="baseline"]');
         const handlesLayer = drawRoot.querySelector('[data-role="handles"]');
-        const output = drawRoot.querySelector('[data-role="output"]');
         const cursor = drawRoot.querySelector('.dm-draw__cursor');
         const stage = drawRoot.querySelector('.dm-draw__stage');
         const resetButton = root.querySelector('[data-dm-reset-draw]');
@@ -3460,73 +3459,22 @@ export async function initDeveloperMap(options) {
         const addRegionButton = drawRoot.querySelector('[data-dm-add-region]');
         const removeRegionButton = drawRoot.querySelector('[data-dm-remove-region]');
         const regionNameInput = drawRoot.querySelector('[data-dm-region-name]');
-        const regionStatusSelect = drawRoot.querySelector('[data-dm-region-status]');
         const regionChildrenFieldset = drawRoot.querySelector('[data-dm-region-children]');
-        const zoomOutButton = drawRoot.querySelector('[data-dm-zoom-out]');
-        const zoomInButton = drawRoot.querySelector('[data-dm-zoom-in]');
-        const zoomValueEl = drawRoot.querySelector('[data-dm-zoom-value]');
+        const fullscreenToggle = drawRoot.querySelector('[data-dm-fullscreen-toggle]');
         const ownerTypeAttr = drawRoot.dataset.dmOwner ?? 'project';
         const ownerIdAttr = drawRoot.dataset.dmOwnerId ?? '';
         const projectIdAttr = drawRoot.dataset.dmProjectId ?? '';
-        const floorName = drawRoot.dataset.dmFloorName ?? 'Lokalita';
         const initialRegionId = drawRoot.dataset.dmActiveRegion ?? '';
 
-        if (!overlay || !fill || !outline || !baseline || !handlesLayer || !output || !stage) {
+        if (!overlay || !fill || !outline || !baseline || !handlesLayer || !stage) {
             return;
         }
 
         const imageEl = drawRoot.querySelector('.dm-draw__image');
 
-        const ZOOM_MIN = 0.35;
-        const ZOOM_MAX = 1.5;
-        const ZOOM_STEP = 0.1;
-        const DEFAULT_ZOOM = 0.65;
-
-        const parseZoomValue = (value) => {
-            const numeric = Number(value);
-            if (!Number.isFinite(numeric)) {
-                return null;
-            }
-            return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, numeric));
-        };
-
-        let stageZoom = parseZoomValue(drawRoot.dataset.dmZoom) ?? DEFAULT_ZOOM;
-
         const parseViewboxDimension = (value) => {
             const number = Number(value);
             return Number.isFinite(number) && number > 0 ? number : null;
-        };
-
-        const updateStageZoom = () => {
-            stage.style.setProperty('--dm-draw-zoom', String(stageZoom));
-            if (zoomValueEl) {
-                zoomValueEl.textContent = `${Math.round(stageZoom * 100)}%`;
-            }
-            if (zoomOutButton) {
-                const disabled = stageZoom <= ZOOM_MIN + 0.01;
-                zoomOutButton.disabled = disabled;
-                zoomOutButton.setAttribute('aria-disabled', disabled ? 'true' : 'false');
-            }
-            if (zoomInButton) {
-                const disabled = stageZoom >= ZOOM_MAX - 0.01;
-                zoomInButton.disabled = disabled;
-                zoomInButton.setAttribute('aria-disabled', disabled ? 'true' : 'false');
-            }
-            drawRoot.dataset.dmZoom = String(stageZoom);
-            if (state.modal && state.modal.type === 'draw-coordinates') {
-                state.modal.zoom = stageZoom;
-            }
-        };
-
-        const adjustStageZoom = (delta) => {
-            const nextZoom = Number((stageZoom + delta).toFixed(2));
-            const clamped = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, nextZoom));
-            if (clamped === stageZoom) {
-                return;
-            }
-            stageZoom = clamped;
-            updateStageZoom();
-            redraw();
         };
 
         let viewBoxWidth = parseViewboxDimension(drawRoot.dataset.dmViewboxWidth) ?? DRAW_VIEWBOX.width;
@@ -3534,6 +3482,8 @@ export async function initDeveloperMap(options) {
 
         const updateOverlayViewBox = () => {
             overlay.setAttribute('viewBox', `0 0 ${viewBoxWidth} ${viewBoxHeight}`);
+            overlay.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            overlay.style.transformOrigin = 'top left';
         };
 
         const syncRootDatasetViewbox = () => {
@@ -3606,7 +3556,9 @@ export async function initDeveloperMap(options) {
                     }));
                     commitActiveRegionPoints();
                 } else if (!preservePoints) {
-                    points = ensurePointsFromRegion(getActiveRegion());
+                    const currentRegion = getActiveRegion();
+                    points = ensurePointsFromRegion(currentRegion);
+                    polygonClosed = currentRegion ? getRegionClosed(currentRegion) && points.length >= 3 : false;
                 }
             }
             buildHandles();
@@ -3634,7 +3586,9 @@ export async function initDeveloperMap(options) {
                     type: 'polygon',
                     points: [],
                 },
-                meta: {},
+                meta: {
+                    closed: false,
+                },
                 children: [],
             };
         }
@@ -3666,6 +3620,11 @@ export async function initDeveloperMap(options) {
             if (meta && Object.prototype.hasOwnProperty.call(meta, 'hatchClass')) {
                 delete meta.hatchClass;
             }
+            const closed =
+                typeof meta.closed === 'boolean'
+                    ? Boolean(meta.closed)
+                    : geometryPoints.length >= 3;
+            meta.closed = closed;
             const clone = {
                 ...region,
                 id,
@@ -3693,6 +3652,27 @@ export async function initDeveloperMap(options) {
             workingRegions = [createRegionTemplate(0)];
         }
 
+        function getRegionClosed(region) {
+            if (!region || typeof region !== 'object') {
+                return false;
+            }
+            if (region.meta && typeof region.meta === 'object' && typeof region.meta.closed === 'boolean') {
+                return Boolean(region.meta.closed);
+            }
+            const points = Array.isArray(region.geometry?.points) ? region.geometry.points : [];
+            return points.length >= 3;
+        }
+
+        function setRegionClosed(region, closed) {
+            if (!region || typeof region !== 'object') {
+                return;
+            }
+            if (!region.meta || typeof region.meta !== 'object') {
+                region.meta = {};
+            }
+            region.meta.closed = Boolean(closed);
+        }
+
         let activeRegionId = (() => {
             if (initialRegionId && workingRegions.some((region) => String(region.id) === String(initialRegionId))) {
                 return String(initialRegionId);
@@ -3700,14 +3680,29 @@ export async function initDeveloperMap(options) {
             return String(workingRegions[0].id);
         })();
 
+        let handleGroups = [];
         let handleElements = [];
         let activeHandle = null;
         let activeIndex = -1;
         let preventClick = false;
         let cursorAnchorIndex = 0;
+        let polygonClosed = false;
+        let pointerSession = null;
+        let redrawPending = false;
+        let fullscreenScrollTop = 0;
+        let isFullscreen = false;
 
         const handleResize = () => positionCursor();
         window.addEventListener('resize', handleResize);
+
+        // ResizeObserver to handle stage size changes (e.g., fullscreen toggle)
+        const resizeObserver = new ResizeObserver(() => {
+            // Just reposition cursor, no point re-normalization
+            requestAnimationFrame(() => {
+                positionCursor();
+            });
+        });
+        resizeObserver.observe(stage);
 
         const preventWheelZoom = (event) => {
             if (event.ctrlKey || event.metaKey) {
@@ -3715,16 +3710,22 @@ export async function initDeveloperMap(options) {
             }
         };
 
-        const observer = new MutationObserver(() => {
+        const mutationObserver = new MutationObserver(() => {
             if (!root.contains(drawRoot)) {
                 teardown();
             }
         });
-        observer.observe(root, { childList: true, subtree: true });
+        mutationObserver.observe(root, { childList: true, subtree: true });
 
         function teardown() {
+            // Exit fullscreen if active
+            if (isFullscreen) {
+                exitFullscreen();
+            }
+            
             window.removeEventListener('resize', handleResize);
-            observer.disconnect();
+            resizeObserver.disconnect();
+            mutationObserver.disconnect();
             stage.removeEventListener('wheel', preventWheelZoom);
             overlay.removeEventListener('wheel', preventWheelZoom);
         }
@@ -3757,7 +3758,9 @@ export async function initDeveloperMap(options) {
             return workingRegions.find((region) => String(region.id) === String(activeRegionId)) ?? null;
         }
 
-        points = ensurePointsFromRegion(getActiveRegion());
+        const initialRegion = getActiveRegion();
+        points = ensurePointsFromRegion(initialRegion);
+        polygonClosed = initialRegion ? getRegionClosed(initialRegion) && points.length >= 3 : false;
 
         stage.addEventListener('wheel', preventWheelZoom, { passive: false });
         overlay.addEventListener('wheel', preventWheelZoom, { passive: false });
@@ -3765,6 +3768,11 @@ export async function initDeveloperMap(options) {
         if (imageEl) {
             const syncFromImage = () => {
                 if (imageEl.naturalWidth > 0 && imageEl.naturalHeight > 0) {
+                    console.log('[syncFromImage]', {
+                        naturalWidth: imageEl.naturalWidth,
+                        naturalHeight: imageEl.naturalHeight,
+                        currentViewBox: { width: viewBoxWidth, height: viewBoxHeight }
+                    });
                     setViewBoxSize(imageEl.naturalWidth, imageEl.naturalHeight, { preservePoints: true });
                 }
             };
@@ -3805,9 +3813,10 @@ export async function initDeveloperMap(options) {
                 state.modal.regionId = activeRegionId;
             }
             points = ensurePointsFromRegion(nextRegion);
+            polygonClosed = getRegionClosed(nextRegion) && points.length >= 3;
             cursorAnchorIndex = 0;
             buildHandles();
-            redraw();
+            scheduleRedraw();
             syncRegionForm();
             refreshRegionList();
         }
@@ -3872,11 +3881,6 @@ export async function initDeveloperMap(options) {
             if (regionNameInput) {
                 regionNameInput.value = region?.label ?? region?.name ?? '';
                 updateFieldFilledState(regionNameInput);
-            }
-            if (regionStatusSelect) {
-                const statusValue = sanitiseStatusId(region?.statusId ?? region?.status ?? '');
-                regionStatusSelect.value = statusValue;
-                updateFieldFilledState(regionStatusSelect);
             }
             if (regionChildrenFieldset) {
                 const selected = new Set(
@@ -3945,18 +3949,6 @@ export async function initDeveloperMap(options) {
             });
         }
 
-        if (regionStatusSelect) {
-            regionStatusSelect.addEventListener('change', (event) => {
-                const region = getActiveRegion();
-                if (!region) return;
-                const value = sanitiseStatusId(event.target.value);
-                region.statusId = value;
-                region.status = value;
-                region.statusLabel = getStatusLabel(value);
-                refreshRegionList();
-            });
-        }
-
         if (regionChildrenFieldset) {
             regionChildrenFieldset.addEventListener('change', (event) => {
                 const input = event.target.closest('input[data-dm-region-child]');
@@ -4017,21 +4009,63 @@ export async function initDeveloperMap(options) {
             const pointString = pointsToString(points);
             const closedString = pointsToClosedString(points);
             const hasPolygon = points.length >= 3;
-            fill.setAttribute('points', hasPolygon ? pointString : '');
+            
+            // Update fill with hatching pattern if polygon is closed
+            const region = getActiveRegion();
+            const isClosed = polygonClosed && hasPolygon;
+            
+            // Debug logging
+            console.log('[updateShapes]', {
+                pointsCount: points.length,
+                hasPolygon,
+                polygonClosed,
+                isClosed,
+                regionClosed: region ? getRegionClosed(region) : null
+            });
+            
+            if (isClosed) {
+                const hatchId = overlay.getAttribute('data-dm-hatch-id');
+                const fillValue = hatchId ? `url(#${hatchId})` : 'rgba(72, 198, 116, 0.18)';
+                console.log('[updateShapes] Setting fill:', fillValue, 'hatchId:', hatchId);
+                console.log('[updateShapes] Fill element:', fill, 'classList:', fill.classList.toString());
+                fill.setAttribute('points', pointString);
+                fill.setAttribute('fill', fillValue);
+                fill.setAttribute('stroke', 'none');
+                // Remove CSS fill: none by using inline style (has higher priority)
+                fill.style.fill = fillValue;
+                fill.style.stroke = 'none';
+                fill.classList.add('is-active');
+            } else {
+                console.log('[updateShapes] Clearing fill');
+                fill.setAttribute('points', '');
+                fill.setAttribute('fill', 'none');
+                fill.style.fill = 'none';
+                fill.classList.remove('is-active', 'is-dragging');
+            }
+            
             outline.setAttribute('points', hasPolygon ? closedString : pointString);
             baseline.setAttribute('points', points.length >= 2 ? pointString : '');
+            
+            // Update handle positions
             points.forEach((point, index) => {
-                const handle = handleElements[index];
-                if (handle) {
-                    handle.setAttribute('cx', String(point.x));
-                    handle.setAttribute('cy', String(point.y));
+                const handleGroup = handlesLayer.querySelector(`[data-handle-group="${index}"]`);
+                if (handleGroup) {
+                    const hitCircle = handleGroup.querySelector('.dm-draw__handle-hit');
+                    const nodeCircle = handleGroup.querySelector('.dm-draw__handle-node');
+                    if (hitCircle) {
+                        hitCircle.setAttribute('cx', String(point.x));
+                        hitCircle.setAttribute('cy', String(point.y));
+                    }
+                    if (nodeCircle) {
+                        nodeCircle.setAttribute('cx', String(point.x));
+                        nodeCircle.setAttribute('cy', String(point.y));
+                    }
                 }
             });
         }
 
         function updateOutput() {
             const region = getActiveRegion();
-            const regionLabel = region?.label ?? region?.name ?? region?.id ?? 'Zóna';
             const normalised = points.map((point) => [
                 Number((point.x / viewBoxWidth).toFixed(4)),
                 Number((point.y / viewBoxHeight).toFixed(4)),
@@ -4042,7 +4076,8 @@ export async function initDeveloperMap(options) {
                     points: normalised,
                 };
             }
-            output.textContent = `${floorName} • ${regionLabel}: ${JSON.stringify(normalised)}`;
+            // Output debug info to console if needed
+            // console.log('Region points updated:', normalised);
         }
 
         function positionCursor() {
@@ -4072,29 +4107,53 @@ export async function initDeveloperMap(options) {
             positionCursor();
         }
 
+        function scheduleRedraw() {
+            if (redrawPending) {
+                return;
+            }
+            redrawPending = true;
+            requestAnimationFrame(() => {
+                redrawPending = false;
+                redraw();
+            });
+        }
+
         function buildHandles() {
             handlesLayer.innerHTML = points
                 .map(
                     (point, index) => `
-                        <circle data-index="${index}" cx="${point.x}" cy="${point.y}" r="14"></circle>
+                        <g data-handle-group="${index}">
+                            <circle class="dm-draw__handle-hit" data-index="${index}" cx="${point.x}" cy="${point.y}" r="12"></circle>
+                            <circle class="dm-draw__handle-node" cx="${point.x}" cy="${point.y}" r="5"></circle>
+                        </g>
                     `,
                 )
                 .join('');
-            handleElements = Array.from(handlesLayer.querySelectorAll('circle'));
+            handleElements = Array.from(handlesLayer.querySelectorAll('.dm-draw__handle-hit'));
             if (cursorAnchorIndex >= points.length) {
                 cursorAnchorIndex = Math.max(0, points.length - 1);
             }
             handleElements.forEach((handle) => {
                 handle.setAttribute('tabindex', '0');
                 handle.setAttribute('role', 'button');
+                handle.setAttribute('aria-label', `Vrchol ${Number(handle.getAttribute('data-index')) + 1}`);
                 handle.addEventListener(
                     'pointerdown',
                     (event) => {
                         event.stopPropagation();
-                        startDrag(event);
+                        // Left button = drag, Right button = delete
+                        if (event.button === 0) {
+                            startDrag(event);
+                        } else if (event.button === 2) {
+                            event.preventDefault();
+                            handleVertexDelete(event);
+                        }
                     },
                     { passive: false },
                 );
+                handle.addEventListener('contextmenu', (event) => {
+                    event.preventDefault();
+                });
                 handle.addEventListener('keydown', handleHandleKeydown);
                 handle.addEventListener('focus', () => {
                     const focusIndex = Number(handle.getAttribute('data-index'));
@@ -4104,6 +4163,30 @@ export async function initDeveloperMap(options) {
                     }
                 });
             });
+        }
+
+        function handleVertexDelete(event) {
+            const target = event.currentTarget;
+            const index = Number(target.getAttribute('data-index'));
+            if (!Number.isFinite(index)) return;
+            
+            // Delete vertex
+            points.splice(index, 1);
+            if (cursorAnchorIndex >= points.length) {
+                cursorAnchorIndex = Math.max(0, points.length - 1);
+            }
+            
+            // Update polygonClosed state
+            const region = getActiveRegion();
+            polygonClosed = points.length >= 3 && region && getRegionClosed(region);
+            
+            // Update closed state in region meta
+            if (region) {
+                setRegionClosed(region, polygonClosed);
+            }
+            
+            buildHandles();
+            redraw();
         }
 
         function handleHandleKeydown(event) {
@@ -4131,20 +4214,28 @@ export async function initDeveloperMap(options) {
                     break;
                 case 'Delete':
                 case 'Backspace':
-                    if (points.length > 3) {
-                        points.splice(index, 1);
-                        if (cursorAnchorIndex >= points.length) {
-                            cursorAnchorIndex = Math.max(0, points.length - 1);
-                        }
-                        buildHandles();
-                        redraw();
+                    points.splice(index, 1);
+                    if (cursorAnchorIndex >= points.length) {
+                        cursorAnchorIndex = Math.max(0, points.length - 1);
                     }
+                    
+                    // Update polygonClosed state
+                    const region = getActiveRegion();
+                    polygonClosed = points.length >= 3 && region && getRegionClosed(region);
+                    
+                    // Update closed state in region meta
+                    if (region) {
+                        setRegionClosed(region, polygonClosed);
+                    }
+                    
+                    buildHandles();
+                    redraw();
                     break;
                 default:
                     break;
             }
             if (changed) {
-                redraw();
+                scheduleRedraw();
             }
         }
 
@@ -4157,7 +4248,15 @@ export async function initDeveloperMap(options) {
             activeHandle = target;
             cursorAnchorIndex = activeIndex;
             preventClick = false;
+            
+            // Highlight both hit area and visual node
             activeHandle.classList.add('is-active');
+            const handleGroup = activeHandle.parentElement;
+            const nodeCircle = handleGroup?.querySelector('.dm-draw__handle-node');
+            if (nodeCircle) {
+                nodeCircle.classList.add('is-active');
+            }
+            
             activeHandle.setPointerCapture(event.pointerId);
             event.preventDefault();
             window.addEventListener('pointermove', handleDrag);
@@ -4171,7 +4270,7 @@ export async function initDeveloperMap(options) {
             preventClick = true;
             const { x, y } = toViewBoxCoordinates(event);
             points[activeIndex] = clampPoint({ x, y });
-            redraw();
+            scheduleRedraw();
         }
 
         function endDrag(event) {
@@ -4180,24 +4279,39 @@ export async function initDeveloperMap(options) {
             }
             const { x, y } = toViewBoxCoordinates(event);
             points[activeIndex] = clampPoint({ x, y });
+            
             if (activeHandle) {
                 activeHandle.releasePointerCapture(event.pointerId);
                 activeHandle.classList.remove('is-active');
+                
+                // Remove highlight from visual node
+                const handleGroup = activeHandle.parentElement;
+                const nodeCircle = handleGroup?.querySelector('.dm-draw__handle-node');
+                if (nodeCircle) {
+                    nodeCircle.classList.remove('is-active');
+                }
             }
+            
             activeHandle = null;
             activeIndex = -1;
             window.removeEventListener('pointermove', handleDrag);
             setTimeout(() => {
                 preventClick = false;
-            }, 0);
+            }, 100);
             redraw();
         }
 
-        function handleOverlayClick(event) {
-            if (event.target !== overlay || preventClick) {
-                preventClick = false;
+        function handleOverlayPointerDown(event) {
+            // Only handle left button clicks
+            if (event.button !== 0) {
                 return;
             }
+            
+            // Prevent adding point if clicking on handle or during drag
+            if (event.target !== overlay || preventClick) {
+                return;
+            }
+            
             const { x, y } = toViewBoxCoordinates(event);
             const point = clampPoint({ x, y });
             insertPoint(point);
@@ -4206,6 +4320,22 @@ export async function initDeveloperMap(options) {
         function insertPoint(point) {
             points.push(point);
             cursorAnchorIndex = points.length - 1;
+            
+            // Update polygonClosed state when we have 3+ points
+            const region = getActiveRegion();
+            if (points.length >= 3) {
+                // Auto-close polygon when 3rd point is added
+                polygonClosed = true;
+                if (region) {
+                    setRegionClosed(region, true);
+                }
+            } else {
+                polygonClosed = false;
+                if (region) {
+                    setRegionClosed(region, false);
+                }
+            }
+            
             buildHandles();
             redraw();
         }
@@ -4220,17 +4350,18 @@ export async function initDeveloperMap(options) {
             });
         }
 
-        if (zoomOutButton) {
-            zoomOutButton.addEventListener('click', () => {
-                adjustStageZoom(-ZOOM_STEP);
-            });
-        }
-
-        if (zoomInButton) {
-            zoomInButton.addEventListener('click', () => {
-                adjustStageZoom(ZOOM_STEP);
-            });
-        }
+        // Zoom functionality (reserved for future implementation)
+        // if (zoomOutButton) {
+        //     zoomOutButton.addEventListener('click', () => {
+        //         adjustStageZoom(-ZOOM_STEP);
+        //     });
+        // }
+        //
+        // if (zoomInButton) {
+        //     zoomInButton.addEventListener('click', () => {
+        //         adjustStageZoom(ZOOM_STEP);
+        //     });
+        // }
 
         if (saveButton) {
             saveButton.addEventListener('click', () => {
@@ -4319,7 +4450,8 @@ export async function initDeveloperMap(options) {
                             width: Math.round(viewBoxWidth),
                             height: Math.round(viewBoxHeight),
                         };
-                        rendererConfig.zoom = Number(stageZoom.toFixed(2));
+                        // Zoom level will be handled separately if zoom functionality is added
+                        // rendererConfig.zoom = 1.0;
                         targetEntity.renderer = rendererConfig;
                     }
                 }
@@ -4328,13 +4460,166 @@ export async function initDeveloperMap(options) {
             });
         }
 
+        // Fullscreen portal and backdrop
+        let fullscreenPortal = null;
+        let fullscreenBackdrop = null;
+        let originalParent = null;
+        
+        function enterFullscreen() {
+            if (isFullscreen) return;
+            
+            fullscreenScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            isFullscreen = true;
+            
+            // Create backdrop
+            fullscreenBackdrop = document.createElement('div');
+            fullscreenBackdrop.className = 'dm-draw-fullscreen-backdrop';
+            fullscreenBackdrop.addEventListener('click', exitFullscreen);
+            document.body.appendChild(fullscreenBackdrop);
+            
+            // Store original parent
+            originalParent = stage.parentElement;
+            
+            // Move stage to body (portal pattern - no cloning)
+            document.body.classList.add('dm-draw-fullscreen-active');
+            stage.classList.add('dm-draw__stage--fullscreen');
+            document.body.appendChild(stage);
+            
+            fullscreenToggle.setAttribute('aria-pressed', 'true');
+            fullscreenToggle.setAttribute('aria-label', 'Ukončiť režim celej obrazovky');
+            
+            // Reposition cursor after layout change
+            requestAnimationFrame(() => {
+                positionCursor();
+            });
+        }
+        
+        function exitFullscreen() {
+            if (!isFullscreen) return;
+            
+            isFullscreen = false;
+            
+            // Remove backdrop
+            if (fullscreenBackdrop) {
+                fullscreenBackdrop.removeEventListener('click', exitFullscreen);
+                fullscreenBackdrop.remove();
+                fullscreenBackdrop = null;
+            }
+            
+            // Move stage back to original parent
+            document.body.classList.remove('dm-draw-fullscreen-active');
+            stage.classList.remove('dm-draw__stage--fullscreen');
+            
+            if (originalParent) {
+                originalParent.appendChild(stage);
+            }
+            
+            fullscreenToggle.setAttribute('aria-pressed', 'false');
+            fullscreenToggle.setAttribute('aria-label', 'Zobraziť na celú obrazovku');
+            
+            window.scrollTo(0, fullscreenScrollTop);
+            
+            // Reposition cursor after layout change
+            requestAnimationFrame(() => {
+                positionCursor();
+            });
+        }
+        
+        // Fullscreen toggle
+        if (fullscreenToggle) {
+            fullscreenToggle.addEventListener('click', () => {
+                if (isFullscreen) {
+                    exitFullscreen();
+                } else {
+                    enterFullscreen();
+                }
+            });
+        }
+
+        // Polygon drag functionality
+        let polygonDragSession = null;
+        
+        function startPolygonDrag(event) {
+            if (!polygonClosed || points.length < 3) {
+                return;
+            }
+            
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const startCoords = toViewBoxCoordinates(event);
+            polygonDragSession = {
+                startX: startCoords.x,
+                startY: startCoords.y,
+                originalPoints: points.map(p => ({ x: p.x, y: p.y })),
+                pointerId: event.pointerId,
+            };
+            
+            fill.classList.add('is-dragging');
+            fill.setPointerCapture(event.pointerId);
+            
+            preventClick = true;
+            
+            window.addEventListener('pointermove', handlePolygonDrag);
+            window.addEventListener('pointerup', endPolygonDrag, { once: true });
+        }
+        
+        function handlePolygonDrag(event) {
+            if (!polygonDragSession) {
+                return;
+            }
+            
+            const currentCoords = toViewBoxCoordinates(event);
+            const deltaX = currentCoords.x - polygonDragSession.startX;
+            const deltaY = currentCoords.y - polygonDragSession.startY;
+            
+            // Move all points, clamping to bounds
+            points = polygonDragSession.originalPoints.map(p => 
+                clampPoint({ x: p.x + deltaX, y: p.y + deltaY })
+            );
+            
+            scheduleRedraw();
+        }
+        
+        function endPolygonDrag(event) {
+            if (!polygonDragSession) {
+                return;
+            }
+            
+            fill.classList.remove('is-dragging');
+            
+            if (fill.releasePointerCapture) {
+                try {
+                    fill.releasePointerCapture(polygonDragSession.pointerId);
+                } catch (e) {
+                    // Ignore if capture was already released
+                }
+            }
+            
+            window.removeEventListener('pointermove', handlePolygonDrag);
+            polygonDragSession = null;
+            
+            setTimeout(() => {
+                preventClick = false;
+            }, 100);
+            
+            redraw();
+        }
+        
+        // Attach polygon drag listeners
+        fill.addEventListener('pointerdown', startPolygonDrag, { passive: false });
+
         refreshRegionList();
         syncRegionForm();
 
-        overlay.addEventListener('click', handleOverlayClick);
+        // Prevent context menu on overlay
+        overlay.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+        });
+        
+        overlay.addEventListener('pointerdown', handleOverlayPointerDown, { passive: false });
 
         buildHandles();
-        updateStageZoom();
         redraw();
         positionCursor();
     }

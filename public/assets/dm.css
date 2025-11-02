@@ -3871,30 +3871,26 @@
     box-shadow: 0 26px 58px rgba(18, 18, 26, 0.22);
     border: 1px solid rgba(24, 24, 32, 0.12);
     touch-action: none;
-    width: min(100%, 720px);
+    width: min(100%, 760px);
     margin: 0 auto;
-    transform-origin: top left;
-    transform: scale(var(--dm-draw-zoom, 0.65));
+    background: transparent;
 }
 
 @media (max-width: 1024px) {
     .dm-draw__stage {
         width: min(100%, 640px);
-        transform: scale(var(--dm-draw-zoom, 0.6));
     }
 }
 
 @media (max-width: 768px) {
     .dm-draw__stage {
         width: min(100%, 520px);
-        transform: scale(var(--dm-draw-zoom, 0.55));
     }
 }
 
 @media (max-width: 520px) {
     .dm-draw__stage {
         width: 100%;
-        transform: scale(var(--dm-draw-zoom, 0.5));
     }
 }
 
@@ -3904,53 +3900,85 @@
     height: auto;
     user-select: none;
     pointer-events: none;
+    position: relative;
+    z-index: 1;
 }
 
 .dm-draw__overlay {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
     height: 100%;
     cursor: crosshair;
     touch-action: none;
+    z-index: 2;
+    pointer-events: auto;
 }
 
 .dm-draw__shape-fill {
-    fill: rgba(72, 198, 116, 0.26);
+    fill: none;
+    pointer-events: none;
+    stroke: none;
+}
+
+.dm-draw__shape-fill.is-active {
+    pointer-events: visiblePainted;
+    cursor: grab;
+    /* fill is set via JS setAttribute to allow dynamic pattern/color */
 }
 
 .dm-draw__shape-outline {
     fill: none;
     stroke: #32d26e;
-    stroke-width: 12;
+    stroke-width: 5;
     stroke-linejoin: round;
     stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
 }
 
 .dm-draw__shape-baseline {
     fill: none;
     stroke: rgba(255, 255, 255, 0.9);
-    stroke-width: 6;
+    stroke-width: 3;
     stroke-linejoin: round;
     stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
 }
 
-.dm-draw__handles circle {
-    fill: #10121a !important;
-    stroke: #ffffff !important;
-    stroke-width: 4 !important;
+.dm-draw__handles {
+    pointer-events: none;
+}
+
+.dm-draw__handle-hit {
+    fill: transparent;
+    stroke: transparent;
+    pointer-events: auto;
     cursor: grab;
-    transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+    transition: none;
 }
 
-.dm-draw__handles circle:is(:hover, .is-active, :focus-visible) {
-    transform: scale(1.08);
-    box-shadow: 0 0 0 4px rgba(22, 22, 29, 0.15) !important;
-    outline: none !important;
-}
-
-.dm-draw__handles circle.is-active {
+.dm-draw__handle-hit.is-active {
     cursor: grabbing;
+}
+
+.dm-draw__handle-node {
+    fill: #101435 !important;
+    stroke: #f4f7ff !important;
+    stroke-width: 2 !important;
+    transition: none !important;
+    pointer-events: none;
+}
+
+.dm-draw__handle-node.is-active {
+    fill: #354eff !important;
+}
+
+.dm-draw__handle-node:focus-visible {
+    outline: 2px solid rgba(80, 110, 255, 0.85);
+    outline-offset: 2px;
 }
 
 .dm-draw__badge {
@@ -3968,6 +3996,7 @@
     font-size: 24px;
     letter-spacing: 0.02em;
     pointer-events: none;
+    z-index: 10;
 }
 
 .dm-draw__levels {
@@ -3979,6 +4008,7 @@
     list-style: none;
     display: grid;
     gap: 12px;
+    z-index: 10;
 }
 
 .dm-draw__levels li {
@@ -4004,6 +4034,7 @@
     height: 64px;
     pointer-events: none;
     transform: translate(-9999px, -9999px);
+    z-index: 15;
 }
 
 .dm-draw__cursor img {
@@ -4012,87 +4043,92 @@
     display: block;
 }
 
-.dm-draw__toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 24px;
-    padding: 0 6px;
-    flex-wrap: wrap;
-}
-
-.dm-draw__toolbar-left {
-    display: flex;
-    gap: 20px;
-    align-items: baseline;
-    flex-wrap: wrap;
-}
-
-.dm-draw__toolbar-right {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.dm-draw__zoom-button {
-    appearance: none;
-    border: 1px solid rgba(28, 19, 79, 0.18);
-    background: rgba(255, 255, 255, 0.85);
-    border-radius: 12px;
-    width: 34px;
-    height: 34px;
+.dm-draw__fullscreen-toggle {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(12, 18, 36, 0.82);
+    color: #f5f7ff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    font-weight: 600;
-    color: #1c134f;
+    z-index: 20;
     cursor: pointer;
-    transition: border 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.dm-draw__zoom-button:is(:hover, :focus-visible) {
-    border-color: rgba(124, 58, 237, 0.45);
-    background: rgba(124, 58, 237, 0.12);
+.dm-draw__fullscreen-toggle svg {
+    width: 22px;
+    height: 22px;
+}
+
+.dm-draw__fullscreen-toggle:is(:hover, :focus-visible) {
+    background: rgba(64, 92, 255, 0.92);
+    border-color: rgba(255, 255, 255, 0.35);
+    outline: none;
     transform: translateY(-1px);
 }
 
-.dm-draw__zoom-button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none;
+.dm-draw--fullscreen .dm-draw__fullscreen-toggle {
+    background: rgba(20, 25, 46, 0.94);
 }
 
-.dm-draw__zoom-value {
-    min-width: 48px;
-    text-align: center;
-    font-weight: 600;
-    font-size: 13px;
-    color: var(--dm-toolbar-text-color, #1c134f);
+body.dm-draw-fullscreen-active {
+    overflow: hidden;
 }
 
-.dm-draw__floor-label {
-    font-weight: 700;
-    font-size: 20px;
+.dm-draw-fullscreen-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 7, 16, 0.85);
+    z-index: 1001;
+    cursor: pointer;
 }
 
-.dm-draw__hint {
-    font-size: 14px;
-    color: var(--dm-content-text-color);
+.dm-draw__stage--fullscreen {
+    position: fixed;
+    top: 48px;
+    left: 32px;
+    right: 32px;
+    width: auto;
+    max-width: 1400px;
+    height: calc(100vh - 96px);
+    max-height: calc(100vh - 96px);
+    margin: 0 auto;
+    border-radius: 24px;
+    box-shadow: 0 50px 120px rgba(5, 7, 16, 0.65);
+    z-index: 1002;
+    background: transparent;
+    transform-origin: top left;
+    opacity: 1;
 }
 
-.dm-draw__output {
-    background: #11131d;
-    color: #e5e9ff;
-    border-radius: 14px;
-    padding: 12px 16px;
-    font-size: 14px;
-    text-align: right;
-    white-space: nowrap;
-    overflow-x: auto;
-    flex: 1 1 260px;
-    min-width: 0;
-    max-width: clamp(240px, 40vw, 520px);
+.dm-draw__stage--fullscreen .dm-draw__image {
+    width: 100%;
+    height: 100%;
+    max-height: calc(100vh - 96px);
+    object-fit: contain;
+}
+
+.dm-draw__stage--fullscreen .dm-draw__overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.dm-draw__stage--fullscreen .dm-draw__badge {
+    top: 36px;
+    right: 36px;
+}
+
+.dm-draw__stage--fullscreen .dm-draw__levels {
+    top: 44px;
+    left: 36px;
 }
 
 /* === responsive.css === */
