@@ -1,6 +1,16 @@
 import { DRAW_VIEWBOX } from '../constants.js';
 import { escapeHtml } from '../utils/html.js';
 
+function slugifyStatus(label) {
+    if (!label) return 'unknown';
+    return label
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-)|(-$)/g, '') || 'unknown';
+}
+
 export function renderModal(state, data) {
     if (!state.modal) return '';
     const { type, payload } = state.modal;
@@ -787,20 +797,15 @@ function renderDrawModal(state, data) {
                       ? String(activeRegion.id ?? '') === id
                       : index === 0 && !activeRegionId;
                   const label = region.label ?? region.name ?? `Zóna ${index + 1}`;
-                  const statusLabel = resolveStatusLabel(region);
                   const childCount = Array.isArray(region.children) ? region.children.length : 0;
-                  const childMeta = childCount
-                      ? `<span class="dm-draw__region-meta">${childCount} prepojené</span>`
-                      : '';
+                  const connectionMeta = childCount > 0
+                      ? `Prepojený (${childCount})`
+                      : 'Neprepojený';
                   return `
                         <li class="dm-draw__region-item${isActive ? ' is-active' : ''}" data-dm-region-item="${escapeHtml(id)}">
                             <button type="button" class="dm-draw__region-button" data-dm-region-trigger="${escapeHtml(id)}">
-                                <span class="dm-draw__region-main">
-                                    <span class="dm-draw__region-index">${index + 1}.</span>
-                                    <span class="dm-draw__region-name">${escapeHtml(label)}</span>
-                                    ${statusLabel ? `<span class="dm-draw__region-status">${escapeHtml(statusLabel)}</span>` : ''}
-                                </span>
-                                ${childMeta ? `<span class="dm-draw__region-footer">${childMeta}</span>` : ''}
+                                <span class="dm-draw__region-name">${escapeHtml(label)}</span>
+                                <span class="dm-draw__region-connection">${escapeHtml(connectionMeta)}</span>
                             </button>
                         </li>
                     `;
@@ -818,19 +823,40 @@ function renderDrawModal(state, data) {
             ? `
                 <fieldset class="dm-draw__children" data-dm-region-children>
                     <legend>Naviazané lokality</legend>
-                    <div class="dm-draw__children-list">
-                        ${floorsForChildren
-                            .map((floor) => {
-                                const value = String(floor.id);
-                                const checked = regionChildrenValues.includes(value) ? ' checked' : '';
-                                return `
-                                    <label class="dm-draw__child-option">
-                                        <input type="checkbox" data-dm-region-child value="${escapeHtml(value)}"${checked}>
-                                        <span>${escapeHtml(floor.name ?? value)}</span>
-                                    </label>
-                                `;
-                            })
-                            .join('')}
+                    <div class="dm-draw__children-table">
+                        <table class="dm-dashboard__table">
+                            <thead>
+                                <tr>
+                                    <th>Lokalita</th>
+                                    <th>Stav</th>
+                                    <th>Prepojenie</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${floorsForChildren
+                                    .map((floor) => {
+                                        const value = String(floor.id);
+                                        const checked = regionChildrenValues.includes(value) ? ' checked' : '';
+                                        const statusKey = String(floor?.statusId ?? floor?.status ?? '');
+                                        const statusMatch = statusOptionsSource.find(s => String(s.id) === statusKey || String(s.key) === statusKey);
+                                        const statusLabel = statusMatch?.label ?? floor?.statusLabel ?? 'Neznáme';
+                                        const statusVariant = slugifyStatus(statusLabel);
+                                        return `
+                                            <tr>
+                                                <td>${escapeHtml(floor.name ?? value)}</td>
+                                                <td><span class="dm-status dm-status--${escapeHtml(statusVariant)}">${escapeHtml(statusLabel)}</span></td>
+                                                <td>
+                                                    <label class="dm-draw__child-checkbox">
+                                                        <input type="checkbox" data-dm-region-child value="${escapeHtml(value)}"${checked}>
+                                                        <span>${checked ? 'Prepojené' : 'Neaktívne'}</span>
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    })
+                                    .join('')}
+                            </tbody>
+                        </table>
                     </div>
                 </fieldset>
             `

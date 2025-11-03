@@ -3838,20 +3838,10 @@ export async function initDeveloperMap(options) {
                 trigger.type = 'button';
                 trigger.className = 'dm-draw__region-button';
                 trigger.dataset.dmRegionTrigger = id;
-                const indexEl = document.createElement('span');
-                indexEl.className = 'dm-draw__region-index';
-                indexEl.textContent = `${index + 1}.`;
                 const nameEl = document.createElement('span');
                 nameEl.className = 'dm-draw__region-name';
                 nameEl.textContent = region.label ?? region.name ?? `Zóna ${index + 1}`;
-                trigger.append(indexEl, nameEl);
-                const statusLabel = getStatusLabel(region.statusId ?? region.status ?? '') || region.statusLabel;
-                if (statusLabel) {
-                    const statusEl = document.createElement('span');
-                    statusEl.className = 'dm-draw__region-status';
-                    statusEl.textContent = statusLabel;
-                    trigger.append(statusEl);
-                }
+                trigger.append(nameEl);
                 const childCount = Array.isArray(region.children) ? region.children.length : 0;
                 if (childCount) {
                     const metaWrapper = document.createElement('span');
