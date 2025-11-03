@@ -28,9 +28,9 @@
             .dm-map-viewer__image { width: 100%; height: auto; display: block; }
             .dm-map-viewer__overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
             .dm-map-viewer__regions { pointer-events: none; }
-            .dm-map-viewer__region { fill: rgba(52, 69, 235, 0.72); stroke: none; pointer-events: auto; transition: fill 0.2s ease, opacity 0.2s ease; opacity: 0.88; outline: none; }
-            .dm-map-viewer__region:hover { opacity: 1; fill: rgba(52, 69, 235, 0.88); }
-            .dm-map-viewer__region.is-active { opacity: 1; fill: rgba(52, 69, 235, 0.92); }
+            .dm-map-viewer__region { fill: rgba(52, 69, 235, 0.15); stroke: none; pointer-events: auto; transition: fill 0.2s ease, opacity 0.2s ease; opacity: 0.42; outline: none; }
+            .dm-map-viewer__region:hover { opacity: 0.95; }
+            .dm-map-viewer__region.is-active { opacity: 1; }
             .dm-map-viewer__region:focus { outline: none; }
             .dm-map-viewer__region:focus-visible { outline: none; }
             .dm-map-viewer__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -1299,42 +1299,51 @@
                 return { entries, linkedFloors, availableCount };
             };
 
-            const baseFill = 'rgba(52, 69, 235, 0.72)';
-            const positiveFill = 'rgba(43, 134, 76, 0.75)';
-            const negativeFill = 'rgba(220, 53, 69, 0.75)';
-            const neutralFill = 'rgba(148, 163, 184, 0.65)';
+            const baseFillColor = '#3445eb';
+            const positiveFillColor = '#2b864c';
+            const negativeFillColor = '#dc3545';
+            const neutralFillColor = '#94a3b8';
+            const idleAlpha = 0.42;
+            const activeAlpha = 0.88;
+            const idleStrokeAlpha = 0.55;
+            const activeStrokeAlpha = 0.95;
 
             const applyRegionFill = (polygon, summary) => {
                 if (!polygon) {
                     return;
                 }
                 const hasSummary = summary && Array.isArray(summary.entries);
-                let fill = baseFill;
+                let color = baseFillColor;
                 let availabilityState = 'empty';
 
                 if (hasSummary) {
                     if (!summary.entries.length) {
-                        fill = neutralFill;
+                        color = neutralFillColor;
                         availabilityState = 'empty';
                     } else if (summary.availableCount > 0) {
-                        fill = positiveFill;
+                        color = positiveFillColor;
                         availabilityState = 'available';
                     } else {
-                        fill = negativeFill;
+                        color = negativeFillColor;
                         availabilityState = 'unavailable';
                     }
                 } else {
-                    fill = neutralFill;
+                    color = neutralFillColor;
                     availabilityState = 'empty';
                 }
 
-                polygon.style.fill = fill;
-                polygon.style.stroke = fill;
+                const isActive = polygon.classList.contains('is-active');
+                const alpha = isActive ? activeAlpha : idleAlpha;
+                const strokeAlpha = isActive ? activeStrokeAlpha : idleStrokeAlpha;
+
+                polygon.style.fill = toRgba(color, alpha);
+                polygon.style.stroke = toRgba(color, strokeAlpha);
                 polygon.style.strokeWidth = '1';
                 polygon.style.strokeLinejoin = 'round';
                 polygon.style.strokeLinecap = 'round';
                 polygon.style.paintOrder = 'fill stroke';
                 polygon.style.vectorEffect = 'non-scaling-stroke';
+                polygon.style.opacity = isActive ? '1' : '0.62';
                 polygon.dataset.dmAvailability = availabilityState;
             };
 
@@ -1510,6 +1519,11 @@
 
                 polygon.addEventListener('mouseenter', () => {
                     polygon.classList.add('is-active');
+                    const regionInstance = regionById.get(polygon.getAttribute('data-region-id'));
+                    const summaryActive = regionInstance
+                        ? summariseRegion(regionInstance)
+                        : { entries: [], linkedFloors: [], availableCount: 0 };
+                    applyRegionFill(polygon, summaryActive);
                 });
                 polygon.addEventListener('mouseleave', () => {
                     if (activeRegionId === polygon.getAttribute('data-region-id')) {
@@ -1524,6 +1538,11 @@
                 });
                 polygon.addEventListener('focus', () => {
                     polygon.classList.add('is-active');
+                    const regionInstance = regionById.get(polygon.getAttribute('data-region-id'));
+                    const summaryActive = regionInstance
+                        ? summariseRegion(regionInstance)
+                        : { entries: [], linkedFloors: [], availableCount: 0 };
+                    applyRegionFill(polygon, summaryActive);
                 });
                 polygon.addEventListener('blur', () => {
                     if (activeRegionId === polygon.getAttribute('data-region-id')) {
