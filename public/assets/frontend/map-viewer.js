@@ -28,9 +28,9 @@
             .dm-map-viewer__image { width: 100%; height: auto; display: block; }
             .dm-map-viewer__overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
             .dm-map-viewer__regions { pointer-events: none; }
-            .dm-map-viewer__region { fill: rgba(52, 69, 235, 0.15); stroke: none; pointer-events: auto; transition: fill 0.2s ease, opacity 0.2s ease; opacity: 0.42; outline: none; }
-            .dm-map-viewer__region:hover { opacity: 0.95; }
-            .dm-map-viewer__region.is-active { opacity: 1; }
+            .dm-map-viewer__region { fill: rgba(52, 69, 235, 0.12); stroke: none; pointer-events: auto; transition: fill 0.18s ease, opacity 0.18s ease; opacity: 0.4; outline: none; }
+            .dm-map-viewer__region:hover { opacity: 0.72; }
+            .dm-map-viewer__region.is-active { opacity: 0.82; }
             .dm-map-viewer__region:focus { outline: none; }
             .dm-map-viewer__region:focus-visible { outline: none; }
             .dm-map-viewer__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -1303,10 +1303,15 @@
             const positiveFillColor = '#2b864c';
             const negativeFillColor = '#dc3545';
             const neutralFillColor = '#94a3b8';
-            const idleAlpha = 0.42;
-            const activeAlpha = 0.88;
-            const idleStrokeAlpha = 0.55;
-            const activeStrokeAlpha = 0.95;
+            const idleAlpha = 0.32;
+            const hoverAlpha = 0.54;
+            const selectedAlpha = 0.68;
+            const idleStrokeAlpha = 0.45;
+            const hoverStrokeAlpha = 0.65;
+            const selectedStrokeAlpha = 0.82;
+            const idleOpacity = 0.42;
+            const hoverOpacity = 0.64;
+            const selectedOpacity = 0.78;
 
             const applyRegionFill = (polygon, summary) => {
                 if (!polygon) {
@@ -1332,9 +1337,11 @@
                     availabilityState = 'empty';
                 }
 
-                const isActive = polygon.classList.contains('is-active');
-                const alpha = isActive ? activeAlpha : idleAlpha;
-                const strokeAlpha = isActive ? activeStrokeAlpha : idleStrokeAlpha;
+                const isSelected = polygon.dataset.dmSelected === 'true';
+                const isHover = polygon.dataset.dmHover === 'true';
+                const alpha = isSelected ? selectedAlpha : isHover ? hoverAlpha : idleAlpha;
+                const strokeAlpha = isSelected ? selectedStrokeAlpha : isHover ? hoverStrokeAlpha : idleStrokeAlpha;
+                const opacity = isSelected ? selectedOpacity : isHover ? hoverOpacity : idleOpacity;
 
                 polygon.style.fill = toRgba(color, alpha);
                 polygon.style.stroke = toRgba(color, strokeAlpha);
@@ -1343,7 +1350,7 @@
                 polygon.style.strokeLinecap = 'round';
                 polygon.style.paintOrder = 'fill stroke';
                 polygon.style.vectorEffect = 'non-scaling-stroke';
-                polygon.style.opacity = isActive ? '1' : '0.62';
+                polygon.style.opacity = String(opacity);
                 polygon.dataset.dmAvailability = availabilityState;
             };
 
@@ -1434,6 +1441,8 @@
                 ctaButton.onclick = null;
                 regionElements.forEach((polygon) => {
                     polygon.classList.remove('is-active');
+                    polygon.dataset.dmSelected = 'false';
+                    polygon.dataset.dmHover = 'false';
                     const region = regionById.get(polygon.getAttribute('data-region-id'));
                     const summary = region
                         ? summariseRegion(region)
@@ -1497,7 +1506,12 @@
                 activeRegionId = regionId;
                 regionElements.forEach((el) => {
                     const regionInstance = regionById.get(el.getAttribute('data-region-id'));
-                    if (el === polygon) {
+                    const isSelected = el === polygon;
+                    el.dataset.dmSelected = isSelected ? 'true' : 'false';
+                    if (!isSelected) {
+                        el.dataset.dmHover = 'false';
+                    }
+                    if (isSelected) {
                         el.classList.add('is-active');
                     } else {
                         el.classList.remove('is-active');
@@ -1515,9 +1529,12 @@
                 const summary = region
                     ? summariseRegion(region)
                     : { entries: [], linkedFloors: [], availableCount: 0 };
+                polygon.dataset.dmSelected = 'false';
+                polygon.dataset.dmHover = 'false';
                 applyRegionFill(polygon, summary);
 
                 polygon.addEventListener('mouseenter', () => {
+                    polygon.dataset.dmHover = 'true';
                     polygon.classList.add('is-active');
                     const regionInstance = regionById.get(polygon.getAttribute('data-region-id'));
                     const summaryActive = regionInstance
@@ -1526,10 +1543,11 @@
                     applyRegionFill(polygon, summaryActive);
                 });
                 polygon.addEventListener('mouseleave', () => {
-                    if (activeRegionId === polygon.getAttribute('data-region-id')) {
-                        return;
+                    polygon.dataset.dmHover = 'false';
+                    const isSelected = activeRegionId === polygon.getAttribute('data-region-id');
+                    if (!isSelected) {
+                        polygon.classList.remove('is-active');
                     }
-                    polygon.classList.remove('is-active');
                     const region = regionById.get(polygon.getAttribute('data-region-id'));
                     const summary = region
                         ? summariseRegion(region)
@@ -1537,6 +1555,7 @@
                     applyRegionFill(polygon, summary);
                 });
                 polygon.addEventListener('focus', () => {
+                    polygon.dataset.dmHover = 'true';
                     polygon.classList.add('is-active');
                     const regionInstance = regionById.get(polygon.getAttribute('data-region-id'));
                     const summaryActive = regionInstance
@@ -1545,10 +1564,11 @@
                     applyRegionFill(polygon, summaryActive);
                 });
                 polygon.addEventListener('blur', () => {
-                    if (activeRegionId === polygon.getAttribute('data-region-id')) {
-                        return;
+                    polygon.dataset.dmHover = 'false';
+                    const isSelected = activeRegionId === polygon.getAttribute('data-region-id');
+                    if (!isSelected) {
+                        polygon.classList.remove('is-active');
                     }
-                    polygon.classList.remove('is-active');
                     const region = regionById.get(polygon.getAttribute('data-region-id'));
                     const summary = region
                         ? summariseRegion(region)
