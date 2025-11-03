@@ -3,6 +3,7 @@ import { createInitialData, getDefaultTypes, getDefaultStatuses, getDefaultColor
 import { renderAppShell } from './layout/app-shell.js';
 import { renderModal } from './modals/index.js';
 import { createStorageClient } from './storage-client.js';
+import { WPAdminLayoutManager } from './wp-admin-layout.js';
 
 /**
  * Initialise the Developer Map dashboard inside the provided root element.
@@ -1264,6 +1265,7 @@ export async function initDeveloperMap(options) {
     let customSelectControllers = [];
     let customSelectDocEventsBound = false;
     let mediaFrame = null;
+    let wpAdminLayoutManager = null;
 
     function findMapItem(itemId) {
         if (!itemId) {
@@ -1595,6 +1597,17 @@ export async function initDeveloperMap(options) {
     function setState(patch) {
         const focusState = captureFocusState();
         const next = typeof patch === 'function' ? patch(state) : patch;
+        
+        // Check if modal is being closed (draw-coordinates specifically)
+        const wasDrawModal = state.modal && state.modal.type === 'draw-coordinates';
+        const willBeDrawModal = next.modal && next.modal.type === 'draw-coordinates';
+        
+        // Cleanup WP Admin Layout Manager when closing draw modal
+        if (wasDrawModal && !willBeDrawModal && wpAdminLayoutManager) {
+            wpAdminLayoutManager.destroy();
+            wpAdminLayoutManager = null;
+        }
+        
         Object.assign(state, next);
         render();
         restoreFocusState(focusState);
@@ -3436,7 +3449,67 @@ export async function initDeveloperMap(options) {
         if (!drawRoot) {
             return;
         }
+        
+        // Bind tab switching in inspector panel
+        bindEditorTabs();
+        
+        // Initialize WordPress admin layout manager
+        initWPAdminLayout();
+        
         initDrawSurface(drawRoot);
+    }
+    
+    function initWPAdminLayout() {
+        // Destroy existing manager if any
+        if (wpAdminLayoutManager) {
+            wpAdminLayoutManager.destroy();
+            wpAdminLayoutManager = null;
+        }
+        
+        // Initialize new manager
+        try {
+            wpAdminLayoutManager = new WPAdminLayoutManager('.dm-editor-overlay');
+            const initialized = wpAdminLayoutManager.init();
+            
+            if (!initialized) {
+                console.warn('[DM] WP Admin Layout Manager failed to initialize');
+                wpAdminLayoutManager = null;
+            }
+        } catch (error) {
+            console.error('[DM] Error initializing WP Admin Layout Manager:', error);
+            wpAdminLayoutManager = null;
+        }
+    }
+    
+    function bindEditorTabs() {
+        const tabs = root.querySelectorAll('.dm-editor__tab[data-dm-tab]');
+        const panels = root.querySelectorAll('.dm-editor__tab-panel[data-dm-tab-panel]');
+        
+        tabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const targetPanel = tab.getAttribute('data-dm-tab');
+                
+                // Update tabs
+                tabs.forEach((t) => {
+                    t.classList.remove('dm-editor__tab--active');
+                    t.setAttribute('aria-selected', 'false');
+                });
+                tab.classList.add('dm-editor__tab--active');
+                tab.setAttribute('aria-selected', 'true');
+                
+                // Update panels
+                panels.forEach((p) => {
+                    const panelId = p.getAttribute('data-dm-tab-panel');
+                    if (panelId === targetPanel) {
+                        p.classList.add('dm-editor__tab-panel--active');
+                        p.removeAttribute('hidden');
+                    } else {
+                        p.classList.remove('dm-editor__tab-panel--active');
+                        p.setAttribute('hidden', '');
+                    }
+                });
+            });
+        });
     }
 
     function initDrawSurface(drawRoot) {
@@ -3455,6 +3528,7 @@ export async function initDeveloperMap(options) {
         const stage = drawRoot.querySelector('.dm-draw__stage');
         const canvas = drawRoot.querySelector('.dm-draw__canvas');
         const resetButton = root.querySelector('[data-dm-reset-draw]');
+    const revertButton = root.querySelector('[data-dm-revert-draw]');
         const saveButton = root.querySelector('[data-dm-save-draw]');
         const regionList = drawRoot.querySelector('[data-dm-region-list]');
         const addRegionButton = drawRoot.querySelector('[data-dm-add-region]');
@@ -3582,6 +3656,28 @@ export async function initDeveloperMap(options) {
                 if (item && typeof item === 'object') return { ...item };
                 return item;
             });
+        }
+
+        function cloneRegionSnapshot(region) {
+            if (!region || typeof region !== 'object') {
+                return null;
+            }
+            const clone = { ...region };
+            clone.geometry = {
+                type: region.geometry?.type ?? 'polygon',
+                points: deepCloneArray(Array.isArray(region.geometry?.points) ? region.geometry.points : []),
+            };
+            clone.meta = region.meta && typeof region.meta === 'object' ? { ...region.meta } : {};
+            clone.children = Array.isArray(region.children) ? [...region.children] : [];
+            if (Array.isArray(region.tags)) {
+                clone.tags = [...region.tags];
+            } else if (Object.prototype.hasOwnProperty.call(clone, 'tags')) {
+                delete clone.tags;
+            }
+            if (typeof clone.type === 'undefined' && typeof region.type !== 'undefined') {
+                clone.type = region.type;
+            }
+            return clone;
         }
 
         const regionBootstrap =
@@ -3740,6 +3836,8 @@ export async function initDeveloperMap(options) {
             regionState.regions.push(createRegion(null, 0));
         }
 
+        let savedSnapshot = null;
+
         regionState.activeId = (() => {
             if (
                 initialRegionId &&
@@ -3850,6 +3948,15 @@ export async function initDeveloperMap(options) {
             );
         }
 
+        function captureSnapshot() {
+            return {
+                regions: regionState.regions.map((region) => cloneRegionSnapshot(region)).filter(Boolean),
+                activeId: regionState.activeId ? String(regionState.activeId) : null,
+                viewBoxWidth,
+                viewBoxHeight,
+            };
+        }
+
         const initialRegion = getActiveRegion();
         points = ensurePointsFromRegion(initialRegion);
         polygonClosed = initialRegion ? getRegionClosed(initialRegion) && points.length >= 3 : false;
@@ -3866,6 +3973,12 @@ export async function initDeveloperMap(options) {
                         currentViewBox: { width: viewBoxWidth, height: viewBoxHeight }
                     });
                     setViewBoxSize(imageEl.naturalWidth, imageEl.naturalHeight, { preservePoints: true });
+                    if (savedSnapshot) {
+                        savedSnapshot.viewBoxWidth = viewBoxWidth;
+                        savedSnapshot.viewBoxHeight = viewBoxHeight;
+                    } else {
+                        savedSnapshot = captureSnapshot();
+                    }
                 }
             };
             if (imageEl.complete) {
@@ -3922,41 +4035,35 @@ export async function initDeveloperMap(options) {
             regionList.innerHTML = '';
             if (!regionState.regions.length) {
                 const emptyItem = document.createElement('li');
-                emptyItem.className = 'dm-draw__region-item dm-draw__region-item--empty';
-                emptyItem.textContent = 'Žiadne zóny zatiaľ nevytvorené.';
+                emptyItem.className = 'dm-editor__zone-item dm-editor__zone-item--empty';
+                const emptySpan = document.createElement('span');
+                emptySpan.className = 'dm-editor__empty-text';
+                emptySpan.textContent = 'Zatiaľ žiadne zóny';
+                emptyItem.append(emptySpan);
                 regionList.append(emptyItem);
                 return;
             }
             regionState.regions.forEach((region, index) => {
                 const id = String(region.id);
                 const item = document.createElement('li');
-                item.className = 'dm-draw__region-item';
+                item.className = 'dm-editor__zone-item';
                 item.dataset.dmRegionItem = id;
                 if (id === String(regionState.activeId)) {
-                    item.classList.add('is-active');
+                    item.classList.add('is-active', 'dm-editor__zone-item--active');
                 }
                 const trigger = document.createElement('button');
                 trigger.type = 'button';
-                trigger.className = 'dm-draw__region-button';
+                trigger.className = 'dm-editor__zone-button';
                 trigger.dataset.dmRegionTrigger = id;
                 const nameEl = document.createElement('span');
-                nameEl.className = 'dm-draw__region-name';
+                nameEl.className = 'dm-editor__zone-name';
                 nameEl.textContent = region.label ?? region.name ?? `Zóna ${index + 1}`;
                 trigger.append(nameEl);
                 const childCount = Array.isArray(region.children) ? region.children.length : 0;
-                const metaWrapper = document.createElement('span');
-                metaWrapper.className = 'dm-draw__region-meta';
-                if (childCount > 0) {
-                    const badge = document.createElement('span');
-                    badge.className = 'dm-draw__region-meta-badge';
-                    badge.textContent = String(childCount);
-                    const metaLabel = document.createElement('span');
-                    metaLabel.textContent = 'prepojené';
-                    metaWrapper.append(badge, metaLabel);
-                } else {
-                    metaWrapper.textContent = 'Neprepojené';
-                }
-                trigger.append(metaWrapper);
+                const metaEl = document.createElement('span');
+                metaEl.className = 'dm-editor__zone-meta';
+                metaEl.textContent = childCount > 0 ? `Prepojených: ${childCount}` : 'Bez prepojení';
+                trigger.append(metaEl);
                 item.append(trigger);
                 regionList.append(item);
             });
@@ -4073,27 +4180,18 @@ export async function initDeveloperMap(options) {
         }
 
         function toViewBoxCoordinates(event) {
-            // Use overlay bounding rect since it's positioned exactly over the image
-            const overlayRect = overlay.getBoundingClientRect();
-            
-            // Calculate scale based on viewBox vs overlay display size
-            const scaleX = viewBoxWidth / overlayRect.width;
-            const scaleY = viewBoxHeight / overlayRect.height;
-            
-            // Calculate position relative to overlay (which is positioned over image)
-            const x = (event.clientX - overlayRect.left) * scaleX;
-            const y = (event.clientY - overlayRect.top) * scaleY;
-            
-            console.log('[toViewBoxCoordinates]', {
-                clientX: event.clientX,
-                clientY: event.clientY,
-                overlayRect: { left: overlayRect.left, top: overlayRect.top, width: overlayRect.width, height: overlayRect.height },
-                viewBox: { width: viewBoxWidth, height: viewBoxHeight },
-                scale: { x: scaleX, y: scaleY },
-                result: { x, y }
-            });
-            
-            return { x, y };
+            if (!overlay) {
+                return { x: 0, y: 0 };
+            }
+            const screenPoint = overlay.createSVGPoint();
+            screenPoint.x = event.clientX;
+            screenPoint.y = event.clientY;
+            const ctm = overlay.getScreenCTM();
+            if (!ctm) {
+                return { x: 0, y: 0 };
+            }
+            const svgPoint = screenPoint.matrixTransform(ctm.inverse());
+            return { x: svgPoint.x, y: svgPoint.y };
         }
 
         function pointsToString(list) {
@@ -4195,13 +4293,23 @@ export async function initDeveloperMap(options) {
                 cursorAnchorIndex = points.length - 1;
             }
             const anchor = points[cursorAnchorIndex];
-            const overlayRect = overlay.getBoundingClientRect();
-            const stageRect = stage.getBoundingClientRect();
-            const scaleX = overlayRect.width / viewBoxWidth;
-            const scaleY = overlayRect.height / viewBoxHeight;
-            const x = (anchor.x * scaleX) + (overlayRect.left - stageRect.left) - 28;
-            const y = (anchor.y * scaleY) + (overlayRect.top - stageRect.top) - 28;
-            cursor.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+            const ctm = overlay?.getScreenCTM();
+            if (!ctm) {
+                return;
+            }
+            const svgPoint = overlay.createSVGPoint();
+            svgPoint.x = anchor.x;
+            svgPoint.y = anchor.y;
+            const screenPoint = svgPoint.matrixTransform(ctm);
+            const isFullscreen = stage.classList.contains('dm-draw__stage--fullscreen');
+            if (isFullscreen) {
+                cursor.style.left = `${Math.round(screenPoint.x)}px`;
+                cursor.style.top = `${Math.round(screenPoint.y)}px`;
+            } else {
+                const stageRect = stage.getBoundingClientRect();
+                cursor.style.left = `${Math.round(screenPoint.x - stageRect.left)}px`;
+                cursor.style.top = `${Math.round(screenPoint.y - stageRect.top)}px`;
+            }
         }
 
         function redraw() {
@@ -4453,6 +4561,71 @@ export async function initDeveloperMap(options) {
             });
         }
 
+        if (revertButton) {
+            revertButton.addEventListener('click', () => {
+                if (!savedSnapshot) {
+                    return;
+                }
+
+                const snapshotRegions = Array.isArray(savedSnapshot.regions)
+                    ? savedSnapshot.regions.map((region) => cloneRegionSnapshot(region)).filter(Boolean)
+                    : [];
+
+                regionState.regions = snapshotRegions.length
+                    ? snapshotRegions
+                    : [createRegion(null, 0)];
+
+                const preferredId = savedSnapshot.activeId;
+                const hasPreferred = preferredId
+                    ? regionState.regions.some((region) => String(region.id) === String(preferredId))
+                    : false;
+
+                const fallbackRegionId = regionState.regions.length ? regionState.regions[0].id : null;
+                regionState.activeId = hasPreferred
+                    ? String(preferredId)
+                    : fallbackRegionId
+                        ? String(fallbackRegionId)
+                        : null;
+
+                if (regionState.activeId) {
+                    drawRoot.dataset.dmActiveRegion = regionState.activeId;
+                    if (state.modal && state.modal.type === 'draw-coordinates') {
+                        state.modal.regionId = regionState.activeId;
+                    }
+                } else {
+                    delete drawRoot.dataset.dmActiveRegion;
+                    if (state.modal && state.modal.type === 'draw-coordinates') {
+                        delete state.modal.regionId;
+                    }
+                }
+
+                const snapshotWidth = Number(savedSnapshot.viewBoxWidth);
+                const snapshotHeight = Number(savedSnapshot.viewBoxHeight);
+                if (Number.isFinite(snapshotWidth) && Number.isFinite(snapshotHeight)) {
+                    viewBoxWidth = snapshotWidth;
+                    viewBoxHeight = snapshotHeight;
+                    updateOverlayViewBox();
+                    syncRootDatasetViewbox();
+                }
+
+                const activeRegion = getActiveRegion();
+                points = ensurePointsFromRegion(activeRegion);
+                polygonClosed = activeRegion ? getRegionClosed(activeRegion) && points.length >= 3 : false;
+                cursorAnchorIndex = 0;
+                preventClick = false;
+                activeHandle = null;
+                activeIndex = -1;
+
+                refreshRegionList();
+                syncRegionForm();
+                buildHandles();
+                redraw();
+                positionCursor();
+
+                savedSnapshot = captureSnapshot();
+            });
+        }
+
         // Zoom functionality (reserved for future implementation)
         // if (zoomOutButton) {
         //     zoomOutButton.addEventListener('click', () => {
@@ -4559,6 +4732,7 @@ export async function initDeveloperMap(options) {
                     }
                 }
                 saveProjects(data.projects);
+                savedSnapshot = captureSnapshot();
                 setState({ modal: null });
             });
         }
@@ -4725,6 +4899,10 @@ export async function initDeveloperMap(options) {
         buildHandles();
         redraw();
         positionCursor();
+
+        if (!savedSnapshot) {
+            savedSnapshot = captureSnapshot();
+        }
     }
 
     // Global event delegation for draw modal region list
@@ -4749,15 +4927,15 @@ export async function initDeveloperMap(options) {
         const currentActiveRegion = drawRoot.dataset.dmActiveRegion ?? '';
         if (!regionId || regionId === String(currentActiveRegion)) return;
         
-        // Update UI immediately to show active state
+        // Update UI immediately to show active state - use new editor classes
         const regionList = clickedList;
-        const allItems = regionList.querySelectorAll('.dm-draw__region-item');
+        const allItems = regionList.querySelectorAll('.dm-editor__zone-item, .dm-draw__region-item');
         allItems.forEach(item => {
             const itemId = item.dataset.dmRegionItem;
             if (String(itemId) === String(regionId)) {
-                item.classList.add('is-active');
+                item.classList.add('is-active', 'dm-editor__zone-item--active');
             } else {
-                item.classList.remove('is-active');
+                item.classList.remove('is-active', 'dm-editor__zone-item--active');
             }
         });
         
@@ -4767,6 +4945,49 @@ export async function initDeveloperMap(options) {
         drawRoot.dispatchEvent(new CustomEvent('dm:setActiveRegion', {
             detail: { regionId }
         }));
+    });
+
+    // Tab switching for editor inspector panel
+    root.addEventListener('click', (event) => {
+        const tabButton = event.target.closest('[data-dm-tab]');
+        if (!tabButton) return;
+        
+        // Only handle if we're in draw editor
+        if (!state.modal || state.modal.type !== 'draw-coordinates') return;
+        
+        const targetTab = tabButton.getAttribute('data-dm-tab');
+        if (!targetTab) return;
+        
+        // Find all tabs and panels in the inspector
+        const inspectorPanel = tabButton.closest('.dm-editor__panel--right');
+        if (!inspectorPanel) return;
+        
+        const allTabs = inspectorPanel.querySelectorAll('[data-dm-tab]');
+        const allPanels = inspectorPanel.querySelectorAll('[data-dm-tab-panel]');
+        
+        // Update tab buttons
+        allTabs.forEach(tab => {
+            const tabName = tab.getAttribute('data-dm-tab');
+            if (tabName === targetTab) {
+                tab.classList.add('dm-editor__tab--active');
+                tab.setAttribute('aria-selected', 'true');
+            } else {
+                tab.classList.remove('dm-editor__tab--active');
+                tab.setAttribute('aria-selected', 'false');
+            }
+        });
+        
+        // Update tab panels
+        allPanels.forEach(panel => {
+            const panelName = panel.getAttribute('data-dm-tab-panel');
+            if (panelName === targetTab) {
+                panel.classList.add('dm-editor__tab-panel--active');
+                panel.removeAttribute('hidden');
+            } else {
+                panel.classList.remove('dm-editor__tab-panel--active');
+                panel.setAttribute('hidden', '');
+            }
+        });
     });
 
     const instance = {

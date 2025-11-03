@@ -804,13 +804,13 @@ function renderDrawModal(state, data) {
                   const label = region.label ?? region.name ?? `Zóna ${index + 1}`;
                   const childCount = Array.isArray(region.children) ? region.children.length : 0;
                   const connectionMeta = childCount > 0
-                      ? `Prepojený (${childCount})`
-                      : 'Neprepojený';
+                      ? `Prepojených: ${childCount}`
+                      : 'Bez prepojení';
                   return `
-                        <li class="dm-draw__region-item${isActive ? ' is-active' : ''}" data-dm-region-item="${escapeHtml(id)}">
-                            <button type="button" class="dm-draw__region-button" data-dm-region-trigger="${escapeHtml(id)}">
-                                <span class="dm-draw__region-name">${escapeHtml(label)}</span>
-                                <span class="dm-draw__region-connection">${escapeHtml(connectionMeta)}</span>
+                        <li class="dm-editor__zone-item${isActive ? ' dm-editor__zone-item--active' : ''}" data-dm-region-item="${escapeHtml(id)}">
+                            <button type="button" class="dm-editor__zone-button" data-dm-region-trigger="${escapeHtml(id)}">
+                                <span class="dm-editor__zone-name">${escapeHtml(label)}</span>
+                                <span class="dm-editor__zone-meta">${escapeHtml(connectionMeta)}</span>
                             </button>
                         </li>
                     `;
@@ -818,8 +818,8 @@ function renderDrawModal(state, data) {
               .filter(Boolean)
               .join('')
         : `
-                <li class="dm-draw__region-item dm-draw__region-item--empty">
-                    <span>Žiadne zóny zatiaľ nevytvorené.</span>
+                <li class="dm-editor__zone-item dm-editor__zone-item--empty">
+                    <span class="dm-editor__empty-text">Zatiaľ žiadne zóny</span>
                 </li>
             `;
 
@@ -879,108 +879,202 @@ function renderDrawModal(state, data) {
     const hatchPatternId = `dm-hatch-${Math.random().toString(36).slice(2, 8)}`;
 
     return `
-        <div class="dm-modal-overlay">
-            <div class="dm-modal dm-modal--draw">
-                <header class="dm-modal__header dm-modal__header--center">
-                    <h2>Nakresliť súradnice</h2>
-                    <button type="button" class="dm-modal__close" aria-label="Zavrieť" data-dm-close-modal>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 25 25" fill="none">
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4841 15.5772L3.09313 24.9681L0 21.875L9.39094 12.4841L0 3.09313L3.09313 0L12.4841 9.39094L21.875 0L24.9681 3.09313L15.5772 12.4841L24.9681 21.875L21.875 24.9681L12.4841 15.5772Z" fill="#1C134F"/>
+        <div class="dm-editor-overlay">
+            <div class="dm-editor">
+                <header class="dm-editor__header">
+                    <div class="dm-editor__header-left">
+                        <h1 class="dm-editor__title">${escapeHtml(surfaceLabel)}</h1>
+                        <span class="dm-editor__subtitle">Editor súradníc</span>
+                    </div>
+                    <button type="button" class="dm-editor__close" aria-label="Zavrieť" data-dm-close-modal>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </button>
                 </header>
-                <div class="dm-modal__body dm-modal__body--draw">
-                    <div
-                        class="dm-draw"
-                        data-dm-draw-root
-                        data-dm-owner="${escapeHtml(contextType)}"
-                        data-dm-owner-id="${escapeHtml(
-                            contextType === 'floor'
-                                ? activeFloor?.id ?? ''
-                                : activeProject?.id ?? '',
-                        )}"
-                        data-dm-project-id="${escapeHtml(activeProject?.id ?? '')}"
-                        data-dm-floor-name="${escapeHtml(surfaceLabel)}"
-                        data-dm-active-region="${activeRegion ? escapeHtml(String(activeRegion.id)) : ''}"
-                        data-dm-viewbox-width="${initialViewboxWidth ? escapeHtml(String(initialViewboxWidth)) : ''}"
-                        data-dm-viewbox-height="${initialViewboxHeight ? escapeHtml(String(initialViewboxHeight)) : ''}"
-                        data-dm-zoom="${escapeHtml(String(initialZoom))}"
-                    >
-                        <div class="dm-draw__layout">
-                            <aside class="dm-draw__aside">
-                                <div class="dm-draw__aside-header">
-                                    <h3>Segmenty mapy</h3>
-                                </div>
-                                <ul class="dm-draw__regions" data-dm-region-list>
-                                    ${regionListMarkup}
-                                </ul>
-                                <button type="button" class="dm-button dm-button--primary dm-draw__add-region" data-dm-add-region>+ Pridať zónu</button>
-                            </aside>
-                            <div class="dm-draw__main">
-                                <div class="dm-draw__stage">
-                            <div class="dm-draw__canvas">
-                                <img src="${escapeHtml(backgroundImage)}" alt="${escapeHtml(backgroundAlt)}" class="dm-draw__image" draggable="false" />
-                                <svg class="dm-draw__overlay" viewBox="0 0 ${escapeHtml(String(defaultViewboxWidth))} ${escapeHtml(String(defaultViewboxHeight))}" preserveAspectRatio="xMidYMid meet" data-role="overlay" data-dm-hatch-id="${escapeHtml(hatchPatternId)}">
-                                <defs>
-                                    <pattern id="${escapeHtml(hatchPatternId)}" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(45)">
-                                        <rect width="16" height="16" fill="rgba(72, 198, 116, 0.18)"></rect>
-                                        <path d="M0 16L16 0" stroke="#32d26e" stroke-width="3" stroke-linecap="round"></path>
-                                    </pattern>
-                                </defs>
-                                <polygon class="dm-draw__shape-fill" data-role="fill" points=""></polygon>
-                                <polyline class="dm-draw__shape-outline" data-role="outline" points=""></polyline>
-                                <polyline class="dm-draw__shape-baseline" data-role="baseline" points=""></polyline>
-                                <g class="dm-draw__handles" data-role="handles"></g>
-                            </svg>
-                            </div>
-                            <div class="dm-draw__cursor" aria-hidden="true">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z" fill="currentColor"/></svg>
-                            </div>
-                            ${levelLabels.length ? `
-                            <ul class="dm-draw__levels">
-                                ${levelLabels
-                                    .map(
-                                        (label) => `
-                                            <li class="${activeFloor?.label === label ? 'is-active' : ''}">
-                                                ${escapeHtml(label)}
-                                            </li>
-                                        `,
-                                    )
-                                    .join('')}
-                            </ul>` : ''}
-                            <button type="button" class="dm-draw__fullscreen-toggle" data-dm-fullscreen-toggle aria-pressed="false" aria-label="Zobraziť na celú obrazovku">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                    <path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                
+                <div class="dm-editor__body"
+                    data-dm-draw-root
+                    data-dm-owner="${escapeHtml(contextType)}"
+                    data-dm-owner-id="${escapeHtml(
+                        contextType === 'floor'
+                            ? activeFloor?.id ?? ''
+                            : activeProject?.id ?? '',
+                    )}"
+                    data-dm-project-id="${escapeHtml(activeProject?.id ?? '')}"
+                    data-dm-floor-name="${escapeHtml(surfaceLabel)}"
+                    data-dm-active-region="${activeRegion ? escapeHtml(String(activeRegion.id)) : ''}"
+                    data-dm-viewbox-width="${initialViewboxWidth ? escapeHtml(String(initialViewboxWidth)) : ''}"
+                    data-dm-viewbox-height="${initialViewboxHeight ? escapeHtml(String(initialViewboxHeight)) : ''}"
+                    data-dm-zoom="${escapeHtml(String(initialZoom))}"
+                >
+                    <!-- LEFT PANEL: Zóny -->
+                    <aside class="dm-editor__panel dm-editor__panel--left">
+                        <div class="dm-editor__panel-header">
+                            <h2>Zóny</h2>
+                        </div>
+                        <div class="dm-editor__panel-content">
+                            <ul class="dm-editor__zones-list" data-dm-region-list>
+                                ${regionListMarkup}
+                            </ul>
+                        </div>
+                        <div class="dm-editor__panel-footer">
+                            <button type="button" class="dm-button dm-button--primary dm-editor__add-zone" data-dm-add-region>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
                                 </svg>
+                                Pridať zónu
                             </button>
                         </div>
-                            </div>
-                        </div>
-                        <div class="dm-draw__bottom">
-                            <div class="dm-draw__region-form" data-dm-region-form>
-                                <div class="dm-draw__region-form-header">
-                                    <h3>Detail zóny</h3>
-                                    <button type="button" class="dm-button dm-button--outline dm-button--small dm-draw__remove-region" data-dm-remove-region${canRemoveRegion ? '' : ' disabled aria-disabled="true"'}>
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
-                                        </svg>
-                                        Vymazať
-                                    </button>
+                    </aside>
+                    
+                    <!-- CENTER PANEL: Viewport/Canvas -->
+                    <div class="dm-editor__panel dm-editor__panel--center">
+                        <div class="dm-editor__canvas-wrapper">
+                            <div class="dm-draw__stage">
+                                <div class="dm-draw__canvas">
+                                    <img src="${escapeHtml(backgroundImage)}" alt="${escapeHtml(backgroundAlt)}" class="dm-draw__image" draggable="false" />
+                                    <svg class="dm-draw__overlay" viewBox="0 0 ${escapeHtml(String(defaultViewboxWidth))} ${escapeHtml(String(defaultViewboxHeight))}" preserveAspectRatio="xMidYMid meet" data-role="overlay" data-dm-hatch-id="${escapeHtml(hatchPatternId)}">
+                                        <defs>
+                                            <pattern id="${escapeHtml(hatchPatternId)}" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(45)">
+                                                <rect width="16" height="16" fill="rgba(72, 198, 116, 0.18)"></rect>
+                                                <path d="M0 16L16 0" stroke="#32d26e" stroke-width="3" stroke-linecap="round"></path>
+                                            </pattern>
+                                        </defs>
+                                        <polygon class="dm-draw__shape-fill" data-role="fill" points=""></polygon>
+                                        <polyline class="dm-draw__shape-outline" data-role="outline" points=""></polyline>
+                                        <polyline class="dm-draw__shape-baseline" data-role="baseline" points=""></polyline>
+                                        <g class="dm-draw__handles" data-role="handles"></g>
+                                    </svg>
                                 </div>
-                                <div class="dm-draw__region-form-content">
-                                    <div class="dm-field">
-                                        <input type="text" autocomplete="off" class="dm-field__input" data-dm-region-name placeholder=" " value="${escapeHtml(regionNameValue)}">
-                                        <label class="dm-field__label">Názov zóny</label>
-                                    </div>
-                                    ${childSelectorMarkup}
+                                <div class="dm-draw__cursor" aria-hidden="true">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z" fill="currentColor"/></svg>
                                 </div>
+                                ${levelLabels.length ? `
+                                <ul class="dm-draw__levels">
+                                    ${levelLabels
+                                        .map(
+                                            (label) => `
+                                                <li class="${activeFloor?.label === label ? 'is-active' : ''}">
+                                                    ${escapeHtml(label)}
+                                                </li>
+                                            `,
+                                        )
+                                        .join('')}
+                                </ul>` : ''}
+                                <button type="button" class="dm-draw__fullscreen-toggle" data-dm-fullscreen-toggle aria-pressed="false" aria-label="Zobraziť na celú obrazovku">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- RIGHT PANEL: Inšpektor -->
+                    <aside class="dm-editor__panel dm-editor__panel--right">
+                        <div class="dm-editor__tabs" role="tablist">
+                            <button type="button" class="dm-editor__tab dm-editor__tab--active" role="tab" aria-selected="true" data-dm-tab="detail">
+                                Detail
+                            </button>
+                            <button type="button" class="dm-editor__tab" role="tab" aria-selected="false" data-dm-tab="localities">
+                                Lokality
+                            </button>
+                        </div>
+                        
+                        <!-- Tab: Detail zóny -->
+                        <div class="dm-editor__tab-panel dm-editor__tab-panel--active" data-dm-tab-panel="detail" role="tabpanel">
+                            <div class="dm-editor__panel-header">
+                                <h3>Detail zóny</h3>
+                                <button type="button" class="dm-button dm-button--outline dm-button--small dm-editor__remove-zone" data-dm-remove-region${canRemoveRegion ? '' : ' disabled aria-disabled="true"'}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                                    </svg>
+                                    Vymazať
+                                </button>
+                            </div>
+                            <div class="dm-editor__panel-content" data-dm-region-form>
+                                <div class="dm-field">
+                                    <input type="text" autocomplete="off" class="dm-field__input" data-dm-region-name placeholder=" " value="${escapeHtml(regionNameValue)}">
+                                    <label class="dm-field__label">Názov zóny</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab: Nadviazané lokality -->
+                        <div class="dm-editor__tab-panel" data-dm-tab-panel="localities" role="tabpanel" hidden>
+                            <div class="dm-editor__panel-header">
+                                <h3>Nadviazané lokality</h3>
+                            </div>
+                            <div class="dm-editor__panel-content dm-editor__panel-content--scrollable">
+                                ${contextType === 'project' && floorsForChildren.length ? `
+                                    <div class="dm-editor__localities-table" data-dm-region-children>
+                                        <table class="dm-localities-table">
+                                            <thead class="dm-localities-table__head">
+                                                <tr>
+                                                    <th class="dm-localities-table__th dm-localities-table__th--sticky">Prepojenie</th>
+                                                    <th class="dm-localities-table__th">Lokalita</th>
+                                                    <th class="dm-localities-table__th">Stav</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="dm-localities-table__body">
+                                                ${floorsForChildren
+                                                    .map((floor) => {
+                                                        const value = String(floor.id);
+                                                        const checked = regionChildrenValues.includes(value) ? ' checked' : '';
+                                                        const statusKey = String(floor?.statusId ?? floor?.status ?? '');
+                                                        const statusMatch = statusOptionsSource.find(s => String(s.id) === statusKey || String(s.key) === statusKey);
+                                                        const statusLabel = statusMatch?.label ?? floor?.statusLabel ?? 'Neznáme';
+                                                        const statusVariant = slugifyStatus(statusLabel);
+                                                        return `
+                                                            <tr class="dm-localities-table__row">
+                                                                <td class="dm-localities-table__td dm-localities-table__td--sticky">
+                                                                    <label class="dm-localities-checkbox">
+                                                                        <input type="checkbox" data-dm-region-child value="${escapeHtml(value)}"${checked}>
+                                                                        <span class="dm-localities-checkbox__label">${checked ? 'Prepojené' : 'Neaktívne'}</span>
+                                                                    </label>
+                                                                </td>
+                                                                <td class="dm-localities-table__td">${escapeHtml(floor.name ?? value)}</td>
+                                                                <td class="dm-localities-table__td">
+                                                                    <span class="dm-status dm-status--${escapeHtml(statusVariant)}">${escapeHtml(statusLabel)}</span>
+                                                                </td>
+                                                            </tr>
+                                                        `;
+                                                    })
+                                                    .join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ` : `
+                                    <p class="dm-editor__empty-message">
+                                        ${contextType === 'project' ? 'Zóny môžete prepojiť s poschodiami projektu.' : 'V tomto režime nie sú dostupné prepojenia.'}
+                                    </p>
+                                `}
+                            </div>
+                        </div>
+                    </aside>
                 </div>
-                <footer class="dm-modal__actions dm-modal__actions--split dm-modal__actions--draw">
-                    <button type="button" class="dm-button dm-button--outline" data-dm-reset-draw>Reset</button>
-                    <button type="button" class="dm-button dm-button--dark" data-dm-save-draw>Uložiť a zatvoriť</button>
+                
+                <!-- STICKY FOOTER: Actions -->
+                <footer class="dm-editor__footer">
+                    <button type="button" class="dm-button dm-button--outline" data-dm-reset-draw>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>
+                        </svg>
+                        Reset
+                    </button>
+                    <button type="button" class="dm-button dm-button--outline" data-dm-revert-draw>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4v6h6"/><path d="M20 20V8a6 6 0 00-6-6H6"/><path d="M4 11a9 9 0 009 9h7"/>
+                        </svg>
+                        Obnoviť uložené
+                    </button>
+                    <button type="button" class="dm-button dm-button--primary" data-dm-save-draw>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Uložiť a zatvoriť
+                    </button>
                 </footer>
             </div>
         </div>

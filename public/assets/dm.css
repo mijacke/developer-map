@@ -3966,6 +3966,39 @@
     display: inline-block;
     max-width: 100%;
     max-height: 100%;
+    width: 100%;
+    height: 100%;
+}
+
+/* Canvas inside editor wrapper */
+.dm-editor__canvas-wrapper .dm-draw__canvas {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+}
+
+.dm-editor__canvas-wrapper .dm-draw__image {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100vh - 300px);
+    width: auto;
+    height: auto;
+    user-select: none;
+    pointer-events: none;
+}
+
+.dm-editor__canvas-wrapper .dm-draw__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    touch-action: none;
+    pointer-events: auto;
 }
 
 .dm-draw__image {
@@ -4100,7 +4133,27 @@
 }
 
 .dm-draw__cursor {
-    display: none;
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    pointer-events: none;
+    z-index: 100;
+    /* Position set via JS (left/top) */
+    /* Center cursor on point */
+    margin-left: -14px;
+    margin-top: -14px;
+    color: #0f121c;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+/* In fullscreen mode, cursor should be fixed */
+.dm-draw__stage--fullscreen .dm-draw__cursor {
+    position: fixed;
+}
+
+.dm-draw__cursor.is-visible {
+    opacity: 1;
 }
 
 .dm-draw__fullscreen-toggle {
@@ -4119,6 +4172,11 @@
     z-index: 20;
     cursor: pointer;
     transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+/* Show fullscreen toggle in editor */
+.dm-editor__canvas-wrapper .dm-draw__fullscreen-toggle {
+    display: inline-flex;
 }
 
 .dm-draw__fullscreen-toggle svg {
@@ -4503,5 +4561,713 @@ body.dm-draw-fullscreen-active {
     .dm-board__cell--shortcode code {
         font-size: 9px;
         padding: 6px 8px;
+    }
+}
+
+/* === Editor Layout (plnohodnotný 3-panel editor namiesto modalu) === */
+
+.dm-editor-overlay {
+    position: fixed;
+    /* WordPress admin offsety - nastavené dynamicky cez JS */
+    --wp-admin-menu-width: 0px;
+    --wp-admin-bar-height: 0px;
+    
+    /* Automatické odsadenie od WP admin UI */
+    left: var(--wp-admin-menu-width);
+    top: var(--wp-admin-bar-height);
+    right: 0;
+    bottom: 0;
+    width: calc(100vw - var(--wp-admin-menu-width));
+    height: calc(100vh - var(--wp-admin-bar-height));
+    
+    background: var(--dm-bg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    
+    /* Smooth transitions pri fold/unfold menu */
+    transition: left 0.3s ease, width 0.3s ease, top 0.2s ease, height 0.2s ease;
+}
+
+/* Fallback pre non-admin kontext (front-end) */
+body:not(.wp-admin) .dm-editor-overlay {
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.dm-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    background: var(--dm-surface);
+    overflow: hidden;
+}
+
+/* Header */
+.dm-editor__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    background: var(--dm-surface);
+    border-bottom: 1px solid var(--dm-border);
+    flex-shrink: 0;
+}
+
+.dm-editor__header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dm-editor__title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--dm-heading-color, var(--dm-text));
+    line-height: 1.2;
+}
+
+.dm-editor__subtitle {
+    font-size: 14px;
+    color: var(--dm-text-muted);
+    font-weight: 500;
+}
+
+.dm-editor__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--dm-border);
+    background: var(--dm-surface);
+    color: var(--dm-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dm-editor__close:hover {
+    background: var(--dm-bg);
+    border-color: var(--dm-border-strong);
+    transform: scale(1.05);
+}
+
+/* Body - 3 Panel Layout */
+.dm-editor__body {
+    display: grid;
+    grid-template-columns: 20% 1fr 20%;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* Panels */
+.dm-editor__panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--dm-surface);
+}
+
+/* LEFT PANEL: Zóny */
+.dm-editor__panel--left {
+    border-right: 1px solid var(--dm-border);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(250, 250, 255, 0.98) 100%);
+}
+
+.dm-editor__panel-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--dm-border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.dm-editor__panel-header h2,
+.dm-editor__panel-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dm-text);
+}
+
+.dm-editor__panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.dm-editor__panel-content--scrollable {
+    overflow-y: auto;
+    max-height: calc(100vh - 300px);
+}
+
+.dm-editor__panel-footer {
+    padding: 16px;
+    border-top: 1px solid var(--dm-border);
+    flex-shrink: 0;
+}
+
+/* Zones List */
+.dm-editor__zones-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dm-editor__zone-item {
+    margin: 0;
+}
+
+.dm-editor__zone-item--empty {
+    padding: 32px 16px;
+    text-align: center;
+}
+
+.dm-editor__empty-text {
+    font-size: 14px;
+    color: var(--dm-text-muted);
+    font-style: italic;
+}
+
+.dm-editor__zone-button {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 14px 16px;
+    border: 1px solid var(--dm-border);
+    border-radius: 12px;
+    background: var(--dm-surface);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.dm-editor__zone-button:hover {
+    border-color: var(--dm-button-color, #7c3aed);
+    background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 5%, var(--dm-surface));
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+}
+
+.dm-editor__zone-item--active .dm-editor__zone-button {
+    border-color: var(--dm-button-color, #7c3aed);
+    background: linear-gradient(135deg, 
+        color-mix(in srgb, var(--dm-button-color, #7c3aed) 10%, var(--dm-surface)) 0%, 
+        color-mix(in srgb, var(--dm-button-color, #7c3aed) 15%, var(--dm-surface)) 100%
+    );
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.2);
+    transform: translateX(4px);
+}
+
+.dm-editor__zone-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--dm-text);
+    line-height: 1.3;
+}
+
+.dm-editor__zone-meta {
+    font-size: 12px;
+    color: var(--dm-text-muted);
+    font-weight: 500;
+}
+
+.dm-editor__add-zone {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    border: none;
+    background: var(--dm-button-color, #7c3aed);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dm-editor__add-zone:hover {
+    background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 90%, black);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
+}
+
+/* CENTER PANEL: Canvas/Viewport */
+.dm-editor__panel--center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(248, 250, 255, 0.6) 0%, rgba(243, 243, 247, 0.8) 100%);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.dm-editor__canvas-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dm-editor__canvas-wrapper .dm-draw__stage {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 16px;
+    overflow: visible;
+    box-shadow: 0 8px 32px rgba(18, 18, 26, 0.12);
+    border: 1px solid var(--dm-border);
+    background: var(--dm-surface);
+}
+
+
+
+/* RIGHT PANEL: Inšpektor */
+.dm-editor__panel--right {
+    border-left: 1px solid var(--dm-border);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(250, 250, 255, 0.98) 100%);
+}
+
+/* Tabs */
+.dm-editor__tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--dm-border);
+    flex-shrink: 0;
+}
+
+.dm-editor__tab {
+    flex: 1;
+    padding: 16px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dm-text-muted);
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dm-editor__tab:hover {
+    color: var(--dm-text);
+    background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 5%, transparent);
+}
+
+.dm-editor__tab--active {
+    color: var(--dm-button-color, #7c3aed);
+    border-bottom-color: var(--dm-button-color, #7c3aed);
+    background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 8%, transparent);
+}
+
+.dm-editor__tab-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.dm-editor__tab-panel[hidden] {
+    display: none;
+}
+
+.dm-editor__tab-panel--active {
+    display: flex;
+}
+
+/* Remove Zone Button */
+.dm-editor__remove-zone {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: rgba(254, 242, 242, 0.8);
+    color: #ef4444;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dm-editor__remove-zone:hover:not([disabled]) {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.dm-editor__remove-zone[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Empty Message */
+.dm-editor__empty-message {
+    padding: 32px 24px;
+    text-align: center;
+    color: var(--dm-text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Localities Table */
+.dm-editor__localities-table {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--dm-border);
+}
+
+.dm-localities-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.dm-localities-table__head {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: linear-gradient(135deg, 
+        color-mix(in srgb, var(--dm-button-color, #7c3aed) 8%, var(--dm-surface)) 0%, 
+        color-mix(in srgb, var(--dm-button-color, #7c3aed) 12%, var(--dm-surface)) 100%
+    );
+}
+
+.dm-localities-table__th {
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    color: var(--dm-text);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--dm-border);
+}
+
+.dm-localities-table__th--sticky {
+    position: sticky;
+    left: 0;
+    z-index: 11;
+    background: inherit;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.dm-localities-table__body {
+    background: var(--dm-surface);
+}
+
+.dm-localities-table__row {
+    transition: background 0.15s ease;
+}
+
+.dm-localities-table__row:hover {
+    background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 3%, var(--dm-surface));
+}
+
+.dm-localities-table__td {
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--dm-text);
+    border-bottom: 1px solid var(--dm-border);
+    min-height: 52px;
+    vertical-align: middle;
+}
+
+.dm-localities-table__td--sticky {
+    position: sticky;
+    left: 0;
+    z-index: 9;
+    background: var(--dm-surface);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+}
+
+.dm-localities-table__row:hover .dm-localities-table__td--sticky {
+    background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 3%, var(--dm-surface));
+}
+
+.dm-localities-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.dm-localities-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--dm-button-color, #7c3aed);
+    cursor: pointer;
+}
+
+.dm-localities-checkbox__label {
+    color: var(--dm-text-muted);
+}
+
+.dm-localities-checkbox input[type="checkbox"]:checked ~ .dm-localities-checkbox__label {
+    color: var(--dm-button-color, #7c3aed);
+    font-weight: 600;
+}
+
+/* STICKY FOOTER: Actions */
+.dm-editor__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    padding: 20px 32px;
+    background: var(--dm-surface);
+    border-top: 2px solid var(--dm-border);
+    flex-shrink: 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.dm-editor__footer .dm-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dm-editor__footer .dm-button--outline {
+    border: 1px solid var(--dm-border-strong);
+    background: var(--dm-surface);
+    color: var(--dm-text);
+}
+
+.dm-editor__footer .dm-button--outline:hover {
+    background: var(--dm-bg);
+    border-color: var(--dm-text);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dm-editor__footer .dm-button--primary {
+    border: none;
+    background: var(--dm-button-color, #7c3aed);
+    color: white;
+}
+
+.dm-editor__footer .dm-button--primary:hover {
+    background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 90%, black);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+}
+
+/* RESPONSIVE BREAKPOINTS */
+
+/* ≥1440px: Všetky 3 panely (20% / 60% / 20%) */
+@media (min-width: 1440px) {
+    .dm-editor__body {
+        grid-template-columns: 20% 1fr 20%;
+    }
+}
+
+/* 1024px - 1439px: Skryť pravý panel do tabov nad viewportom */
+@media (min-width: 1024px) and (max-width: 1439px) {
+    .dm-editor__body {
+        grid-template-columns: 22% 1fr;
+        grid-template-rows: auto 1fr;
+    }
+    
+    .dm-editor__panel--left {
+        grid-column: 1;
+        grid-row: 1 / 3;
+    }
+    
+    .dm-editor__panel--right {
+        grid-column: 2;
+        grid-row: 1;
+        border-left: none;
+        border-bottom: 1px solid var(--dm-border);
+        max-height: none;
+        flex-direction: row;
+        overflow-x: auto;
+    }
+    
+    .dm-editor__tabs {
+        flex-direction: row;
+        border-bottom: none;
+        border-right: 2px solid var(--dm-border);
+        min-width: 200px;
+    }
+    
+    .dm-editor__tab {
+        border-bottom: none;
+        border-right: 3px solid transparent;
+        padding: 12px 20px;
+    }
+    
+    .dm-editor__tab--active {
+        border-bottom: none;
+        border-right-color: var(--dm-button-color, #7c3aed);
+    }
+    
+    .dm-editor__tab-panel {
+        flex: 1;
+        overflow: auto;
+    }
+    
+    .dm-editor__panel--center {
+        grid-column: 2;
+        grid-row: 2;
+    }
+    
+    .dm-editor__panel-content--scrollable {
+        max-height: none;
+    }
+}
+
+/* <1024px: Krokový režim (Stepper) */
+@media (max-width: 1023px) {
+    .dm-editor__body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        position: relative;
+    }
+    
+    .dm-editor__panel {
+        display: none;
+    }
+    
+    .dm-editor__panel--active {
+        display: flex;
+    }
+    
+    /* Stepper Navigation */
+    .dm-editor__body::before {
+        content: '';
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        z-index: 100;
+    }
+    
+    .dm-editor__stepper {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 12px;
+        padding: 12px 20px;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        border: 1px solid var(--dm-border);
+        z-index: 100;
+    }
+    
+    .dm-editor__stepper-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 8px;
+        border: 1px solid var(--dm-border);
+        background: var(--dm-surface);
+        color: var(--dm-text-muted);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .dm-editor__stepper-btn--active {
+        background: var(--dm-button-color, #7c3aed);
+        color: white;
+        border-color: var(--dm-button-color, #7c3aed);
+    }
+    
+    .dm-editor__stepper-btn:hover {
+        background: color-mix(in srgb, var(--dm-button-color, #7c3aed) 10%, var(--dm-surface));
+        border-color: var(--dm-button-color, #7c3aed);
+    }
+    
+    .dm-editor__header {
+        padding: 16px 20px;
+    }
+    
+    .dm-editor__title {
+        font-size: 20px;
+    }
+    
+    .dm-editor__subtitle {
+        font-size: 12px;
+    }
+    
+    .dm-editor__footer {
+        padding: 16px 20px;
+    }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .dm-editor__header {
+        padding: 12px 16px;
+    }
+    
+    .dm-editor__title {
+        font-size: 18px;
+    }
+    
+    .dm-editor__panel-header {
+        padding: 16px;
+    }
+    
+    .dm-editor__panel-content {
+        padding: 12px;
+    }
+    
+    .dm-editor__footer {
+        padding: 12px 16px;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .dm-editor__footer .dm-button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .dm-localities-table__th,
+    .dm-localities-table__td {
+        padding: 10px 12px;
+        font-size: 13px;
     }
 }
