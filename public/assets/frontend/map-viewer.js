@@ -28,8 +28,11 @@
             .dm-map-viewer__image { width: 100%; height: auto; display: block; }
             .dm-map-viewer__overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
             .dm-map-viewer__regions { pointer-events: none; }
-            .dm-map-viewer__region { fill: rgba(99, 102, 241, 0.24); stroke: none; pointer-events: auto; transition: fill 0.2s ease, stroke 0.2s ease, transform 0.2s ease, filter 0.2s ease; }
-            .dm-map-viewer__region.is-active { filter: saturate(1.1) brightness(1.05); }
+            .dm-map-viewer__region { fill: rgba(52, 69, 235, 0.72); stroke: none; pointer-events: auto; transition: fill 0.2s ease, opacity 0.2s ease; opacity: 0.88; outline: none; }
+            .dm-map-viewer__region:hover { opacity: 1; fill: rgba(52, 69, 235, 0.88); }
+            .dm-map-viewer__region.is-active { opacity: 1; fill: rgba(52, 69, 235, 0.92); }
+            .dm-map-viewer__region:focus { outline: none; }
+            .dm-map-viewer__region:focus-visible { outline: none; }
             .dm-map-viewer__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
             .dm-map-viewer__item { display: flex; align-items: center; gap: 12px; justify-content: space-between; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 12px; padding: 12px 16px; background: #f8fafc; }
             .dm-map-viewer__item strong { font-weight: 600; color: #1c134f; }
@@ -1296,10 +1299,10 @@
                 return { entries, linkedFloors, availableCount };
             };
 
-            const baseFill = 'rgba(99, 102, 241, 0.24)';
-            const positiveFill = 'rgba(34, 197, 94, 0.3)';
-            const negativeFill = 'rgba(248, 113, 113, 0.32)';
-            const neutralFill = 'rgba(148, 163, 184, 0.3)';
+            const baseFill = 'rgba(52, 69, 235, 0.72)';
+            const positiveFill = 'rgba(43, 134, 76, 0.75)';
+            const negativeFill = 'rgba(220, 53, 69, 0.75)';
+            const neutralFill = 'rgba(148, 163, 184, 0.65)';
 
             const applyRegionFill = (polygon, summary) => {
                 if (!polygon) {
@@ -1307,35 +1310,31 @@
                 }
                 const hasSummary = summary && Array.isArray(summary.entries);
                 let fill = baseFill;
-                let stroke = 'rgba(79, 70, 229, 0.55)';
-                let strokeWidth = '1.5';
                 let availabilityState = 'empty';
 
                 if (hasSummary) {
                     if (!summary.entries.length) {
                         fill = neutralFill;
-                        stroke = 'rgba(148, 163, 184, 0.75)';
                         availabilityState = 'empty';
                     } else if (summary.availableCount > 0) {
                         fill = positiveFill;
-                        stroke = 'rgba(22, 163, 74, 0.85)';
-                        strokeWidth = '2';
                         availabilityState = 'available';
                     } else {
                         fill = negativeFill;
-                        stroke = 'rgba(220, 38, 38, 0.85)';
-                        strokeWidth = '2';
                         availabilityState = 'unavailable';
                     }
                 } else {
                     fill = neutralFill;
-                    stroke = 'rgba(148, 163, 184, 0.75)';
                     availabilityState = 'empty';
                 }
 
                 polygon.style.fill = fill;
-                polygon.style.stroke = stroke;
-                polygon.style.strokeWidth = strokeWidth;
+                polygon.style.stroke = fill;
+                polygon.style.strokeWidth = '1';
+                polygon.style.strokeLinejoin = 'round';
+                polygon.style.strokeLinecap = 'round';
+                polygon.style.paintOrder = 'fill stroke';
+                polygon.style.vectorEffect = 'non-scaling-stroke';
                 polygon.dataset.dmAvailability = availabilityState;
             };
 
