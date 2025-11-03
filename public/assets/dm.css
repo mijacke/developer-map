@@ -3733,8 +3733,14 @@
     cursor: pointer;
 }
 
-.dm-draw__region-button:hover,
-.dm-draw__region-button:focus-visible {
+.dm-draw__region-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.dm-draw__region-button:hover:not(:disabled),
+.dm-draw__region-button:focus-visible:not(:disabled) {
     border-color: rgba(124, 58, 237, 0.3);
     background: rgba(124, 58, 237, 0.04);
     transform: translateX(4px);
@@ -3746,6 +3752,8 @@
     background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0.16) 100%);
     box-shadow: 0 2px 12px rgba(124, 58, 237, 0.15);
     transform: translateX(4px);
+    pointer-events: auto;
+    opacity: 1;
 }
 
 .dm-draw__region-name {
@@ -3756,7 +3764,8 @@
     background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%);
     padding: 8px 14px;
     border-radius: 8px;
-    display: inline-block;
+    display: block;
+    width: 100%;
     box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
 }
 
@@ -3878,10 +3887,11 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--dm-text-muted);
+    margin-top: 2px;
 }
 
 .dm-draw__region-meta-badge {

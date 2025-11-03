@@ -792,7 +792,12 @@ function renderDrawModal(state, data) {
     const regionListMarkup = regions.length
         ? regions
               .map((region, index) => {
-                  const id = String(region.id ?? region.lotId ?? `region-${index + 1}`);
+                  // Always use region.id as key, never index
+                  const id = String(region.id ?? region.lotId ?? '');
+                  if (!id) {
+                      console.warn('[renderDrawModal] Region missing id:', region);
+                      return '';
+                  }
                   const isActive = activeRegion
                       ? String(activeRegion.id ?? '') === id
                       : index === 0 && !activeRegionId;
@@ -810,6 +815,7 @@ function renderDrawModal(state, data) {
                         </li>
                     `;
               })
+              .filter(Boolean)
               .join('')
         : `
                 <li class="dm-draw__region-item dm-draw__region-item--empty">

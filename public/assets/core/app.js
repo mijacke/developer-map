@@ -3575,82 +3575,184 @@ export async function initDeveloperMap(options) {
             return statusLookupById.get(key) ?? '';
         }
 
-        function createRegionTemplate(index) {
-            const id = generateId('region');
-            return {
-                id,
-                label: `Zóna ${index + 1}`,
-                status: '',
-                statusId: '',
-                statusLabel: '',
-                geometry: {
-                    type: 'polygon',
-                    points: [],
-                },
-                meta: {
-                    closed: false,
-                },
-                children: [],
-            };
+        function deepCloneArray(arr) {
+            if (!Array.isArray(arr)) return [];
+            return arr.map(item => {
+                if (Array.isArray(item)) return deepCloneArray(item);
+                if (item && typeof item === 'object') return { ...item };
+                return item;
+            });
         }
 
-        function cloneRegion(region, index) {
-            if (!region || typeof region !== 'object') {
-                return createRegionTemplate(index);
+        const regionBootstrap =
+            typeof window !== 'undefined' && window.dmRegionBootstrap ? window.dmRegionBootstrap : null;
+        const knownRegionIds = new Set();
+        const sessionRegionIds = new Set();
+        let regionIdCounter = (() => {
+            const next = Number(regionBootstrap?.next);
+            return Number.isFinite(next) && next > 0 ? Math.floor(next) : 1;
+        })();
+
+        function adjustRegionCounter(id) {
+            const match = /^region-(\d+)$/.exec(id);
+            if (!match) {
+                return;
             }
-            const id = region.id ? String(region.id) : generateId('region');
+            const numeric = parseInt(match[1], 10);
+            if (Number.isFinite(numeric) && numeric >= regionIdCounter) {
+                regionIdCounter = numeric + 1;
+            }
+        }
+
+        function primeKnownRegionIds(ids) {
+            (ids || []).forEach((rawId) => {
+                const id = typeof rawId === 'string' ? rawId.trim() : String(rawId ?? '').trim();
+                if (!id) {
+                    return;
+                }
+                knownRegionIds.add(id);
+                adjustRegionCounter(id);
+            });
+        }
+
+        if (Array.isArray(regionBootstrap?.ids)) {
+            primeKnownRegionIds(regionBootstrap.ids);
+        }
+
+        const allProjects = Array.isArray(data.projects) ? data.projects : [];
+        allProjects.forEach((project) => {
+            if (!project || typeof project !== 'object') {
+                return;
+            }
+            primeKnownRegionIds((project.regions || []).map((region) => region?.id ?? ''));
+            (project.floors || []).forEach((floor) => {
+                if (!floor || typeof floor !== 'object') {
+                    return;
+                }
+                primeKnownRegionIds((floor.regions || []).map((region) => region?.id ?? ''));
+            });
+        });
+
+        function createRegionId() {
+            let index = Math.max(1, regionIdCounter);
+            let candidate = `region-${index}`;
+            while (knownRegionIds.has(candidate) || sessionRegionIds.has(candidate)) {
+                index += 1;
+                candidate = `region-${index}`;
+            }
+            regionIdCounter = index + 1;
+            knownRegionIds.add(candidate);
+            sessionRegionIds.add(candidate);
+            return candidate;
+        }
+
+        function ensureRegionIdentifier(candidate, { reuseExisting = false } = {}) {
+            const trimmed = typeof candidate === 'string' ? candidate.trim() : String(candidate ?? '').trim();
+            if (trimmed) {
+                const isKnown = knownRegionIds.has(trimmed);
+                const isSession = sessionRegionIds.has(trimmed);
+                if (reuseExisting || (!isKnown && !isSession)) {
+                    knownRegionIds.add(trimmed);
+                    sessionRegionIds.add(trimmed);
+                    adjustRegionCounter(trimmed);
+                    return trimmed;
+                }
+            }
+            return createRegionId();
+        }
+
+        function createRegion(source = null, index = 0) {
+            const fallbackLabel = `Zóna ${index + 1}`;
+
+            if (!source || typeof source !== 'object') {
+                return {
+                    id: createRegionId(),
+                    label: fallbackLabel,
+                    status: '',
+                    statusId: '',
+                    statusLabel: '',
+                    geometry: {
+                        type: 'polygon',
+                        points: [],
+                    },
+                    meta: {
+                        closed: false,
+                    },
+                    children: [],
+                };
+            }
+
+            const id = ensureRegionIdentifier(source.id ?? source.lotId ?? '', { reuseExisting: true });
             const label =
-                typeof region.label === 'string' && region.label.trim()
-                    ? region.label.trim()
-                    : typeof region.name === 'string' && region.name.trim()
-                        ? region.name.trim()
-                        : `Zóna ${index + 1}`;
-            const statusId = sanitiseStatusId(region.statusId ?? region.status ?? '');
+                typeof source.label === 'string' && source.label.trim()
+                    ? source.label.trim()
+                    : typeof source.name === 'string' && source.name.trim()
+                        ? source.name.trim()
+                        : fallbackLabel;
+            const statusId = sanitiseStatusId(source.statusId ?? source.status ?? '');
             const geometryPoints = normaliseRegionGeometryPoints(
-                (region.geometry && region.geometry.points) || region.geometry || [],
+                (source.geometry && source.geometry.points) || source.geometry || [],
             );
-            const children = Array.isArray(region.children)
-                ? region.children
+            const children = Array.isArray(source.children)
+                ? source.children
                       .map((childId) => {
                           const str = String(childId ?? '').trim();
                           return str ? str : null;
                       })
                       .filter(Boolean)
                 : [];
-            const meta = region.meta && typeof region.meta === 'object' ? { ...region.meta } : {};
+            const meta = source.meta && typeof source.meta === 'object' ? { ...source.meta } : {};
             if (meta && Object.prototype.hasOwnProperty.call(meta, 'hatchClass')) {
                 delete meta.hatchClass;
             }
-            const closed =
-                typeof meta.closed === 'boolean'
-                    ? Boolean(meta.closed)
-                    : geometryPoints.length >= 3;
+            const closed = typeof meta.closed === 'boolean' ? Boolean(meta.closed) : geometryPoints.length >= 3;
             meta.closed = closed;
-            const clone = {
-                ...region,
+
+            const regionClone = {
                 id,
                 label,
                 status: statusId,
                 statusId,
-                statusLabel: region.statusLabel ?? getStatusLabel(statusId),
+                statusLabel: source.statusLabel ?? getStatusLabel(statusId),
                 geometry: {
                     type: 'polygon',
-                    points: geometryPoints,
+                    points: deepCloneArray(geometryPoints),
                 },
-                meta,
-                children,
+                meta: { ...meta },
+                children: [...children],
             };
-            if (Array.isArray(region.tags)) {
-                clone.tags = [...region.tags];
+
+            if (Array.isArray(source.tags)) {
+                regionClone.tags = [...source.tags];
             }
-            return clone;
+
+            return regionClone;
         }
 
-        let workingRegions = Array.isArray(targetEntity?.regions)
-            ? targetEntity.regions.map((region, index) => cloneRegion(region, index))
-            : [];
-        if (!workingRegions.length) {
-            workingRegions = [createRegionTemplate(0)];
+        const regionState = {
+            regions: Array.isArray(targetEntity?.regions)
+                ? targetEntity.regions.map((region, index) => createRegion(region, index))
+                : [],
+            activeId: null,
+        };
+
+        if (!regionState.regions.length) {
+            regionState.regions.push(createRegion(null, 0));
+        }
+
+        regionState.activeId = (() => {
+            if (
+                initialRegionId &&
+                regionState.regions.some((region) => String(region.id) === String(initialRegionId))
+            ) {
+                return String(initialRegionId);
+            }
+            return String(regionState.regions[0].id);
+        })();
+
+        drawRoot.dataset.dmActiveRegion = regionState.activeId;
+        if (state.modal && state.modal.type === 'draw-coordinates') {
+            state.modal.regionId = regionState.activeId;
         }
 
         function getRegionClosed(region) {
@@ -3673,13 +3775,6 @@ export async function initDeveloperMap(options) {
             }
             region.meta.closed = Boolean(closed);
         }
-
-        let activeRegionId = (() => {
-            if (initialRegionId && workingRegions.some((region) => String(region.id) === String(initialRegionId))) {
-                return String(initialRegionId);
-            }
-            return String(workingRegions[0].id);
-        })();
 
         let handleGroups = [];
         let handleElements = [];
@@ -3748,7 +3843,11 @@ export async function initDeveloperMap(options) {
         }
 
         function getActiveRegion() {
-            return workingRegions.find((region) => String(region.id) === String(activeRegionId)) ?? null;
+            return (
+                regionState.regions.find(
+                    (region) => String(region.id) === String(regionState.activeId),
+                ) ?? null
+            );
         }
 
         const initialRegion = getActiveRegion();
@@ -3793,17 +3892,19 @@ export async function initDeveloperMap(options) {
 
         function setActiveRegion(regionId, options = {}) {
             const { commit = true } = options;
-            const nextRegion = workingRegions.find((region) => String(region.id) === String(regionId));
+            const nextRegion = regionState.regions.find(
+                (region) => String(region.id) === String(regionId),
+            );
             if (!nextRegion) {
                 return;
             }
             if (commit) {
                 commitActiveRegionPoints();
             }
-            activeRegionId = String(nextRegion.id);
-            drawRoot.dataset.dmActiveRegion = activeRegionId;
+            regionState.activeId = String(nextRegion.id);
+            drawRoot.dataset.dmActiveRegion = regionState.activeId;
             if (state.modal && state.modal.type === 'draw-coordinates') {
-                state.modal.regionId = activeRegionId;
+                state.modal.regionId = regionState.activeId;
             }
             points = ensurePointsFromRegion(nextRegion);
             polygonClosed = getRegionClosed(nextRegion) && points.length >= 3;
@@ -3819,19 +3920,19 @@ export async function initDeveloperMap(options) {
                 return;
             }
             regionList.innerHTML = '';
-            if (!workingRegions.length) {
+            if (!regionState.regions.length) {
                 const emptyItem = document.createElement('li');
                 emptyItem.className = 'dm-draw__region-item dm-draw__region-item--empty';
                 emptyItem.textContent = 'Žiadne zóny zatiaľ nevytvorené.';
                 regionList.append(emptyItem);
                 return;
             }
-            workingRegions.forEach((region, index) => {
+            regionState.regions.forEach((region, index) => {
                 const id = String(region.id);
                 const item = document.createElement('li');
                 item.className = 'dm-draw__region-item';
                 item.dataset.dmRegionItem = id;
-                if (id === String(activeRegionId)) {
+                if (id === String(regionState.activeId)) {
                     item.classList.add('is-active');
                 }
                 const trigger = document.createElement('button');
@@ -3843,17 +3944,19 @@ export async function initDeveloperMap(options) {
                 nameEl.textContent = region.label ?? region.name ?? `Zóna ${index + 1}`;
                 trigger.append(nameEl);
                 const childCount = Array.isArray(region.children) ? region.children.length : 0;
-                if (childCount) {
-                    const metaWrapper = document.createElement('span');
-                    metaWrapper.className = 'dm-draw__region-meta';
+                const metaWrapper = document.createElement('span');
+                metaWrapper.className = 'dm-draw__region-meta';
+                if (childCount > 0) {
                     const badge = document.createElement('span');
                     badge.className = 'dm-draw__region-meta-badge';
                     badge.textContent = String(childCount);
                     const metaLabel = document.createElement('span');
                     metaLabel.textContent = 'prepojené';
                     metaWrapper.append(badge, metaLabel);
-                    trigger.append(metaWrapper);
+                } else {
+                    metaWrapper.textContent = 'Neprepojené';
                 }
+                trigger.append(metaWrapper);
                 item.append(trigger);
                 regionList.append(item);
             });
@@ -3876,7 +3979,7 @@ export async function initDeveloperMap(options) {
                     });
             }
             if (removeRegionButton) {
-                if (workingRegions.length > 1) {
+                if (regionState.regions.length > 1) {
                     removeRegionButton.disabled = false;
                     removeRegionButton.setAttribute('aria-disabled', 'false');
                 } else {
@@ -3886,39 +3989,42 @@ export async function initDeveloperMap(options) {
             }
         }
 
-        if (regionList) {
-            regionList.addEventListener('click', (event) => {
-                const trigger = event.target.closest('[data-dm-region-trigger]');
-                if (!trigger) return;
-                const regionId = trigger.getAttribute('data-dm-region-trigger');
-                if (!regionId || regionId === String(activeRegionId)) return;
+        // Region list click handler is now set up globally on root element
+        // to prevent duplicate handlers when modal is reopened
+        // Listen for custom event from global handler
+        drawRoot.addEventListener('dm:setActiveRegion', (event) => {
+            const regionId = event.detail?.regionId;
+            if (regionId) {
                 setActiveRegion(regionId);
-            });
-        }
+            }
+        });
 
         if (addRegionButton) {
             addRegionButton.addEventListener('click', () => {
                 commitActiveRegionPoints();
-                const newRegion = createRegionTemplate(workingRegions.length);
-                workingRegions.push(newRegion);
+                // Create new region with unique ID
+                const newRegion = createRegion(null, regionState.regions.length);
+                regionState.regions.push(newRegion);
+                // Immediately set as active region
                 setActiveRegion(newRegion.id, { commit: false });
             });
         }
 
         if (removeRegionButton) {
             removeRegionButton.addEventListener('click', () => {
-                if (workingRegions.length <= 1) {
+                if (regionState.regions.length <= 1) {
                     return;
                 }
-                const indexToRemove = workingRegions.findIndex(
-                    (region) => String(region.id) === String(activeRegionId),
+                const indexToRemove = regionState.regions.findIndex(
+                    (region) => String(region.id) === String(regionState.activeId),
                 );
                 if (indexToRemove === -1) {
                     return;
                 }
                 commitActiveRegionPoints();
-                workingRegions.splice(indexToRemove, 1);
-                const nextRegion = workingRegions[Math.max(0, indexToRemove - 1)] ?? workingRegions[0];
+                regionState.regions.splice(indexToRemove, 1);
+                const nextRegion =
+                    regionState.regions[Math.max(0, indexToRemove - 1)] ?? regionState.regions[0];
                 setActiveRegion(nextRegion.id, { commit: false });
             });
         }
@@ -4370,7 +4476,7 @@ export async function initDeveloperMap(options) {
                             region,
                         ]),
                     );
-                    const nextRegions = workingRegions
+                    const nextRegions = regionState.regions
                         .map((region, index) => {
                             const statusId = sanitiseStatusId(region.statusId ?? region.status ?? '');
                             const statusLabel = getStatusLabel(statusId) || region.statusLabel || '';
@@ -4620,6 +4726,48 @@ export async function initDeveloperMap(options) {
         redraw();
         positionCursor();
     }
+
+    // Global event delegation for draw modal region list
+    // This prevents duplicate event handlers when modal is reopened
+    root.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-dm-region-trigger]');
+        if (!trigger) return;
+        
+        // Only handle if we're in a draw modal
+        if (!state.modal || state.modal.type !== 'draw-coordinates') return;
+        
+        // Verify the click is within the region list
+        const clickedList = event.target.closest('[data-dm-region-list]');
+        if (!clickedList) return;
+        
+        const regionId = trigger.getAttribute('data-dm-region-trigger');
+        
+        // Find the current drawRoot to get activeRegionId
+        const drawRoot = root.querySelector('[data-dm-draw-root]');
+        if (!drawRoot) return;
+        
+        const currentActiveRegion = drawRoot.dataset.dmActiveRegion ?? '';
+        if (!regionId || regionId === String(currentActiveRegion)) return;
+        
+        // Update UI immediately to show active state
+        const regionList = clickedList;
+        const allItems = regionList.querySelectorAll('.dm-draw__region-item');
+        allItems.forEach(item => {
+            const itemId = item.dataset.dmRegionItem;
+            if (String(itemId) === String(regionId)) {
+                item.classList.add('is-active');
+            } else {
+                item.classList.remove('is-active');
+            }
+        });
+        
+        // Dispatch custom event to initDrawSurface to set active region
+        // This maintains separation of concerns - UI state is updated here,
+        // but the actual region switching logic is handled by initDrawSurface
+        drawRoot.dispatchEvent(new CustomEvent('dm:setActiveRegion', {
+            detail: { regionId }
+        }));
+    });
 
     const instance = {
         root,

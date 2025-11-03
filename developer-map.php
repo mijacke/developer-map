@@ -324,6 +324,14 @@ function dm_enqueue_admin_assets(): void
         'ver'           => isset($GLOBALS['dm_assets_ver']) ? $GLOBALS['dm_assets_ver'] : time(),
     ];
 
+    $region_bootstrap = DM_Rest_Controller::get_region_registry_bootstrap();
+
+    wp_add_inline_script(
+        DM_PLUGIN_SCRIPT_HANDLE,
+        'window.dmRegionBootstrap = ' . wp_json_encode($region_bootstrap) . ';',
+        'before'
+    );
+
     wp_add_inline_script(
         DM_PLUGIN_SCRIPT_HANDLE,
         'window.dmRuntimeConfig = ' . wp_json_encode($config) . ';',

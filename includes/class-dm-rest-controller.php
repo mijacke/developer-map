@@ -268,6 +268,156 @@ final class DM_Rest_Controller
     }
 
     /**
+     * Ensure all regions in projects have unique IDs.
+     * 
+     * @param array $projects Array of project objects
+     * @return array Projects with guaranteed region IDs
+     */
+    private static function ensure_region_ids(array $projects): array
+    {
+        $result = self::process_region_ids($projects);
+
+        return $result['projects'];
+    }
+
+    /**
+     * Normalize regions array to ensure each has a unique ID.
+     *
+     * @param array $regions Array of region objects
+     * @param array<string, bool> $used_ids Reference to the set of already used IDs
+     * @param int $next_index Reference to the next numeric index for generated IDs
+     * @param bool $modified Reference flag that becomes true when data was changed
+     * @return array Normalized regions with IDs
+     */
+    private static function normalize_regions(array $regions, array &$used_ids, int &$next_index, bool &$modified): array
+    {
+        $normalized = [];
+
+        foreach ($regions as $region) {
+            if (!is_array($region)) {
+                continue;
+            }
+
+            $original_id = isset($region['id']) ? (string) $region['id'] : '';
+            $resolved_id = self::resolve_region_id($original_id, $used_ids, $next_index);
+
+            if ($resolved_id !== $original_id) {
+                $modified = true;
+            }
+
+            $region['id'] = $resolved_id;
+            $normalized[] = $region;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Assign unique region identifiers and collect registry metadata.
+     *
+     * @param array $projects
+     * @return array{projects: array, ids: array, next: int, modified: bool}
+     */
+    private static function process_region_ids(array $projects): array
+    {
+        $used_ids = [];
+        $next_index = 1;
+        $modified = false;
+
+        foreach ($projects as &$project) {
+            if (!is_array($project)) {
+                continue;
+            }
+
+            if (isset($project['regions']) && is_array($project['regions'])) {
+                $project['regions'] = self::normalize_regions($project['regions'], $used_ids, $next_index, $modified);
+            }
+
+            if (isset($project['floors']) && is_array($project['floors'])) {
+                foreach ($project['floors'] as &$floor) {
+                    if (!is_array($floor)) {
+                        continue;
+                    }
+                    if (isset($floor['regions']) && is_array($floor['regions'])) {
+                        $floor['regions'] = self::normalize_regions($floor['regions'], $used_ids, $next_index, $modified);
+                    }
+                }
+                unset($floor);
+            }
+        }
+        unset($project);
+
+        return [
+            'projects' => $projects,
+            'ids'      => array_keys($used_ids),
+            'next'     => $next_index,
+            'modified' => $modified,
+        ];
+    }
+
+    /**
+     * Ensure the provided region identifier is unique, generating a new one if needed.
+     *
+     * @param string $candidate
+     * @param array<string, bool> $used_ids
+     * @param int $next_index
+     * @return string
+     */
+    private static function resolve_region_id(string $candidate, array &$used_ids, int &$next_index): string
+    {
+        $candidate = trim($candidate);
+
+        if ($candidate !== '' && !isset($used_ids[$candidate])) {
+            $used_ids[$candidate] = true;
+            self::update_region_index($candidate, $next_index);
+
+            return $candidate;
+        }
+
+        do {
+            $generated = sprintf('region-%d', $next_index);
+            $next_index++;
+        } while (isset($used_ids[$generated]));
+
+        $used_ids[$generated] = true;
+
+        return $generated;
+    }
+
+    /**
+     * Update the numeric counter for generated IDs based on an existing identifier.
+     */
+    private static function update_region_index(string $id, int &$next_index): void
+    {
+        if (preg_match('/^region-(\d+)$/', $id, $matches)) {
+            $numeric = (int) $matches[1];
+            if ($numeric >= $next_index) {
+                $next_index = $numeric + 1;
+            }
+        }
+    }
+
+    /**
+     * Return registry metadata for region identifiers consumed by the JS app.
+     */
+    public static function get_region_registry_bootstrap(): array
+    {
+        $projects = DM_Storage_Manager::get('dm-projects');
+        $projects = is_array($projects) ? $projects : [];
+
+        $result = self::process_region_ids($projects);
+
+        if ($result['modified']) {
+            DM_Storage_Manager::set('dm-projects', $result['projects']);
+        }
+
+        return [
+            'ids'  => $result['ids'],
+            'next' => $result['next'],
+        ];
+    }
+
+    /**
      * Handle list route.
      */
     public static function handle_list(WP_REST_Request $request): WP_REST_Response
@@ -309,6 +459,11 @@ final class DM_Rest_Controller
 
         $value = DM_Storage_Manager::get($key, get_current_user_id());
 
+        // Ensure all regions have unique IDs when loading projects
+        if ($key === 'dm-projects' && is_array($value)) {
+            $value = self::ensure_region_ids($value);
+        }
+
         return new WP_REST_Response(
             [
                 'key'   => $key,
@@ -337,6 +492,11 @@ final class DM_Rest_Controller
 
         $payload = $request->get_json_params();
         $value = $payload['value'] ?? null;
+
+        // Ensure all regions have unique IDs when saving projects
+        if ($key === 'dm-projects' && is_array($value)) {
+            $value = self::ensure_region_ids($value);
+        }
 
         $stored = DM_Storage_Manager::set($key, $value, $user_id);
 

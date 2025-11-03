@@ -271,10 +271,44 @@ function count_items($data) {
         <div class="info">
             <strong>ℹ️ Info:</strong> Zobrazuješ dáta uložené v databáze pre Developer Map plugin.
             <br>User ID: <?php echo $current_user_id; ?>
+            <br><br>
+            <a href="<?php echo admin_url('options-general.php?page=devtest-9kq7wza3'); ?>" class="button">🚀 Otvoriť Developer Map Admin</a>
         </div>
 
         <!-- Statistics -->
         <h2>📊 Štatistiky</h2>
+        <?php
+        // Calculate region statistics
+        $total_regions = 0;
+        $project_regions = 0;
+        $floor_regions = 0;
+        $regions_with_php_id = 0;
+        if (isset($dm_data_store['dm-projects'])) {
+            foreach ($dm_data_store['dm-projects'] as $project) {
+                if (isset($project['regions']) && is_array($project['regions'])) {
+                    $project_regions += count($project['regions']);
+                    foreach ($project['regions'] as $region) {
+                        if (!empty($region['id']) && substr($region['id'], 0, 7) === 'region_') {
+                            $regions_with_php_id++;
+                        }
+                    }
+                }
+                if (isset($project['floors']) && is_array($project['floors'])) {
+                    foreach ($project['floors'] as $floor) {
+                        if (isset($floor['regions']) && is_array($floor['regions'])) {
+                            $floor_regions += count($floor['regions']);
+                            foreach ($floor['regions'] as $region) {
+                                if (!empty($region['id']) && substr($region['id'], 0, 7) === 'region_') {
+                                    $regions_with_php_id++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        $total_regions = $project_regions + $floor_regions;
+        ?>
         <div class="stats">
             <div class="stat-box">
                 <div class="stat-label">Veľkosť wp_options</div>
@@ -300,9 +334,19 @@ function count_items($data) {
                 <div class="stat-label">Počet obrázkov</div>
                 <div class="stat-value"><?php echo isset($dm_data_store['dm-images']) ? count($dm_data_store['dm-images']) : 0; ?></div>
             </div>
-            <div class="stat-box">
-                <div class="stat-label">Zvolený font</div>
-                <div class="stat-value"><?php echo isset($dm_data_store['dm-selected-font']['label']) ? esc_html($dm_data_store['dm-selected-font']['label']) : 'Žiadny'; ?></div>
+            <div class="stat-box" style="background: #fff3cd; border-left-color: #ffc107;">
+                <div class="stat-label">🎨 Celkový počet regiónov</div>
+                <div class="stat-value"><?php echo $total_regions; ?></div>
+                <div style="font-size: 11px; color: #666; margin-top: 5px;">
+                    Project: <?php echo $project_regions; ?> | Floor: <?php echo $floor_regions; ?>
+                </div>
+            </div>
+            <div class="stat-box" style="background: #d4edda; border-left-color: #28a745;">
+                <div class="stat-label">✓ Regióny s PHP ID</div>
+                <div class="stat-value"><?php echo $regions_with_php_id; ?></div>
+                <div style="font-size: 11px; color: #666; margin-top: 5px;">
+                    <?php echo $total_regions > 0 ? round(($regions_with_php_id / $total_regions) * 100, 1) : 0; ?>% garantované
+                </div>
             </div>
         </div>
 
@@ -339,6 +383,23 @@ function count_items($data) {
                         <?php endif; ?>
                     </div>
 
+                    <?php if (isset($project['regions']) && !empty($project['regions'])): ?>
+                        <div style="background: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                            <strong>🎨 Project Regions:</strong> <?php echo count($project['regions']); ?> zón
+                            <?php foreach ($project['regions'] as $region): ?>
+                                <div style="margin-left: 20px; padding: 5px; border-left: 3px solid #ffc107;">
+                                    <strong>ID:</strong> <?php echo esc_html($region['id'] ?? 'N/A'); ?> |
+                                    <strong>Label:</strong> <?php echo esc_html($region['label'] ?? 'N/A'); ?> |
+                                    <strong>Points:</strong> <?php echo isset($region['geometry']['points']) ? count($region['geometry']['points']) : 0; ?> |
+                                    <strong>Children:</strong> <?php echo isset($region['children']) ? count($region['children']) : 0; ?>
+                                    <?php if (!empty($region['id']) && substr($region['id'], 0, 7) === 'region_'): ?>
+                                        <span style="color: green; font-weight: bold;">✓ PHP Generated ID</span>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+
                     <?php if (isset($project['floors']) && !empty($project['floors'])): ?>
                         <h4>📍 Lokality/Floors (<?php echo count($project['floors']); ?>):</h4>
                         <div class="floor-list">
@@ -351,7 +412,19 @@ function count_items($data) {
                                         <br><img src="<?php echo esc_url($floor['image']); ?>" class="image-preview" alt="Floor image">
                                     <?php endif; ?>
                                     <?php if (isset($floor['regions']) && !empty($floor['regions'])): ?>
-                                        <br>Regions: <?php echo count($floor['regions']); ?> ks
+                                        <div style="background: #e7f3ff; padding: 8px; border-radius: 4px; margin-top: 8px;">
+                                            <strong>🎨 Floor Regions:</strong> <?php echo count($floor['regions']); ?> zón
+                                            <?php foreach ($floor['regions'] as $region): ?>
+                                                <div style="margin-left: 15px; padding: 3px; font-size: 12px;">
+                                                    <strong>ID:</strong> <?php echo esc_html($region['id'] ?? 'N/A'); ?> |
+                                                    <strong>Label:</strong> <?php echo esc_html($region['label'] ?? 'N/A'); ?> |
+                                                    <strong>Points:</strong> <?php echo isset($region['geometry']['points']) ? count($region['geometry']['points']) : 0; ?>
+                                                    <?php if (!empty($region['id']) && substr($region['id'], 0, 7) === 'region_'): ?>
+                                                        <span style="color: green; font-weight: bold;">✓ PHP ID</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>

@@ -9,6 +9,9 @@
 
     const AVAILABLE_KEYWORDS = ['available', 'free', 'voln', 'volne', 'volny', 'volny apartman', 'volne apartmany'];
 
+    // Map to store popup instances per container
+    const popupInstancesMap = new WeakMap();
+
     function ensureStyles() {
         const STYLE_ID = 'dm-map-viewer-style';
         if (document.getElementById(STYLE_ID)) {
@@ -143,8 +146,6 @@
 
     const STATUS_FALLBACK_COLOR = '#6366f1';
     const RENT_PLACEHOLDER = 'Na vyžiadanie';
-
-    let locationPopupInstance = null;
 
     function clamp(value, min, max) {
         if (!Number.isFinite(value)) {
@@ -1017,11 +1018,12 @@
         };
     }
 
-    function getLocationPopup() {
-        if (!locationPopupInstance) {
-            locationPopupInstance = createLocationPopup();
+    function getLocationPopup(container) {
+        // Each container gets its own popup instance
+        if (!popupInstancesMap.has(container)) {
+            popupInstancesMap.set(container, createLocationPopup());
         }
-        return locationPopupInstance;
+        return popupInstancesMap.get(container);
     }
 
     function escapeHtml(value) {
@@ -1525,7 +1527,7 @@
                 }
                 event.preventDefault();
                 const detail = event.detail || {};
-                const popup = getLocationPopup();
+                const popup = getLocationPopup(container);
                 popup.open({
                     project,
                     region: detail.region ?? null,
