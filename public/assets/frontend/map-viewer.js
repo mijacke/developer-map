@@ -1048,12 +1048,27 @@
         ensureStyles();
 
         try {
-            const response = await fetch(`${endpoint}?public_key=${encodeURIComponent(key)}`, {
+            // Pokús sa o štandardný REST API endpoint
+            let response = await fetch(`${endpoint}?public_key=${encodeURIComponent(key)}`, {
                 credentials: 'same-origin',
                 headers: {
                     Accept: 'application/json',
                 },
             });
+
+            // Ak zlyhá (404 = REST API endpoint neexistuje), skús alternatívny endpoint
+            if (!response.ok && response.status === 404) {
+                console.warn('[Developer Map] Standard REST API endpoint failed, trying alternative endpoint...');
+                const pluginUrl = window.location.origin + '/wp-content/plugins/developer-map';
+                const alternativeUrl = `${pluginUrl}/get-project.php?public_key=${encodeURIComponent(key)}`;
+                
+                response = await fetch(alternativeUrl, {
+                    credentials: 'same-origin',
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                });
+            }
 
             if (!response.ok) {
                 throw new Error(`Request failed with status ${response.status}`);
@@ -1069,7 +1084,46 @@
             const title = project.name ?? project.title ?? key;
             const description = project.description ?? '';
             const floors = Array.isArray(project.floors) ? project.floors : [];
-            const imageUrl = project.image ?? project.imageUrl ?? project.imageurl ?? '';
+
+            // Poskladaj kandidátov na URL obrázka v poradí preferencie
+            const imageCandidates = [
+                project.image,
+                project.imageUrl,
+                project.imageurl,
+                project.img,
+                project?.media?.image,
+                project?.media?.heroImage,
+            ];
+
+            let imageUrl = '';
+
+            for (const candidate of imageCandidates) {
+                if (!candidate) {
+                    continue;
+                }
+                if (typeof candidate === 'string') {
+                    const trimmed = candidate.trim();
+                    if (trimmed.length > 0) {
+                        imageUrl = trimmed;
+                        break;
+                    }
+                    continue;
+                }
+                if (typeof candidate === 'object') {
+                    const nested = candidate.url ?? candidate.src ?? candidate.href ?? candidate.link ?? '';
+                    if (typeof nested === 'string' && nested.trim().length > 0) {
+                        imageUrl = nested.trim();
+                        break;
+                    }
+                }
+            }
+
+            // Debug výpis do konzoly pre chýbajúci obrázok
+            if (!imageUrl) {
+                console.warn('[Developer Map] Missing image URL for project:', key);
+                console.log('[Developer Map] Project data:', project);
+            }
+            
             const rendererOptions = project.renderer ?? {};
             const viewbox = rendererOptions.size ?? { width: 1280, height: 720 };
             const regions = Array.isArray(project.regions) ? project.regions : [];
@@ -1116,38 +1170,14 @@
                 })
                 .join('');
 
-            const floorsMarkup = floors.length
-                ? `<ul class="dm-map-viewer__list">
-                        ${floors
-                            .map((floor) => {
-                                const status = floor.statusLabel ?? floor.status ?? '';
-                                const area = floor.area ? `<span>${escapeHtml(floor.area)}</span>` : '';
-                                return `
-                                    <li class="dm-map-viewer__item">
-                                        <strong>${escapeHtml(floor.name ?? floor.label ?? '')}</strong>
-                                        ${status ? `<span class="dm-map-viewer__badge">${escapeHtml(status)}</span>` : ''}
-                                        ${area}
-                                    </li>
-                                `;
-                            })
-                            .join('')}
-                   </ul>`
-                : '<p class="dm-map-viewer__empty">Pre túto mapu zatiaľ nie sú uložené žiadne lokality.</p>';
-
+            // Zobraz iba interaktívny obrázok bez zoznamu lokalít
             container.innerHTML = `
-                <article class="dm-map-viewer__card">
-                    <header class="dm-map-viewer__header">
-                        <h3>${escapeHtml(title)}</h3>
-                        ${description ? `<p>${escapeHtml(description)}</p>` : ''}
-                    </header>
-                    <div class="dm-map-viewer__surface">
-                        ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(title)}" class="dm-map-viewer__image" />` : ''}
-                        <svg class="dm-map-viewer__overlay" viewBox="0 0 ${escapeHtml(String(baseWidth))} ${escapeHtml(String(baseHeight))}" aria-hidden="true">
-                            <g class="dm-map-viewer__regions">${polygonsMarkup}</g>
-                        </svg>
-                    </div>
-                    ${floorsMarkup}
-                </article>
+                <div class="dm-map-viewer__surface">
+                    ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(title)}" class="dm-map-viewer__image" />` : '<p class="dm-map-viewer__error">Chýba obrázok mapy. Nahrajte obrázok v administrácii.</p>'}
+                    ${imageUrl ? `<svg class="dm-map-viewer__overlay" viewBox="0 0 ${escapeHtml(String(baseWidth))} ${escapeHtml(String(baseHeight))}" aria-hidden="true">
+                        <g class="dm-map-viewer__regions">${polygonsMarkup}</g>
+                    </svg>` : ''}
+                </div>
             `;
 
             const surface = container.querySelector('.dm-map-viewer__surface');
