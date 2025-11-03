@@ -5435,9 +5435,7 @@ body:not(.wp-admin) .dm-editor-overlay {
 }
 
 .dm-editor .dm-field__input:focus ~ label,
-.dm-editor .dm-field__input:valid ~ label,
-.dm-settings .dm-field__input:focus ~ label,
-.dm-settings .dm-field__input:valid ~ label {
+.dm-settings .dm-field__input:focus ~ label {
     top: 0;
     transform: translateY(-50%) scale(0.8);
     background-color: var(--dm-surface);
@@ -5445,9 +5443,9 @@ body:not(.wp-admin) .dm-editor-overlay {
     color: var(--dm-button-color, #1C134F);
 }
 
-/* Special handling for placeholder attribute to trigger label animation */
-.dm-editor .dm-field__input:not(:placeholder-shown) ~ label,
-.dm-settings .dm-field__input:not(:placeholder-shown) ~ label {
+/* Keep label up when field has content (JS adds this class) */
+.dm-editor .dm-field--filled .dm-field__label,
+.dm-settings .dm-field--filled .dm-field__label {
     top: 0;
     transform: translateY(-50%) scale(0.8);
     background-color: var(--dm-surface);

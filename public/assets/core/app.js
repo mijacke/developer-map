@@ -3456,6 +3456,12 @@ export async function initDeveloperMap(options) {
         // Initialize WordPress admin layout manager
         initWPAdminLayout();
         
+        // Initialize floating labels for editor fields
+        const editorContext = root.querySelector('.dm-editor');
+        if (editorContext) {
+            initFloatingFieldState(editorContext);
+        }
+        
         initDrawSurface(drawRoot);
     }
     
