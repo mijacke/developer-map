@@ -1598,15 +1598,8 @@ export async function initDeveloperMap(options) {
         const focusState = captureFocusState();
         const next = typeof patch === 'function' ? patch(state) : patch;
         
-        // Check if modal is being closed (draw-coordinates specifically)
-        const wasDrawModal = state.modal && state.modal.type === 'draw-coordinates';
-        const willBeDrawModal = next.modal && next.modal.type === 'draw-coordinates';
-        
-        // Cleanup WP Admin Layout Manager when closing draw modal
-        if (wasDrawModal && !willBeDrawModal && wpAdminLayoutManager) {
-            wpAdminLayoutManager.destroy();
-            wpAdminLayoutManager = null;
-        }
+        // WP Admin Layout Manager sa už nedestroyuje - zostáva aktívny pre všetky modály
+        // Manager sa automaticky refresh-uje v render() cez ensureWPAdminLayout()
         
         Object.assign(state, next);
         render();
@@ -1854,6 +1847,12 @@ export async function initDeveloperMap(options) {
         initFloatingFieldState();
         enhanceDrawModal();
         restoreExpandedProjects();
+        
+        // Inicializuj/Refresh WP Admin Layout po každom renderi
+        // requestAnimationFrame zabezpečí, že DOM je ready pred aplikovaním offsetov
+        requestAnimationFrame(() => {
+            ensureWPAdminLayout();
+        });
     }
 
     function restoreExpandedProjects() {
@@ -3472,9 +3471,9 @@ export async function initDeveloperMap(options) {
             wpAdminLayoutManager = null;
         }
         
-        // Initialize new manager
+        // Initialize new manager pre editor aj modály
         try {
-            wpAdminLayoutManager = new WPAdminLayoutManager('.dm-editor-overlay');
+            wpAdminLayoutManager = new WPAdminLayoutManager(['.dm-editor-overlay', '.dm-modal-overlay']);
             const initialized = wpAdminLayoutManager.init();
             
             if (!initialized) {
@@ -3484,6 +3483,30 @@ export async function initDeveloperMap(options) {
         } catch (error) {
             console.error('[DM] Error initializing WP Admin Layout Manager:', error);
             wpAdminLayoutManager = null;
+        }
+    }
+    
+    function ensureWPAdminLayout() {
+        // Ak manager ešte neexistuje, inicializuj ho
+        if (!wpAdminLayoutManager) {
+            initWPAdminLayout();
+        } else {
+            // Ak už existuje, len refresh targets (nové modály)
+            wpAdminLayoutManager.forceUpdate();
+        }
+        
+        // Extra forceUpdate po malom delay pre istotu (nové modály môžu potrebovať čas na render)
+        setTimeout(() => {
+            if (wpAdminLayoutManager) {
+                wpAdminLayoutManager.forceUpdate();
+            }
+        }, 50);
+    }
+    
+    function refreshWPAdminLayout() {
+        // Force update pre dynamicky pridané/odstránené modály
+        if (wpAdminLayoutManager) {
+            wpAdminLayoutManager.forceUpdate();
         }
     }
     

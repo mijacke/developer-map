@@ -2582,7 +2582,19 @@
 /* === modal.css === */
 .dm-modal-overlay {
     position: fixed;
-    inset: 0;
+    /* WordPress admin offsety - nastavené dynamicky cez JS (rovnaké ako editor) */
+    --wp-admin-menu-width: 0px;
+    --wp-admin-bar-height: 0px;
+    --wp-scrollbar-width: 0px;
+    
+    /* Automatické odsadenie od WP admin UI (vrátane scrollbaru) */
+    left: var(--wp-admin-menu-width);
+    top: var(--wp-admin-bar-height);
+    right: var(--wp-scrollbar-width);
+    bottom: 0;
+    width: calc(100vw - var(--wp-admin-menu-width) - var(--wp-scrollbar-width));
+    height: calc(100vh - var(--wp-admin-bar-height));
+    
     background: rgba(18, 16, 38, 0.48);
     backdrop-filter: blur(6px);
     display: flex;
@@ -2591,6 +2603,18 @@
     padding: clamp(32px, 5vw, 64px);
     z-index: 1000;
     overflow-y: auto;
+    
+    /* Smooth transitions pri fold/unfold menu a zmenách scrollbaru */
+    transition: left 0.3s ease, width 0.3s ease, right 0.3s ease, top 0.2s ease, height 0.2s ease;
+}
+
+/* Fallback pre non-admin kontext (front-end) */
+body:not(.wp-admin) .dm-modal-overlay {
+    left: 0;
+    top: 0;
+    right: 0;
+    width: 100vw;
+    height: 100vh;
 }
 
 .dm-modal {
@@ -4689,13 +4713,14 @@ body.dm-draw-fullscreen-active {
     /* WordPress admin offsety - nastavené dynamicky cez JS */
     --wp-admin-menu-width: 0px;
     --wp-admin-bar-height: 0px;
+    --wp-scrollbar-width: 0px;
     
-    /* Automatické odsadenie od WP admin UI */
+    /* Automatické odsadenie od WP admin UI (vrátane scrollbaru) */
     left: var(--wp-admin-menu-width);
     top: var(--wp-admin-bar-height);
-    right: 0;
+    right: var(--wp-scrollbar-width);
     bottom: 0;
-    width: calc(100vw - var(--wp-admin-menu-width));
+    width: calc(100vw - var(--wp-admin-menu-width) - var(--wp-scrollbar-width));
     height: calc(100vh - var(--wp-admin-bar-height));
     
     background: var(--dm-bg);
@@ -4704,14 +4729,15 @@ body.dm-draw-fullscreen-active {
     flex-direction: column;
     overflow: hidden;
     
-    /* Smooth transitions pri fold/unfold menu */
-    transition: left 0.3s ease, width 0.3s ease, top 0.2s ease, height 0.2s ease;
+    /* Smooth transitions pri fold/unfold menu a zmenách scrollbaru */
+    transition: left 0.3s ease, width 0.3s ease, right 0.3s ease, top 0.2s ease, height 0.2s ease;
 }
 
 /* Fallback pre non-admin kontext (front-end) */
 body:not(.wp-admin) .dm-editor-overlay {
     left: 0;
     top: 0;
+    right: 0;
     width: 100vw;
     height: 100vh;
 }

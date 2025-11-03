@@ -1,24 +1,26 @@
 /**
  * WordPress Admin Layout Manager
  * 
- * Dynamicky meria a aplikuje offsety pre vlastný panel/editor vo WordPress admin rozhraní,
- * aby nezaliezel pod ľavé menu ani horný admin bar.
+ * Dynamicky meria a aplikuje offsety pre vlastný panel/editor a modály vo WordPress admin rozhraní,
+ * aby nezaliezali pod ľavé menu, horný admin bar ani pravý scrollbar.
  * 
  * Features:
  * - Automatické meranie reálnej šírky WP menu a výšky admin baru
+ * - Živé meranie šírky scrollbaru na pravej strane
  * - Reaguje na fold/unfold menu
- * - Sleduje resize okna
+ * - Sleduje resize okna a zmeny scrollbaru
  * - MutationObserver pre zmeny v DOM
+ * - Aplikuje offsety na všetky overlaye (editor + modály)
  * - Čistý vanilla JS, žiadne závislosti
  * 
- * @version 1.0.0
+ * @version 1.2.0
  * @date 2025-11-03
  */
 
 export class WPAdminLayoutManager {
-    constructor(editorSelector = '.dm-editor-overlay') {
-        this.editorSelector = editorSelector;
-        this.editor = null;
+    constructor(targetSelectors = ['.dm-editor-overlay', '.dm-modal-overlay']) {
+        this.targetSelectors = Array.isArray(targetSelectors) ? targetSelectors : [targetSelectors];
+        this.targets = [];
         
         // WordPress admin selektory
         this.selectors = {
@@ -39,18 +41,22 @@ export class WPAdminLayoutManager {
         // Aktuálne offsety
         this.offsets = {
             left: 0,
-            top: 0
+            top: 0,
+            right: 0,
+            bottom: 0
         };
         
-        // Debounce timer
+        // Debounce timer a flags
         this.resizeTimer = null;
         this.resizeDelay = 150;
+        this.scrollCheckScheduled = false;
         
         // MutationObserver
         this.observer = null;
         
         // Bind metódy
         this.handleResize = this.handleResize.bind(this);
+        this.handleScroll = this.handleScroll.bind(this);
         this.handleMenuTransition = this.handleMenuTransition.bind(this);
         this.updateLayout = this.updateLayout.bind(this);
     }
@@ -59,15 +65,16 @@ export class WPAdminLayoutManager {
      * Inicializuje layout manager
      */
     init() {
-        // Nájdi editor element
-        this.editor = document.querySelector(this.editorSelector);
-        if (!this.editor) {
-            console.warn(`[WPAdminLayout] Editor element not found: ${this.editorSelector}`);
-            return false;
-        }
-        
         // Cache WordPress admin elementy
         this.cacheElements();
+        
+        // Nájdi všetky target elementy
+        this.findTargets();
+        
+        if (this.targets.length === 0) {
+            console.warn('[WPAdminLayout] No target elements found');
+            return false;
+        }
         
         // Počiatočné meranie
         this.updateLayout();
@@ -78,8 +85,23 @@ export class WPAdminLayoutManager {
         // Nastav MutationObserver pre zmeny v DOM
         this.setupObserver();
         
-        console.log('[WPAdminLayout] Initialized successfully');
+        console.log('[WPAdminLayout] Initialized successfully with', this.targets.length, 'targets');
         return true;
+    }
+    
+    /**
+     * Nájde všetky target elementy (editor, modály)
+     */
+    findTargets() {
+        this.targets = [];
+        this.targetSelectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(el => {
+                if (!this.targets.includes(el)) {
+                    this.targets.push(el);
+                }
+            });
+        });
     }
     
     /**
@@ -93,16 +115,18 @@ export class WPAdminLayoutManager {
     }
     
     /**
-     * Zmeria aktuálne rozmery WordPress admin UI
+     * Zmeria aktuálne rozmery WordPress admin UI a scrollbaru
      */
     measureAdminUI() {
         const measurements = {
             menuWidth: 0,
             adminBarHeight: 0,
+            scrollbarWidth: 0,
             isFolded: false,
             isAutoFold: false,
             hasAdminBar: false,
-            hasAdminMenu: false
+            hasAdminMenu: false,
+            hasScrollbar: false
         };
         
         // Zmeraj admin bar výšku
@@ -140,31 +164,51 @@ export class WPAdminLayoutManager {
             }
         }
         
+        // Zmeraj šírku scrollbaru (rozdiel medzi window.innerWidth a clientWidth)
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        if (scrollbarWidth > 0) {
+            measurements.scrollbarWidth = scrollbarWidth;
+            measurements.hasScrollbar = true;
+        }
+        
         return measurements;
     }
     
     /**
-     * Aktualizuje layout editora na základe meraní
+     * Aktualizuje layout všetkých targets (editor + modály) na základe meraní
      */
     updateLayout() {
-        if (!this.editor) return;
+        // Refresh targets - môžu sa pridať/odstrániť modály dynamicky
+        const previousTargetCount = this.targets.length;
+        this.findTargets();
+        
+        if (this.targets.length === 0) return;
         
         const measurements = this.measureAdminUI();
         
         // Vypočítaj offsety
         const leftOffset = measurements.hasAdminMenu ? measurements.menuWidth : 0;
         const topOffset = measurements.hasAdminBar ? measurements.adminBarHeight : 0;
+        const rightOffset = measurements.hasScrollbar ? measurements.scrollbarWidth : 0;
         
-        // Aplikuj len ak sa zmenili
-        if (this.offsets.left !== leftOffset || this.offsets.top !== topOffset) {
+        // Aplikuj ak sa zmenili offsety ALEBO ak pribudli/ubudli targets (nové modály)
+        const targetsChanged = this.targets.length !== previousTargetCount;
+        const offsetsChanged = this.offsets.left !== leftOffset || 
+                               this.offsets.top !== topOffset || 
+                               this.offsets.right !== rightOffset;
+        
+        if (offsetsChanged || targetsChanged) {
             this.offsets.left = leftOffset;
             this.offsets.top = topOffset;
+            this.offsets.right = rightOffset;
             
             this.applyOffsets();
             
             console.log('[WPAdminLayout] Layout updated:', {
                 left: leftOffset,
                 top: topOffset,
+                right: rightOffset,
+                targets: this.targets.length,
                 isFolded: measurements.isFolded,
                 isAutoFold: measurements.isAutoFold
             });
@@ -172,28 +216,62 @@ export class WPAdminLayoutManager {
     }
     
     /**
-     * Aplikuje offsety na editor
+     * Aplikuje offsety na všetky targets (editor + modály)
      */
     applyOffsets() {
-        if (!this.editor) return;
+        if (this.targets.length === 0) return;
         
-        // Aplikuj CSS custom properties
-        this.editor.style.setProperty('--wp-admin-menu-width', `${this.offsets.left}px`);
-        this.editor.style.setProperty('--wp-admin-bar-height', `${this.offsets.top}px`);
-        
-        // Aplikuj aj ako inline styles pre istotu
-        this.editor.style.left = `${this.offsets.left}px`;
-        this.editor.style.top = `${this.offsets.top}px`;
-        this.editor.style.width = `calc(100vw - ${this.offsets.left}px)`;
-        this.editor.style.height = `calc(100vh - ${this.offsets.top}px)`;
+        // Aplikuj na každý target element
+        this.targets.forEach(target => {
+            // Aplikuj CSS custom properties
+            target.style.setProperty('--wp-admin-menu-width', `${this.offsets.left}px`);
+            target.style.setProperty('--wp-admin-bar-height', `${this.offsets.top}px`);
+            target.style.setProperty('--wp-scrollbar-width', `${this.offsets.right}px`);
+            
+            // Aplikuj aj ako inline styles pre istotu
+            target.style.left = `${this.offsets.left}px`;
+            target.style.top = `${this.offsets.top}px`;
+            target.style.right = `${this.offsets.right}px`;
+            target.style.width = `calc(100vw - ${this.offsets.left}px - ${this.offsets.right}px)`;
+            target.style.height = `calc(100vh - ${this.offsets.top}px)`;
+        });
     }
     
     /**
      * Nastav event listeners
      */
     attachListeners() {
-        // Window resize s debounce
+        // Window resize s debounce (zachytáva aj zmeny scrollbaru)
         window.addEventListener('resize', this.handleResize);
+        
+        // Scroll events - zmeny scrollbaru (objavenie/zmiznutie)
+        window.addEventListener('scroll', this.handleScroll);
+        
+        // MutationObserver pre <html> a <body> - zachytáva zmeny overflow/height ktoré ovplyvňujú scrollbar
+        const scrollObserver = new MutationObserver(() => {
+            // Debounce pomocou requestAnimationFrame
+            if (!this.scrollCheckScheduled) {
+                this.scrollCheckScheduled = true;
+                requestAnimationFrame(() => {
+                    this.scrollCheckScheduled = false;
+                    this.updateLayout();
+                });
+            }
+        });
+        
+        scrollObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['style', 'class'],
+            childList: true,
+            subtree: false
+        });
+        
+        scrollObserver.observe(this.elements.body, {
+            attributes: true,
+            attributeFilter: ['style', 'class'],
+            childList: true,
+            subtree: false
+        });
         
         // Body class changes (fold/unfold)
         if (this.elements.body) {
@@ -242,6 +320,19 @@ export class WPAdminLayoutManager {
         this.resizeTimer = setTimeout(() => {
             this.updateLayout();
         }, this.resizeDelay);
+    }
+    
+    /**
+     * Handle scroll event - detekuje zmeny scrollbaru
+     */
+    handleScroll() {
+        if (!this.scrollCheckScheduled) {
+            this.scrollCheckScheduled = true;
+            requestAnimationFrame(() => {
+                this.scrollCheckScheduled = false;
+                this.updateLayout();
+            });
+        }
     }
     
     /**
@@ -301,6 +392,7 @@ export class WPAdminLayoutManager {
     destroy() {
         // Remove event listeners
         window.removeEventListener('resize', this.handleResize);
+        window.removeEventListener('scroll', this.handleScroll);
         
         if (this.elements.adminMenu) {
             this.elements.adminMenu.removeEventListener('transitionend', this.handleMenuTransition);
@@ -312,18 +404,23 @@ export class WPAdminLayoutManager {
             this.observer = null;
         }
         
-        // Clear timer
+        // Clear timer a flags
         clearTimeout(this.resizeTimer);
+        this.scrollCheckScheduled = false;
         
-        // Reset editor styles
-        if (this.editor) {
-            this.editor.style.removeProperty('--wp-admin-menu-width');
-            this.editor.style.removeProperty('--wp-admin-bar-height');
-            this.editor.style.left = '';
-            this.editor.style.top = '';
-            this.editor.style.width = '';
-            this.editor.style.height = '';
-        }
+        // Reset styles pre všetky targets
+        this.targets.forEach(target => {
+            target.style.removeProperty('--wp-admin-menu-width');
+            target.style.removeProperty('--wp-admin-bar-height');
+            target.style.removeProperty('--wp-scrollbar-width');
+            target.style.left = '';
+            target.style.top = '';
+            target.style.right = '';
+            target.style.width = '';
+            target.style.height = '';
+        });
+        
+        this.targets = [];
         
         console.log('[WPAdminLayout] Destroyed');
     }
@@ -347,8 +444,8 @@ export class WPAdminLayoutManager {
 /**
  * Helper funkcia pre rýchlu inicializáciu
  */
-export function initWPAdminLayout(editorSelector = '.dm-editor-overlay') {
-    const manager = new WPAdminLayoutManager(editorSelector);
+export function initWPAdminLayout(targetSelectors = ['.dm-editor-overlay', '.dm-modal-overlay']) {
+    const manager = new WPAdminLayoutManager(targetSelectors);
     const initialized = manager.init();
     return initialized ? manager : null;
 }
