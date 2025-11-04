@@ -176,21 +176,288 @@
             .dm-location-popup__footer--dashboard .dm-dashboard__card { margin: 0; }
             .dm-dashboard { display: flex; flex-direction: column; gap: clamp(14px, 2vw, 20px); }
             .dm-dashboard__card { background: var(--dm-surface, #ffffff); border-radius: clamp(16px, 2.5vw, 24px); border: 1px solid rgba(85, 60, 154, 0.08); padding: clamp(16px, 2.5vw, 28px) clamp(18px, 2.8vw, 32px); box-shadow: 0 18px 48px rgba(82, 51, 143, 0.06); }
-            .dm-dashboard__toolbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: stretch; column-gap: clamp(10px, 1.5vw, 14px); row-gap: clamp(10px, 1.5vw, 14px); width: 100%; --dm-dashboard-control-height: clamp(42px, 5vw, 50px); }
             .dm-dashboard__toolbar-heading { display: none !important; }
-            .dm-dashboard__search { width: 100%; min-width: 160px; height: var(--dm-dashboard-control-height); border-radius: clamp(12px, 1.8vw, 14px); border: 1px solid #1C134F; background: #ffffff; display: flex; align-items: center; gap: clamp(8px, 1.2vw, 10px); padding: 0 clamp(12px, 1.8vw, 16px); transition: border-color 0.18s ease; }
-            .dm-dashboard__search:hover, .dm-dashboard__search:focus-within { border-color: #1C134F; }
-            .dm-dashboard__search input { flex: 1; background: transparent; border: none; font-size: clamp(13px, 1.6vw, 14px); color: #1C134F; height: 100%; }
-            .dm-dashboard__search input::placeholder { color: #1C134F; opacity: 0.7; }
-            .dm-dashboard__search input:focus { outline: none; }
-            .dm-dashboard__search-icon { color: #1C134F; opacity: 0.8; display: inline-flex; width: clamp(14px, 2vw, 16px); height: clamp(14px, 2vw, 16px); }
-            .dm-dashboard__search-icon svg { width: 100%; height: 100%; }
-            .dm-dashboard__select { position: relative; min-width: 140px; width: 100%; min-height: var(--dm-dashboard-control-height); }
-            .dm-dashboard__select .dm-field__input { width: 100%; height: var(--dm-dashboard-control-height); border-radius: clamp(12px, 1.8vw, 14px); border: 1px solid #1C134F; background: #ffffff; padding: 0 clamp(36px, 5vw, 44px) 0 clamp(12px, 1.8vw, 16px); font-size: clamp(13px, 1.6vw, 14px); font-weight: 500; color: #1C134F; box-shadow: none; }
-            .dm-dashboard__select select.dm-field__input { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10' fill='none' stroke='%231C134F' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 2 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right clamp(12px, 1.8vw, 16px) center; background-size: clamp(12px, 1.6vw, 14px) clamp(8px, 1.2vw, 9px); cursor: pointer; }
-            .dm-dashboard__select .dm-field__label { position: absolute; left: clamp(12px, 1.8vw, 16px); top: 50%; transform: translateY(-50%); font-size: clamp(12px, 1.4vw, 13px); color: #1C134F; pointer-events: none; transition: 0.18s ease; background: #ffffff; padding: 0 4px; }
-            .dm-dashboard__select select.dm-field__input:focus ~ .dm-field__label,
-            .dm-dashboard__select.dm-field--has-value .dm-field__label { top: 0; transform: translateY(-50%) scale(0.82); }
+            .filters-scope {
+                --dm-filter-surface: #ffffff;
+                --dm-filter-brand: #4d38ff;
+                --dm-filter-brand-strong: #3a2cc8;
+                --dm-filter-border: rgba(28, 19, 79, 0.28);
+                --dm-filter-border-strong: rgba(28, 19, 79, 0.45);
+                --dm-filter-shadow-focus: 0 0 0 4px rgba(77, 56, 255, 0.12);
+                --dm-filter-control-height: clamp(48px, 5.4vw, 56px);
+                --dm-filter-control-radius: clamp(16px, 2.4vw, 18px);
+                --dm-dashboard-control-height: var(--dm-filter-control-height);
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+                align-items: stretch;
+                column-gap: clamp(12px, 1.8vw, 18px);
+                row-gap: clamp(12px, 1.8vw, 18px);
+                width: 100%;
+            }
+            .filters-scope .dm-dashboard__search {
+                position: relative;
+                display: flex;
+                align-items: center;
+                width: 100%;
+                flex: 1 1 clamp(220px, 28vw, 280px);
+                max-width: 100%;
+                height: var(--dm-filter-control-height);
+                border-radius: var(--dm-filter-control-radius);
+                border: 1.5px solid var(--dm-filter-border);
+                background: var(--dm-filter-surface);
+                padding: 0 clamp(24px, 3.4vw, 30px) 0 clamp(30px, 4vw, 38px);
+                transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+                box-shadow: inset 0 1px 1px rgba(17, 17, 26, 0.06);
+                color: #1c134f;
+            }
+            .filters-scope .dm-dashboard__search:hover {
+                border-color: var(--dm-filter-border-strong);
+            }
+            .filters-scope .dm-dashboard__search:focus-within {
+                border-color: var(--dm-filter-brand);
+            }
+            .filters-scope .dm-dashboard__search input {
+                flex: 1;
+                height: 100%;
+                border: none;
+                background: transparent;
+                font-size: clamp(13px, 1.6vw, 14px);
+                font-weight: 600;
+                color: #1c134f;
+                padding: 0;
+                margin: 0;
+                outline: none;
+                box-shadow: none !important;
+                caret-color: var(--dm-filter-brand);
+                appearance: none;
+            }
+            .filters-scope .dm-dashboard__search input::placeholder { color: transparent; }
+            .filters-scope .dm-dashboard__search input::-webkit-search-decoration,
+            .filters-scope .dm-dashboard__search input::-webkit-search-cancel-button { display: none; }
+            .filters-scope .dm-dashboard__search-icon {
+                position: absolute;
+                left: clamp(24px, 3.4vw, 30px);
+                top: 50%;
+                transform: translateY(-50%);
+                width: clamp(14px, 2vw, 16px);
+                height: clamp(14px, 2vw, 16px);
+                color: rgba(28, 19, 79, 0.65);
+                pointer-events: none;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                transition: color 0.2s ease, left 0.2s ease, top 0.2s ease, transform 0.2s ease;
+            }
+            .filters-scope .dm-dashboard__search-icon svg { width: 100%; height: 100%; }
+            .filters-scope .dm-dashboard__search-label {
+                position: absolute;
+                left: clamp(52px, 6.8vw, 60px);
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: clamp(11px, 1.5vw, 12px);
+                font-weight: 650;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: rgba(28, 19, 79, 0.58);
+                pointer-events: none;
+                transition: transform 0.2s ease, color 0.2s ease, left 0.2s ease, top 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+                background: transparent;
+                padding: 0 0.4em;
+                border-radius: 999px;
+                white-space: nowrap;
+            }
+            .filters-scope .dm-dashboard__search:focus-within .dm-dashboard__search-icon,
+            .filters-scope .dm-dashboard__search input:not(:placeholder-shown) ~ .dm-dashboard__search-icon {
+                left: clamp(18px, 2.6vw, 22px);
+                top: 0;
+                transform: translateY(-50%);
+                color: var(--dm-filter-brand);
+            }
+            .filters-scope .dm-dashboard__search:focus-within .dm-dashboard__search-label,
+            .filters-scope .dm-dashboard__search input:not(:placeholder-shown) ~ .dm-dashboard__search-label {
+                left: clamp(48px, 6.4vw, 56px);
+                top: 0;
+                transform: translateY(-50%) scale(0.82);
+                background: var(--dm-filter-surface);
+                color: var(--dm-filter-brand);
+                box-shadow: 0 6px 18px rgba(77, 56, 255, 0.12);
+            }
+            .filters-scope .dm-dashboard__select {
+                position: relative;
+                width: 100%;
+                flex: 1 1 clamp(220px, 28vw, 280px);
+                max-width: 100%;
+            }
+            .filters-scope .dm-dashboard__select-label {
+                position: absolute;
+                left: clamp(24px, 3.2vw, 30px);
+                top: -2px;
+                transform: translateY(-50%) scale(0.82);
+                font-size: clamp(11px, 1.5vw, 12px);
+                font-weight: 650;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: rgba(28, 19, 79, 0.58);
+                pointer-events: none;
+                transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), color 0.28s cubic-bezier(0.4, 0, 0.2, 1), left 0.28s cubic-bezier(0.4, 0, 0.2, 1), top 0.28s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+                background: var(--dm-filter-surface);
+                padding: 0 0.4em;
+                border-radius: 999px;
+                box-shadow: 0 2px 4px rgba(77, 56, 255, 0.04);
+                z-index: 1;
+            }
+            .filters-scope .dm-dashboard__select-trigger {
+                width: 100%;
+                border: 1.5px solid var(--dm-filter-border);
+                border-radius: var(--dm-filter-control-radius);
+                background: var(--dm-filter-surface);
+                padding: 0 clamp(56px, 7.4vw, 66px) 0 clamp(30px, 4vw, 38px);
+                height: var(--dm-filter-control-height);
+                display: flex;
+                align-items: center;
+                gap: clamp(10px, 1.5vw, 16px);
+                justify-content: space-between;
+                cursor: pointer;
+                box-shadow: inset 0 1px 1px rgba(17, 17, 26, 0.05);
+                transition: border-color 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+                outline: none;
+            }
+            .filters-scope .dm-dashboard__select-trigger:hover {
+                border-color: var(--dm-filter-border-strong);
+                transform: translateY(-0.5px);
+                box-shadow: inset 0 1px 1px rgba(17, 17, 26, 0.06), 0 8px 16px rgba(77, 56, 255, 0.08);
+            }
+            .filters-scope .dm-dashboard__select-trigger:focus-visible {
+                border-color: var(--dm-filter-brand);
+            }
+            .filters-scope .dm-dashboard__select-value {
+                flex: 1;
+                font-size: clamp(13px, 1.6vw, 14px);
+                font-weight: 600;
+                color: #1c134f;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .filters-scope .dm-dashboard__select-icon {
+                position: absolute;
+                right: clamp(18px, 2.6vw, 22px);
+                top: 50%;
+                transform: translateY(-50%);
+                width: clamp(18px, 2.4vw, 20px);
+                height: clamp(18px, 2.4vw, 20px);
+                border-radius: 999px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(77, 56, 255, 0.06);
+                color: var(--dm-filter-brand);
+                flex-shrink: 0;
+                transition: background 0.28s cubic-bezier(0.4, 0, 0.2, 1), color 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .filters-scope .dm-dashboard__select-icon::before {
+                content: '';
+                width: clamp(12px, 1.6vw, 14px);
+                height: clamp(7px, 1vw, 9px);
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10' fill='none' stroke='%234d38ff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 2 6 6 6-6'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-size: 100% 100%;
+                display: inline-block;
+                transition: transform 0.2s ease;
+            }
+            .filters-scope .dm-dashboard__select.is-open .dm-dashboard__select-icon {
+                transform: translateY(-50%) rotate(180deg);
+            }
+            .filters-scope .dm-dashboard__select.is-open .dm-dashboard__select-trigger {
+                border-color: var(--dm-filter-brand);
+                box-shadow: 0 12px 32px rgba(77, 56, 255, 0.14);
+            }
+            .filters-scope .dm-dashboard__select.is-open .dm-dashboard__select-icon,
+            .filters-scope .dm-dashboard__select-trigger:hover .dm-dashboard__select-icon,
+            .filters-scope .dm-dashboard__select-trigger:focus-visible .dm-dashboard__select-icon {
+                background: rgba(77, 56, 255, 0.14);
+                color: var(--dm-filter-brand);
+            }
+            .filters-scope .dm-dashboard__select.is-open .dm-dashboard__select-label,
+            .filters-scope .dm-dashboard__select:focus-within .dm-dashboard__select-label,
+            .filters-scope .dm-dashboard__select-trigger:active + .dm-dashboard__select-label {
+                color: var(--dm-filter-brand);
+                box-shadow: 0 6px 18px rgba(77, 56, 255, 0.16);
+            }
+            .filters-scope .dm-dashboard__select-dropdown {
+                position: absolute;
+                top: calc(100% + clamp(6px, 1vw, 10px));
+                left: 0;
+                width: 100%;
+                background: var(--dm-filter-surface);
+                border: 1.5px solid rgba(28, 19, 79, 0.22);
+                border-radius: clamp(16px, 2.4vw, 20px);
+                box-shadow: 0 26px 48px rgba(15, 23, 42, 0.22);
+                padding: 0;
+                z-index: 70;
+                max-height: min(40vh, 320px);
+                overflow: hidden;
+            }
+            .filters-scope .dm-dashboard__select-dropdown[hidden] { display: none; }
+            .filters-scope .dm-dashboard__select-dropdown-inner {
+                display: flex;
+                flex-direction: column;
+                gap: clamp(4px, 0.8vw, 6px);
+                padding: clamp(6px, 1vw, 8px);
+                max-height: min(40vh, 320px);
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                border-radius: inherit;
+                scrollbar-color: rgba(77, 56, 255, 0.32) rgba(77, 56, 255, 0.08);
+            }
+            .filters-scope .dm-dashboard__select-dropdown-inner::-webkit-scrollbar { width: 8px; }
+            .filters-scope .dm-dashboard__select-dropdown-inner::-webkit-scrollbar-track {
+                background: rgba(77, 56, 255, 0.08);
+                border-radius: 999px;
+            }
+            .filters-scope .dm-dashboard__select-dropdown-inner::-webkit-scrollbar-thumb {
+                background: rgba(77, 56, 255, 0.32);
+                border-radius: 999px;
+            }
+            .filters-scope .dm-dashboard__select-option {
+                width: 100%;
+                border: none;
+                border-radius: clamp(12px, 1.8vw, 14px);
+                background: transparent;
+                padding: clamp(12px, 1.8vw, 14px) clamp(16px, 2.4vw, 20px);
+                text-align: left;
+                font-size: clamp(13px, 1.6vw, 14px);
+                font-weight: 600;
+                color: #1c134f;
+                cursor: pointer;
+                transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            }
+            .filters-scope .dm-dashboard__select-option.is-disabled {
+                opacity: 0.45;
+                cursor: not-allowed;
+            }
+            .filters-scope .dm-dashboard__select-option:hover {
+                background: rgba(77, 56, 255, 0.2);
+                color: #2b217c;
+                transform: translateY(-1px);
+            }
+            .filters-scope .dm-dashboard__select-option.is-disabled:hover {
+                background: transparent;
+                color: #1c134f;
+                transform: none;
+            }
+            .filters-scope .dm-dashboard__select-option.is-selected {
+                background: rgba(77, 56, 255, 0.28);
+                color: #211873;
+                box-shadow: inset 0 0 0 1px rgba(77, 56, 255, 0.16);
+            }
+            .filters-scope .dm-dashboard__select-option:focus {
+                outline: none;
+            }
+            .filters-scope .dm-dashboard__select-option:focus-visible {
+                box-shadow: 0 0 0 3px rgba(77, 56, 255, 0.22);
+            }
+            .filters-scope .dm-dashboard__select-native { position: absolute; opacity: 0; pointer-events: none; }
             .dm-dashboard__legend { display: flex; align-items: center; gap: clamp(8px, 1.2vw, 10px); padding: clamp(10px, 1.5vw, 14px) clamp(12px, 1.8vw, 16px); border-radius: clamp(12px, 1.8vw, 14px); border: 1px solid rgba(85, 60, 154, 0.12); background: #ffffff; min-height: var(--dm-dashboard-control-height); grid-column: 1 / -1; flex-wrap: wrap; }
             .dm-dashboard__legend-heading { font-size: clamp(11px, 1.4vw, 12px); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(28, 19, 79, 0.7); white-space: nowrap; margin-right: clamp(6px, 1vw, 8px); }
             .dm-dashboard__legend-list { display: flex; align-items: center; gap: clamp(6px, 1vw, 8px); flex-wrap: wrap; flex: 1; }
@@ -200,14 +467,14 @@
             .dm-dashboard__table-wrapper { background: #ffffff; border-radius: clamp(16px, 2.5vw, 20px); border: 1px solid #d2d2dc; padding: clamp(14px, 2.2vw, 20px); box-shadow: 0 8px 20px rgba(22, 22, 29, 0.05); overflow: visible; }
             .dm-dashboard__table { display: flex; flex-direction: column; gap: clamp(10px, 1.5vw, 14px); overflow: visible; width: 100%; }
             .dm-dashboard__table thead { display: block; }
-            .dm-dashboard__table thead tr { display: grid; grid-template-columns: minmax(70px, 0.8fr) minmax(100px, 1.2fr) minmax(80px, 0.9fr) minmax(70px, 0.8fr) minmax(70px, 0.8fr) minmax(80px, 0.9fr) minmax(90px, 1.1fr); gap: clamp(8px, 1.2vw, 12px); align-items: center; background: #e8e9f0; border-radius: clamp(14px, 2vw, 18px); padding: clamp(12px, 1.8vw, 16px) clamp(14px, 2vw, 18px); border: none; }
-            .dm-dashboard__table th { text-align: left; font-size: clamp(11px, 1.3vw, 12px); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(45, 45, 78, 0.7); padding: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: none; }
+            .dm-dashboard__table thead tr { display: grid; grid-template-columns: minmax(70px, 0.8fr) minmax(100px, 1.2fr) minmax(80px, 0.9fr) minmax(70px, 0.8fr) minmax(70px, 0.8fr) minmax(80px, 0.9fr) minmax(90px, 1.1fr); gap: clamp(8px, 1.2vw, 12px); align-items: center; background: #e8e9f0; border-radius: clamp(14px, 2vw, 18px); padding: clamp(12px, 1.8vw, 16px) clamp(14px, 2vw, 18px); border: none !important; border-top: none !important; border-bottom: none !important; box-shadow: none !important; }
+            .dm-dashboard__table th { text-align: left; font-size: clamp(11px, 1.3vw, 12px); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(45, 45, 78, 0.7); padding: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: none !important; border-top: none !important; border-bottom: none !important; box-shadow: none; }
             .dm-dashboard__table tbody { display: flex; flex-direction: column; gap: 0; }
             .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(70px, 0.8fr) minmax(100px, 1.2fr) minmax(80px, 0.9fr) minmax(70px, 0.8fr) minmax(70px, 0.8fr) minmax(80px, 0.9fr) minmax(90px, 1.1fr); gap: clamp(8px, 1.2vw, 12px); align-items: center; padding: clamp(12px, 1.8vw, 16px) clamp(14px, 2vw, 18px); border-bottom: none; background: #ffffff !important; position: relative; border-left: none; border-right: none; border-top: none; box-shadow: none; }
             .dm-dashboard__table tbody tr:last-child { border-bottom: none; }
             .dm-dashboard__table tbody tr.is-hovered { background: rgba(77, 56, 255, 0.08) !important; border-radius: clamp(14px, 2vw, 18px); border-bottom-color: transparent; box-shadow: inset 0 0 0 1px rgba(77, 56, 255, 0.1); }
             .dm-dashboard__table tbody tr.is-active { background: rgba(77, 56, 255, 0.12) !important; border-radius: clamp(16px, 2.2vw, 20px); border-bottom-color: transparent; box-shadow: inset 0 0 0 1px rgba(77, 56, 255, 0.18), 0 18px 36px rgba(17, 23, 64, 0.14); }
-            .dm-dashboard__table td { padding: 0; font-size: clamp(13px, 1.5vw, 14px); color: var(--dm-text, #1C134F); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: none; background: #ffffff !important; }
+            .dm-dashboard__table td { padding: 0; font-size: clamp(13px, 1.5vw, 14px); color: var(--dm-text, #1C134F); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: none !important; border-top: none !important; border-bottom: none !important; background: #ffffff !important; }
             .dm-dashboard__cell--actions { display: none !important; }
             .dm-dashboard__cell--status { cursor: pointer; }
             .dm-dashboard__empty-row td { padding: clamp(32px, 5vw, 42px) clamp(18px, 2.8vw, 24px); grid-column: 1 / -1; }
@@ -223,8 +490,8 @@
             .dm-status--unknown { background: rgba(124, 58, 237, 0.12); color: rgba(45, 45, 78, 0.65); }
             @media (max-width: 960px) {
                 .dm-location-popup__footer--dashboard { padding: clamp(14px, 2.5vw, 18px); }
-                .dm-dashboard__toolbar { grid-template-columns: 1fr 1fr; }
-                .dm-dashboard__search { grid-column: 1 / -1; }
+                .filters-scope { grid-template-columns: 1fr 1fr; }
+                .filters-scope .dm-dashboard__search { grid-column: 1 / -1; }
                 .dm-dashboard__legend { gap: clamp(6px, 1vw, 8px); padding: clamp(10px, 1.5vw, 12px); grid-column: 1 / -1; }
                 .dm-dashboard__legend-heading { font-size: clamp(10px, 1.3vw, 11px); }
                 .dm-dashboard__legend-counter { margin-left: 0; margin-top: 4px; flex: 0 0 100%; }
@@ -238,7 +505,7 @@
                 .dm-dashboard__cell--actions::before { margin-bottom: clamp(4px, 0.8vw, 6px); flex: 0 0 100%; }
             }
             @media (max-width: 640px) {
-                .dm-dashboard__toolbar { grid-template-columns: 1fr; }
+                .filters-scope { grid-template-columns: 1fr; }
             }
         `;
         document.head.appendChild(style);
@@ -412,24 +679,39 @@
                     <section class="dm-location-popup__footer dm-location-popup__footer--dashboard">
                         <div class="dm-dashboard dm-dashboard--modal">
                             <div class="dm-dashboard__card dm-dashboard__card--modal">
-                                <div class="dm-dashboard__toolbar dm-dashboard__toolbar--modal" role="search">
+                                <div class="dm-dashboard__toolbar dm-dashboard__toolbar--modal filters-scope" role="search">
                                     <label class="dm-dashboard__search" data-role="search-wrapper">
                                         <span class="dm-dashboard__search-icon" aria-hidden="true">${DASHBOARD_TOOLBAR_ICONS.search}</span>
-                                        <input type="search" placeholder="Vyhľadať lokalitu..." data-role="search" aria-label="Vyhľadať lokalitu" />
+                                        <input type="search" placeholder=" " data-role="search" aria-label="Vyhľadať lokalitu" />
+                                        <span class="dm-dashboard__search-label">Vyhľadať lokalitu</span>
                                     </label>
-                                    <div class="dm-field dm-dashboard__select" data-role="status-filter-wrapper">
-                                        <select id="dm-location-popup-status" class="dm-field__input" data-role="status-filter" aria-label="Filtrovať podľa stavu">
+                                    <div class="dm-dashboard__select" data-role="status-filter-wrapper">
+                                        <label class="dm-dashboard__select-label" id="dm-location-popup-status-label" for="dm-location-popup-status-native">Stav</label>
+                                        <button type="button" class="dm-dashboard__select-trigger" data-role="status-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="dm-location-popup-status-label dm-location-popup-status-value">
+                                            <span class="dm-dashboard__select-value" data-role="status-value" id="dm-location-popup-status-value">Všetky stavy</span>
+                                            <span class="dm-dashboard__select-icon" aria-hidden="true"></span>
+                                        </button>
+                                        <div class="dm-dashboard__select-dropdown" data-role="status-dropdown" role="listbox" aria-labelledby="dm-location-popup-status-label" hidden>
+                                            <div class="dm-dashboard__select-dropdown-inner" data-role="status-dropdown-inner"></div>
+                                        </div>
+                                        <select id="dm-location-popup-status-native" class="dm-dashboard__select-native" data-role="status-filter" aria-labelledby="dm-location-popup-status-label" hidden>
                                             <option value="">Všetky stavy</option>
                                         </select>
-                                        <label class="dm-field__label" for="dm-location-popup-status">Stav</label>
                                     </div>
-                                    <div class="dm-field dm-dashboard__select" data-role="price-filter-wrapper">
-                                        <select id="dm-location-popup-price" class="dm-field__input" data-role="price-filter" aria-label="Zoradiť podľa ceny">
+                                    <div class="dm-dashboard__select" data-role="price-filter-wrapper">
+                                        <label class="dm-dashboard__select-label" id="dm-location-popup-price-label" for="dm-location-popup-price-native">Cena</label>
+                                        <button type="button" class="dm-dashboard__select-trigger" data-role="price-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="dm-location-popup-price-label dm-location-popup-price-value">
+                                            <span class="dm-dashboard__select-value" data-role="price-value" id="dm-location-popup-price-value">Všetky ceny</span>
+                                            <span class="dm-dashboard__select-icon" aria-hidden="true"></span>
+                                        </button>
+                                        <div class="dm-dashboard__select-dropdown" data-role="price-dropdown" role="listbox" aria-labelledby="dm-location-popup-price-label" hidden>
+                                            <div class="dm-dashboard__select-dropdown-inner" data-role="price-dropdown-inner"></div>
+                                        </div>
+                                        <select id="dm-location-popup-price-native" class="dm-dashboard__select-native" data-role="price-filter" aria-labelledby="dm-location-popup-price-label" hidden>
                                             <option value="">Všetky ceny</option>
                                             <option value="asc">Najnižšia</option>
                                             <option value="desc">Najvyššia</option>
                                         </select>
-                                        <label class="dm-field__label" for="dm-location-popup-price">Cena</label>
                                     </div>
                                     <div class="dm-dashboard__legend" data-role="toolbar-legend">
                                         <span class="dm-dashboard__legend-heading">Legenda stavov</span>
@@ -481,17 +763,280 @@
         const tooltipPrice = root.querySelector('[data-role="tooltip-price"]');
         const tooltipRent = root.querySelector('[data-role="tooltip-rent"]');
         const tooltipDot = tooltip.querySelector('.dm-location-popup__tooltip-dot');
-    const tooltipClose = root.querySelector('[data-role="tooltip-close"]');
-    const tooltipCta = root.querySelector('[data-role="tooltip-cta"]');
-    const searchInput = root.querySelector('[data-role="search"]');
-    const statusFilter = root.querySelector('[data-role="status-filter"]');
-    const priceFilter = root.querySelector('[data-role="price-filter"]');
-    const statusFilterWrapper = root.querySelector('[data-role="status-filter-wrapper"]');
-    const priceFilterWrapper = root.querySelector('[data-role="price-filter-wrapper"]');
-    const toolbarLegend = root.querySelector('[data-role="toolbar-legend"]');
-    const toolbarLegendList = root.querySelector('[data-role="toolbar-legend-list"]');
-    const counterEl = root.querySelector('[data-role="counter"]');
-    const tableBody = root.querySelector('[data-role="table-body"]');
+        const tooltipClose = root.querySelector('[data-role="tooltip-close"]');
+        const tooltipCta = root.querySelector('[data-role="tooltip-cta"]');
+        const searchInput = root.querySelector('[data-role="search"]');
+        const statusFilter = root.querySelector('[data-role="status-filter"]');
+        const priceFilter = root.querySelector('[data-role="price-filter"]');
+        const statusFilterWrapper = root.querySelector('[data-role="status-filter-wrapper"]');
+        const priceFilterWrapper = root.querySelector('[data-role="price-filter-wrapper"]');
+        const statusTrigger = root.querySelector('[data-role="status-trigger"]');
+        const priceTrigger = root.querySelector('[data-role="price-trigger"]');
+        const statusValueDisplay = root.querySelector('[data-role="status-value"]');
+        const priceValueDisplay = root.querySelector('[data-role="price-value"]');
+    const statusDropdown = root.querySelector('[data-role="status-dropdown"]');
+    const priceDropdown = root.querySelector('[data-role="price-dropdown"]');
+    const statusDropdownList = root.querySelector('[data-role="status-dropdown-inner"]');
+    const priceDropdownList = root.querySelector('[data-role="price-dropdown-inner"]');
+        const toolbarLegend = root.querySelector('[data-role="toolbar-legend"]');
+        const toolbarLegendList = root.querySelector('[data-role="toolbar-legend-list"]');
+        const counterEl = root.querySelector('[data-role="counter"]');
+        const tableBody = root.querySelector('[data-role="table-body"]');
+
+        const customSelectRegistry = new Map();
+        let openCustomSelectRef = null;
+
+        function handleGlobalPointer(event) {
+            if (!openCustomSelectRef) {
+                return;
+            }
+            const selectConfig = customSelectRegistry.get(openCustomSelectRef);
+            if (!selectConfig) {
+                openCustomSelectRef = null;
+                return;
+            }
+            if (!selectConfig.wrapper.contains(event.target)) {
+                closeCustomSelectMenu(openCustomSelectRef);
+            }
+        }
+
+        function handleGlobalKey(event) {
+            if (!openCustomSelectRef) {
+                return;
+            }
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                const selectConfig = customSelectRegistry.get(openCustomSelectRef);
+                closeCustomSelectMenu(openCustomSelectRef);
+                selectConfig?.trigger?.focus();
+            }
+        }
+
+        function focusOptionForSelect(select, targetValue) {
+            const selectConfig = customSelectRegistry.get(select);
+            if (!selectConfig) {
+                return;
+            }
+            const scope = selectConfig.list ?? selectConfig.dropdown;
+            const optionButtons = Array.from(scope.querySelectorAll('.dm-dashboard__select-option'));
+            if (!optionButtons.length) {
+                return;
+            }
+            const target =
+                (targetValue && optionButtons.find((button) => button.dataset.value === targetValue)) ||
+                optionButtons.find((button) => button.classList.contains('is-selected')) ||
+                optionButtons[0];
+            if (target) {
+                target.focus({ preventScroll: false });
+            }
+        }
+
+        function handleOptionNavigation(select, event) {
+            const selectConfig = customSelectRegistry.get(select);
+            if (!selectConfig) {
+                return;
+            }
+            const scope = selectConfig.list ?? selectConfig.dropdown;
+            const optionButtons = Array.from(scope.querySelectorAll('.dm-dashboard__select-option'));
+            if (!optionButtons.length) {
+                return;
+            }
+            let currentIndex = optionButtons.indexOf(document.activeElement);
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                currentIndex = currentIndex >= 0 && currentIndex < optionButtons.length - 1 ? currentIndex + 1 : 0;
+                optionButtons[currentIndex].focus();
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                currentIndex = currentIndex > 0 ? currentIndex - 1 : optionButtons.length - 1;
+                optionButtons[currentIndex].focus();
+            } else if (event.key === 'Home') {
+                event.preventDefault();
+                optionButtons[0].focus();
+            } else if (event.key === 'End') {
+                event.preventDefault();
+                optionButtons[optionButtons.length - 1].focus();
+            } else if (event.key === ' ' || event.key === 'Enter') {
+                if (document.activeElement && optionButtons.includes(document.activeElement)) {
+                    event.preventDefault();
+                    document.activeElement.click();
+                }
+            } else if (event.key === 'Tab') {
+                closeCustomSelectMenu(select);
+            }
+        }
+
+        function updateCustomSelectDisplay(select) {
+            const selectConfig = customSelectRegistry.get(select);
+            if (!selectConfig) {
+                return;
+            }
+            const selectedOption = select.options[select.selectedIndex] || select.options[0];
+            if (selectedOption) {
+                selectConfig.valueEl.textContent = selectedOption.textContent;
+            }
+            const scope = selectConfig.list ?? selectConfig.dropdown;
+            Array.from(scope.querySelectorAll('.dm-dashboard__select-option')).forEach(
+                (button) => {
+                    const isSelected = button.dataset.value === select.value;
+                    button.classList.toggle('is-selected', isSelected);
+                    button.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                },
+            );
+            syncSelectStates();
+        }
+
+        function rebuildCustomSelectOptions(select) {
+            const selectConfig = customSelectRegistry.get(select);
+            if (!selectConfig) {
+                return;
+            }
+            const host = selectConfig.list ?? selectConfig.dropdown;
+            host.innerHTML = '';
+            Array.from(select.options).forEach((option) => {
+                const optionButton = document.createElement('button');
+                optionButton.type = 'button';
+                optionButton.className = 'dm-dashboard__select-option';
+                optionButton.dataset.value = option.value;
+                optionButton.textContent = option.textContent;
+                optionButton.tabIndex = -1;
+                optionButton.disabled = option.disabled;
+                optionButton.setAttribute('role', 'option');
+                optionButton.setAttribute('aria-selected', option.selected ? 'true' : 'false');
+                optionButton.setAttribute('aria-disabled', option.disabled ? 'true' : 'false');
+                if (option.disabled) {
+                    optionButton.classList.add('is-disabled');
+                }
+                if (option.selected) {
+                    optionButton.classList.add('is-selected');
+                }
+                optionButton.addEventListener('click', () => {
+                    if (option.disabled) {
+                        return;
+                    }
+                    select.value = option.value;
+                    updateCustomSelectDisplay(select);
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    closeCustomSelectMenu(select);
+                    selectConfig.trigger.focus();
+                });
+                host.appendChild(optionButton);
+            });
+            host.scrollTop = 0;
+            updateCustomSelectDisplay(select);
+        }
+
+        function openCustomSelectMenu(select, options = {}) {
+            const selectConfig = customSelectRegistry.get(select);
+            if (!selectConfig) {
+                return;
+            }
+            if (openCustomSelectRef && openCustomSelectRef !== select) {
+                closeCustomSelectMenu(openCustomSelectRef);
+            }
+            rebuildCustomSelectOptions(select);
+            selectConfig.dropdown.hidden = false;
+            selectConfig.wrapper.classList.add('is-open');
+            selectConfig.trigger.setAttribute('aria-expanded', 'true');
+            openCustomSelectRef = select;
+            document.addEventListener('pointerdown', handleGlobalPointer, true);
+            document.addEventListener('keydown', handleGlobalKey);
+            if (options.focusSelected) {
+                requestAnimationFrame(() => {
+                    focusOptionForSelect(select);
+                });
+            }
+        }
+
+        function closeCustomSelectMenu(select) {
+            const selectConfig = customSelectRegistry.get(select);
+            if (!selectConfig) {
+                return;
+            }
+            selectConfig.dropdown.hidden = true;
+            selectConfig.wrapper.classList.remove('is-open');
+            selectConfig.trigger.setAttribute('aria-expanded', 'false');
+            if (openCustomSelectRef === select) {
+                openCustomSelectRef = null;
+                document.removeEventListener('pointerdown', handleGlobalPointer, true);
+                document.removeEventListener('keydown', handleGlobalKey);
+            }
+        }
+
+        function toggleCustomSelectMenu(select) {
+            if (openCustomSelectRef === select) {
+                closeCustomSelectMenu(select);
+            } else {
+                openCustomSelectMenu(select, { focusSelected: true });
+            }
+        }
+
+        function registerCustomSelect(select, config) {
+            if (!select || !config?.wrapper || !config?.trigger || !config?.dropdown || !config?.valueEl) {
+                return;
+            }
+            customSelectRegistry.set(select, config);
+            config.trigger.setAttribute('aria-expanded', 'false');
+            config.trigger.addEventListener('click', (event) => {
+                event.preventDefault();
+                toggleCustomSelectMenu(select);
+            });
+            config.trigger.addEventListener('keydown', (event) => {
+                const { key } = event;
+                if (key === ' ' || key === 'Enter' || key === 'ArrowDown' || key === 'ArrowUp') {
+                    event.preventDefault();
+                    openCustomSelectMenu(select, { focusSelected: true });
+                }
+            });
+            const keydownTarget = config.list ?? config.dropdown;
+            keydownTarget.addEventListener('keydown', (event) => {
+                handleOptionNavigation(select, event);
+            });
+            config.wrapper.addEventListener('focusout', (event) => {
+                if (config.wrapper.contains(event.relatedTarget)) {
+                    return;
+                }
+                closeCustomSelectMenu(select);
+            });
+            select.addEventListener('change', () => {
+                updateCustomSelectDisplay(select);
+            });
+            rebuildCustomSelectOptions(select);
+        }
+
+        if (
+            statusFilter &&
+            statusFilterWrapper &&
+            statusTrigger &&
+            statusDropdown &&
+            statusDropdownList &&
+            statusValueDisplay
+        ) {
+            registerCustomSelect(statusFilter, {
+                wrapper: statusFilterWrapper,
+                trigger: statusTrigger,
+                dropdown: statusDropdown,
+                list: statusDropdownList,
+                valueEl: statusValueDisplay,
+            });
+        }
+
+        if (
+            priceFilter &&
+            priceFilterWrapper &&
+            priceTrigger &&
+            priceDropdown &&
+            priceDropdownList &&
+            priceValueDisplay
+        ) {
+            registerCustomSelect(priceFilter, {
+                wrapper: priceFilterWrapper,
+                trigger: priceTrigger,
+                dropdown: priceDropdown,
+                list: priceDropdownList,
+                valueEl: priceValueDisplay,
+            });
+        }
 
         const state = {
             open: false,
@@ -628,13 +1173,11 @@
         function syncSelectStates() {
             if (statusFilterWrapper) {
                 const hasStatusValue = Boolean(statusFilter?.value);
-                statusFilterWrapper.classList.toggle('dm-field--has-value', hasStatusValue);
-                statusFilterWrapper.classList.toggle('dm-field--select-has-value', hasStatusValue);
+                statusFilterWrapper.classList.toggle('dm-dashboard__select--has-value', hasStatusValue);
             }
             if (priceFilterWrapper) {
                 const hasPriceValue = Boolean(priceFilter?.value);
-                priceFilterWrapper.classList.toggle('dm-field--has-value', hasPriceValue);
-                priceFilterWrapper.classList.toggle('dm-field--select-has-value', hasPriceValue);
+                priceFilterWrapper.classList.toggle('dm-dashboard__select--has-value', hasPriceValue);
             }
         }
 
@@ -674,6 +1217,9 @@
             hideTooltip();
             state.activeAreaId = null;
             state.hoverAreaId = null;
+            if (openCustomSelectRef) {
+                closeCustomSelectMenu(openCustomSelectRef);
+            }
             document.removeEventListener('keydown', handleKeydown);
             window.removeEventListener('resize', repositionActiveTooltip);
             if (typeof state.previousBodyOverflow === 'string') {
@@ -1155,7 +1701,7 @@
             } else {
                 statusFilter.value = '';
             }
-            syncSelectStates();
+            rebuildCustomSelectOptions(statusFilter);
         }
 
         function updateCounter(filteredCount, totalCount) {
@@ -1349,9 +1895,14 @@
                 state.statusFilter = '';
                 state.priceOrder = '';
                 searchInput.value = '';
-                statusFilter.value = '';
-                priceFilter.value = '';
-                syncSelectStates();
+                if (statusFilter) {
+                    statusFilter.value = '';
+                    updateCustomSelectDisplay(statusFilter);
+                }
+                if (priceFilter) {
+                    priceFilter.value = '';
+                    updateCustomSelectDisplay(priceFilter);
+                }
                 titleEl.textContent = String(state.region?.label ?? state.region?.name ?? 'Detail lokality');
                 subtitleEl.textContent = String(state.project?.name ?? state.project?.title ?? '');
                 if (state.project?.badge) {
