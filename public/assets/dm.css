@@ -1956,45 +1956,33 @@
 
 .dm-dashboard__toolbar {
     display: grid;
-    grid-template-columns: repeat(5, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     align-items: stretch;
-    column-gap: 16px;
-    row-gap: 16px;
+    column-gap: clamp(10px, 1.5vw, 14px);
+    row-gap: clamp(10px, 1.5vw, 14px);
     width: 100%;
     --dm-map-modal-heading-color: var(--dm-toolbar-text-color, #1C134F);
     --dm-map-modal-content-color: var(--dm-toolbar-text-color, #1C134F);
-    --dm-dashboard-control-height: 56px;
+    --dm-dashboard-control-height: clamp(42px, 5vw, 50px);
 }
 
 .dm-dashboard__toolbar-heading {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 700;
-    color: #1C134F;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 0 18px;
-    border: 1px solid #ffffff;
-    border-radius: 16px;
-    background: #ffffff;
-    min-height: var(--dm-dashboard-control-height);
-    height: var(--dm-dashboard-control-height);
+    display: none !important;
 }
 
 .dm-dashboard__search {
     width: 100%;
-    min-width: 200px;
+    min-width: 160px;
     height: var(--dm-dashboard-control-height);
     min-height: var(--dm-dashboard-control-height);
-    border-radius: 16px;
+    border-radius: clamp(12px, 1.8vw, 14px);
     border: 1px solid #1C134F;
     background: #ffffff;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 0 18px;
+    gap: clamp(8px, 1.2vw, 10px);
+    padding: 0 clamp(12px, 1.8vw, 16px);
+    transition: border-color 0.18s ease;
 }
 
 .dm-dashboard__search:hover,
@@ -2006,7 +1994,7 @@
     flex: 1;
     background: transparent;
     border: none;
-    font-size: 15px;
+    font-size: clamp(13px, 1.6vw, 14px);
     color: var(--dm-toolbar-text-color, #1C134F);
     height: 100%;
 }
@@ -2024,11 +2012,18 @@
     color: var(--dm-toolbar-text-color, #1C134F);
     opacity: 0.8;
     display: inline-flex;
+    width: clamp(14px, 2vw, 16px);
+    height: clamp(14px, 2vw, 16px);
+}
+
+.dm-dashboard__search-icon svg {
+    width: 100%;
+    height: 100%;
 }
 
 .dm-dashboard__select {
     position: relative;
-    min-width: 200px;
+    min-width: 140px;
     width: 100%;
     --dm-dashboard-select-bg: #ffffff;
     min-height: var(--dm-dashboard-control-height);
@@ -2037,7 +2032,7 @@
 
 .dm-dashboard__select .dm-field__label {
     color: var(--dm-toolbar-text-color, #1C134F);
-    font-size: 14px;
+    font-size: clamp(12px, 1.4vw, 13px);
     pointer-events: none;
 }
 
@@ -2089,6 +2084,63 @@
     background-color: var(--dm-dashboard-select-bg);
     padding: 0 0.2em;
     color: var(--dm-toolbar-text-color, #1C134F);
+}
+
+.dm-dashboard__legend {
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 1.2vw, 10px);
+    padding: clamp(10px, 1.5vw, 14px) clamp(12px, 1.8vw, 16px);
+    border-radius: clamp(12px, 1.8vw, 14px);
+    border: 1px solid rgba(85, 60, 154, 0.12);
+    background: #ffffff;
+    min-height: var(--dm-dashboard-control-height, clamp(42px, 5vw, 50px));
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+}
+
+.dm-dashboard__legend-heading {
+    font-size: clamp(11px, 1.4vw, 12px);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(28, 19, 79, 0.7);
+    white-space: nowrap;
+    margin-right: clamp(6px, 1vw, 8px);
+}
+
+.dm-dashboard__legend-list {
+    display: flex;
+    align-items: center;
+    gap: clamp(6px, 1vw, 8px);
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.dm-dashboard__legend-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(4px, 0.8vw, 6px) clamp(10px, 1.5vw, 12px);
+    border-radius: 999px;
+    font-size: clamp(12px, 1.4vw, 13px);
+    font-weight: 600;
+    color: rgba(45, 45, 78, 0.85);
+    background: rgba(124, 58, 237, 0.08);
+    transition: opacity 0.18s ease;
+    white-space: nowrap;
+}
+
+.dm-dashboard__legend-badge.is-inactive {
+    opacity: 0.45;
+}
+
+.dm-dashboard__legend-counter {
+    margin-left: auto;
+    font-size: clamp(12px, 1.4vw, 13px);
+    font-weight: 500;
+    color: rgba(45, 45, 78, 0.65);
+    white-space: nowrap;
 }
 
 .dm-dashboard__add {
@@ -2240,6 +2292,10 @@
     z-index: 1;
 }
 
+.dm-dashboard__cell--status {
+    cursor: pointer;
+}
+
 .dm-dashboard__table td.dm-dashboard__cell--actions {
     overflow: visible !important;
 }
@@ -2254,6 +2310,20 @@
 
 .dm-dashboard__table th:hover {
     background: transparent !important;
+}
+
+.dm-dashboard__table tbody tr.is-hovered {
+    background: rgba(77, 56, 255, 0.08) !important;
+    border-radius: 20px;
+    border-bottom-color: transparent;
+    box-shadow: inset 0 0 0 1px rgba(77, 56, 255, 0.1);
+}
+
+.dm-dashboard__table tbody tr.is-active {
+    background: rgba(77, 56, 255, 0.12) !important;
+    border-radius: 22px;
+    border-bottom-color: transparent;
+    box-shadow: inset 0 0 0 1px rgba(77, 56, 255, 0.18), 0 24px 46px rgba(17, 23, 64, 0.16);
 }
 
 .dm-status {
@@ -2381,13 +2451,11 @@
     }
 
     .dm-dashboard__toolbar {
-        grid-template-columns: 1fr;
-        column-gap: 0;
-        row-gap: 12px;
+        grid-template-columns: 1fr 1fr;
     }
 
-    .dm-dashboard__toolbar-heading {
-        width: 100%;
+    .dm-dashboard__search {
+        grid-column: 1 / -1;
     }
 
     .dm-dashboard__select {
@@ -2399,13 +2467,29 @@
         width: 100%;
     }
 
+    .dm-dashboard__legend {
+        gap: clamp(6px, 1vw, 8px);
+        padding: clamp(10px, 1.5vw, 12px);
+        grid-column: 1 / -1;
+    }
+
+    .dm-dashboard__legend-heading {
+        font-size: clamp(10px, 1.3vw, 11px);
+    }
+
+    .dm-dashboard__legend-counter {
+        margin-left: 0;
+        margin-top: 4px;
+        flex: 0 0 100%;
+    }
+
     .dm-dashboard__add {
         width: 100%;
         justify-content: center;
     }
 
     .dm-dashboard__table {
-        gap: 18px;
+        gap: clamp(12px, 2vw, 16px);
     }
 
     .dm-dashboard__table thead {
@@ -2471,6 +2555,12 @@
     .dm-dashboard__cell--actions .dm-icon-button__icon svg {
         width: clamp(14px, 3.5vw, 16px);
         height: clamp(14px, 3.5vw, 16px);
+    }
+}
+
+@media (max-width: 640px) {
+    .dm-dashboard__toolbar {
+        grid-template-columns: 1fr;
     }
 }
 

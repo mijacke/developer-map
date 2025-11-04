@@ -9,6 +9,32 @@
 
     const AVAILABLE_KEYWORDS = ['available', 'free', 'voln', 'volne', 'volny', 'volny apartman', 'volne apartmany'];
 
+    const DASHBOARD_TOOLBAR_ICONS = {
+        search: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
+        chevron: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+    };
+
+    const DASHBOARD_ACTION_ICONS = {
+        open: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20.9598 17.4821L19.6287 5.49985C20.5944 5.02976 21.2663 4.04695 21.2663 2.9C21.2663 1.29891 19.9674 0 18.3663 0C16.9607 0 15.7891 1.00166 15.524 2.3287L7.3892 3.49102C6.90403 2.5694 5.94674 1.93343 4.83314 1.93343C3.23205 1.93343 1.93314 3.23234 1.93314 4.83343C1.93314 5.92383 2.54301 6.86198 3.43215 7.35759L2.39482 13.5845C1.03443 13.824 0 15.0049 0 16.4334C0 18.0345 1.29891 19.3334 2.9 19.3334C3.93559 19.3334 4.83923 18.7856 5.3505 17.9684L17.436 20.6541C17.6123 22.0861 18.8198 23.2 20.3 23.2C21.9011 23.2 23.2 21.9011 23.2 20.3C23.2 18.9266 22.2418 17.7822 20.9598 17.4821ZM4.30099 13.909L5.33832 7.68239C6.51166 7.47562 7.44256 6.56821 7.67572 5.40444L15.8105 4.24241C16.1965 4.97495 16.88 5.5245 17.7068 5.71793L19.0379 17.7002C18.549 17.9388 18.1366 18.3063 17.8483 18.765L5.76404 16.0793C5.64891 15.1409 5.09211 14.3489 4.30099 13.909Z" fill="#2E1F7E"/></svg>',
+        edit: '<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.99414 15.2877C1.99416 17.79 2.47827 19.4353 3.54395 20.4644C4.61213 21.4958 6.3227 21.9644 8.91895 21.9644H15.584C18.1806 21.9644 19.8909 21.4957 20.959 20.4644C22.0247 19.4354 22.5088 17.7902 22.5088 15.2877V13.1422C22.5089 12.6732 22.9013 12.3079 23.3652 12.3101C23.8237 12.3101 24.2103 12.6687 24.2168 13.1304C24.3661 16.3022 24.1111 18.9516 22.8447 20.8004C21.5625 22.6721 19.2932 23.6609 15.5869 23.6324H15.583C13.7562 23.5923 11.929 23.6751 10.1455 23.6695C8.38109 23.664 6.69074 23.5707 5.22559 23.1685C3.75499 22.7648 2.49702 22.0457 1.61816 20.7828C0.741989 19.5234 0.263834 17.7531 0.289062 15.2886V15.2857C0.33034 13.521 0.244166 11.7602 0.25 10.0357C0.255772 8.3316 0.352901 6.69676 0.770508 5.27887C1.19013 3.85419 1.93677 2.63863 3.24316 1.79059C4.54383 0.946463 6.3716 0.485869 8.91895 0.508362V0.507385H11.1406C11.4041 0.507393 11.621 0.607205 11.7695 0.772034C11.914 0.932426 11.9814 1.13978 11.9814 1.33942C11.9814 1.53921 11.9143 1.74741 11.7695 1.90778C11.6208 2.07248 11.4032 2.17197 11.1396 2.17145H11.1318V2.17047C8.19979 2.07322 5.89969 2.19213 4.34082 3.09625C2.82145 3.97765 1.94819 5.64801 1.99414 8.8443V15.2877Z" fill="#2E1F7E" stroke="#2E1F7E" stroke-width="0.5"/><path d="M19.4894 0.25C20.6352 0.25 21.7542 0.800077 22.8342 1.84277C23.9131 2.88445 24.4875 3.96743 24.4875 5.08203C24.4875 6.19654 23.9129 7.2793 22.8342 8.32129L14.0754 16.7744L14.0676 16.7822L14.0666 16.7812C13.5286 17.2598 12.8627 17.5815 12.1457 17.709L12.1359 17.7109L8.7912 18.1748C8.01463 18.294 7.18442 18.0896 6.60272 17.5332L6.59784 17.5283C6.04202 16.9641 5.79366 16.1755 5.93378 15.4043L6.41522 12.1807L6.4162 12.1709C6.54829 11.4716 6.88513 10.8237 7.38397 10.3037L7.39081 10.2969L16.1447 1.84473C17.2253 0.800587 18.3439 0.250143 19.4894 0.25ZM8.17206 12.2334C8.15028 12.3165 8.12715 12.4128 8.10468 12.5205C8.0356 12.8517 7.96789 13.2707 7.90546 13.6982C7.84307 14.1255 7.78654 14.5564 7.73846 14.9111C7.69156 15.2573 7.65132 15.5481 7.62128 15.6758L7.6203 15.6748C7.56891 15.9155 7.63718 16.1655 7.80585 16.3545C8.00307 16.5195 8.27068 16.588 8.53046 16.5352C8.65989 16.5073 8.95678 16.4682 9.31366 16.4229C9.68165 16.3761 10.1298 16.3214 10.5744 16.2607C11.0197 16.2 11.4571 16.1347 11.8019 16.0684C11.9049 16.0486 11.9976 16.027 12.0793 16.0078L8.17206 12.2334ZM9.20135 10.8887L13.4748 15.0146L19.4308 9.26367C17.5524 8.41348 16.0404 6.95302 15.1613 5.13379L9.20135 10.8887ZM19.4865 1.90527C18.8344 1.90544 18.1468 2.25078 17.3439 3.02637L16.4758 3.86426C17.1943 5.78128 18.7605 7.29287 20.7541 7.98535L21.6301 7.14062C22.4351 6.36408 22.7883 5.70392 22.7883 5.08398C22.7883 4.46401 22.4352 3.80371 21.6301 3.02637C20.8266 2.25069 20.1388 1.90527 19.4865 1.90527Z" fill="#2E1F7E" stroke="#2E1F7E" stroke-width="0.5"/></svg>',
+    };
+
+    const PREDEFINED_STATUS_STYLES = {
+    volne: { background: '#dcfce7', color: '#15803d' },
+    volny: { background: '#dcfce7', color: '#15803d' },
+    'volny-apartman': { background: '#dcfce7', color: '#15803d' },
+    obsadene: { background: '#fee2e2', color: '#b91c1c' },
+    obsadeny: { background: '#fee2e2', color: '#b91c1c' },
+    obsadena: { background: '#fee2e2', color: '#b91c1c' },
+    predane: { background: '#fee2e2', color: '#b91c1c' },
+    predany: { background: '#fee2e2', color: '#b91c1c' },
+    predana: { background: '#fee2e2', color: '#b91c1c' },
+    rezervovane: { background: '#fef3c7', color: '#b45309' },
+    rezervovany: { background: '#fef3c7', color: '#b45309' },
+    rezervovana: { background: '#fef3c7', color: '#b45309' },
+    unknown: { background: 'rgba(124, 58, 237, 0.12)', color: 'rgba(45, 45, 78, 0.65)' },
+    };
+
     // Map to store popup instances per container
     const popupInstancesMap = new WeakMap();
 
@@ -54,21 +80,22 @@
             .dm-map-viewer__popover-cta:active { transform: translateY(0); }
         `;
         style.textContent += `
-            .dm-location-popup { position: fixed; inset: 0; z-index: 9999; display: none; align-items: flex-start; justify-content: center; padding: clamp(16px, 4vw, 48px); background: rgba(15, 23, 42, 0.62); backdrop-filter: blur(6px); box-sizing: border-box; }
+            .dm-location-popup { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: clamp(12px, 2vw, 24px); background: rgba(15, 23, 42, 0.62); backdrop-filter: blur(6px); box-sizing: border-box; }
             .dm-location-popup.is-visible { display: flex; }
             .dm-location-popup__backdrop { position: absolute; inset: 0; border-radius: 0; }
-            .dm-location-popup__surface { position: relative; background: #ffffff; width: min(1180px, 100%); max-height: min(92vh, 960px); border-radius: 28px; box-shadow: 0 32px 80px rgba(15, 23, 42, 0.25); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(15, 23, 42, 0.08); }
-            .dm-location-popup__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: clamp(20px, 2.8vw, 32px) clamp(24px, 3.2vw, 40px); border-bottom: 1px solid rgba(15, 23, 42, 0.08); background: linear-gradient(145deg, rgba(99, 102, 241, 0.06), rgba(79, 70, 229, 0.04)); }
-            .dm-location-popup__titles { display: flex; flex-direction: column; gap: 6px; }
-            .dm-location-popup__subtitle { margin: 0; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #6366f1; }
-            .dm-location-popup__title { margin: 0; font-size: clamp(1.45rem, 2vw, 1.8rem); font-weight: 700; color: #1c134f; }
-            .dm-location-popup__meta { display: flex; gap: 12px; color: #475569; font-size: 0.9rem; }
-            .dm-location-popup__close { border: none; background: rgba(15, 23, 42, 0.06); color: #1c134f; width: 42px; height: 42px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: background 0.2s ease, transform 0.2s ease; }
+            .dm-location-popup__surface { position: relative; background: #ffffff; width: min(90vw, 100%); max-width: 1400px; max-height: 90vh; border-radius: clamp(18px, 2.8vw, 24px); box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(15, 23, 42, 0.08); }
+            .dm-location-popup__header { display: flex; align-items: flex-start; justify-content: space-between; gap: clamp(12px, 2vw, 16px); padding: clamp(16px, 2.5vw, 24px) clamp(20px, 3vw, 32px); border-bottom: none; background: linear-gradient(145deg, rgba(99, 102, 241, 0.06), rgba(79, 70, 229, 0.04)); }
+            .dm-location-popup__titles { display: flex; flex-direction: column; gap: clamp(4px, 0.8vw, 6px); }
+            .dm-location-popup__subtitle { margin: 0; font-size: clamp(13px, 1.5vw, 14px); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #6366f1; }
+            .dm-location-popup__title { margin: 0; font-size: clamp(18px, 2.2vw, 22px); font-weight: 700; color: #1c134f; }
+            .dm-location-popup__meta { display: none !important; }
+            .dm-location-popup__badge { display: none !important; }
+            .dm-location-popup__close { border: none; background: rgba(15, 23, 42, 0.06); color: #1c134f; width: clamp(36px, 5vw, 40px); height: clamp(36px, 5vw, 40px); border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: clamp(18px, 2.2vw, 20px); cursor: pointer; transition: background 0.2s ease, transform 0.2s ease; flex-shrink: 0; }
             .dm-location-popup__close:hover { background: rgba(79, 70, 229, 0.12); transform: translateY(-1px); }
             .dm-location-popup__close:focus-visible { outline: 2px solid #4d38ff; outline-offset: 2px; }
-            .dm-location-popup__content { display: grid; grid-template-rows: auto 1fr; gap: 0; flex: 1; overflow: hidden; }
-            .dm-location-popup__plan { padding: clamp(20px, 2.5vw, 32px) clamp(24px, 3.2vw, 40px) clamp(16px, 2.5vw, 28px); display: flex; flex-direction: column; gap: clamp(16px, 2vw, 20px); background: #f8fafc; border-bottom: 1px solid rgba(15, 23, 42, 0.06); }
-            .dm-location-popup__plan-body { position: relative; border-radius: 24px; overflow: hidden; background: #ffffff; box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06); }
+            .dm-location-popup__content { display: grid; grid-template-rows: auto 1fr; gap: 0; flex: 1; overflow: auto; }
+            .dm-location-popup__plan { padding: clamp(14px, 2.2vw, 22px) clamp(18px, 2.8vw, 32px) clamp(12px, 2vw, 20px); display: flex; flex-direction: column; gap: clamp(12px, 1.8vw, 16px); background: #f8fafc; border-bottom: 1px solid rgba(15, 23, 42, 0.06); }
+            .dm-location-popup__plan-body { position: relative; border-radius: clamp(16px, 2.5vw, 20px); overflow: hidden; background: #ffffff; box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06); }
             .dm-location-popup__canvas { position: relative; width: 100%; background: #eef2ff; }
             .dm-location-popup__image { width: 100%; height: auto; display: block; }
             .dm-location-popup__overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -78,22 +105,22 @@
             .dm-location-popup__area.is-hovered { filter: drop-shadow(0 12px 18px rgba(15, 23, 42, 0.18)); }
             .dm-location-popup__area.is-active { filter: drop-shadow(0 16px 26px rgba(15, 23, 42, 0.28)); stroke-width: 2.4; }
             .dm-location-popup__area.is-dimmed { opacity: 0.35; }
-            .dm-location-popup__tooltip { position: absolute; min-width: 240px; max-width: 320px; border-radius: 18px; background: #ffffff; box-shadow: 0 24px 50px rgba(15, 23, 42, 0.22); padding: 18px 20px 20px; display: none; flex-direction: column; gap: 14px; z-index: 5; border: 1px solid rgba(15, 23, 42, 0.08); }
+            .dm-location-popup__tooltip { position: absolute; min-width: clamp(200px, 28vw, 260px); max-width: clamp(260px, 35vw, 320px); border-radius: clamp(14px, 2vw, 16px); background: #ffffff; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2); padding: clamp(14px, 2vw, 16px) clamp(16px, 2.2vw, 18px); display: none; flex-direction: column; gap: clamp(10px, 1.5vw, 12px); z-index: 5; border: 1px solid rgba(15, 23, 42, 0.08); }
             .dm-location-popup__tooltip.is-visible { display: flex; }
-            .dm-location-popup__tooltip-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-            .dm-location-popup__tooltip-status { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.95rem; color: #1c134f; margin: 0; }
-            .dm-location-popup__tooltip-dot { width: 12px; height: 12px; border-radius: 999px; background: var(--dm-tooltip-color, #16a34a); box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.16); }
-            .dm-location-popup__tooltip-title { margin: 0; font-size: 1.05rem; font-weight: 700; color: #1c134f; }
-            .dm-location-popup__tooltip-meta { display: grid; gap: 10px; font-size: 0.9rem; color: #334155; }
-            .dm-location-popup__tooltip-meta dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; margin: 0; }
+            .dm-location-popup__tooltip-header { display: flex; justify-content: space-between; align-items: flex-start; gap: clamp(10px, 1.5vw, 12px); }
+            .dm-location-popup__tooltip-status { display: flex; align-items: center; gap: clamp(8px, 1.2vw, 10px); font-weight: 600; font-size: clamp(13px, 1.5vw, 14px); color: #1c134f; margin: 0; }
+            .dm-location-popup__tooltip-dot { width: clamp(10px, 1.4vw, 12px); height: clamp(10px, 1.4vw, 12px); border-radius: 999px; background: var(--dm-tooltip-color, #16a34a); box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.14); }
+            .dm-location-popup__tooltip-title { margin: 0; font-size: clamp(14px, 1.8vw, 16px); font-weight: 700; color: #1c134f; }
+            .dm-location-popup__tooltip-meta { display: grid; gap: clamp(8px, 1.2vw, 10px); font-size: clamp(12px, 1.4vw, 13px); color: #334155; }
+            .dm-location-popup__tooltip-meta dl { display: grid; grid-template-columns: auto 1fr; gap: clamp(6px, 1vw, 8px) clamp(10px, 1.5vw, 12px); margin: 0; }
             .dm-location-popup__tooltip-meta dt { font-weight: 600; color: #1c134f; }
             .dm-location-popup__tooltip-meta dd { margin: 0; }
-            .dm-location-popup__tooltip-cta { margin-top: 4px; border: none; border-radius: 999px; padding: 10px 18px; background: #4d38ff; color: #ffffff; font-weight: 600; cursor: pointer; box-shadow: 0 16px 34px rgba(77, 56, 255, 0.22); transition: transform 0.18s ease, box-shadow 0.18s ease; align-self: flex-start; }
-            .dm-location-popup__tooltip-cta:hover { transform: translateY(-1px); box-shadow: 0 22px 42px rgba(77, 56, 255, 0.32); }
-            .dm-location-popup__tooltip-close { border: none; background: rgba(148, 163, 184, 0.16); color: #0f172a; width: 32px; height: 32px; border-radius: 999px; cursor: pointer; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center; }
-            .dm-location-popup__legend { display: flex; flex-wrap: wrap; gap: 12px 18px; margin: 0; padding: 0; list-style: none; font-size: 0.85rem; color: #475569; }
-            .dm-location-popup__legend-item { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(99, 102, 241, 0.08); }
-            .dm-location-popup__legend-dot { width: 10px; height: 10px; border-radius: 999px; background: var(--dm-legend-color, #6366f1); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16); }
+            .dm-location-popup__tooltip-cta { margin-top: clamp(2px, 0.5vw, 4px); border: none; border-radius: 999px; padding: clamp(8px, 1.2vw, 10px) clamp(14px, 2vw, 16px); background: #4d38ff; color: #ffffff; font-weight: 600; font-size: clamp(12px, 1.4vw, 13px); cursor: pointer; box-shadow: 0 12px 28px rgba(77, 56, 255, 0.2); transition: transform 0.18s ease, box-shadow 0.18s ease; align-self: flex-start; }
+            .dm-location-popup__tooltip-cta:hover { transform: translateY(-1px); box-shadow: 0 16px 34px rgba(77, 56, 255, 0.28); }
+            .dm-location-popup__tooltip-close { border: none; background: rgba(148, 163, 184, 0.16); color: #0f172a; width: clamp(28px, 4vw, 32px); height: clamp(28px, 4vw, 32px); border-radius: 999px; cursor: pointer; font-size: clamp(14px, 1.6vw, 16px); display: inline-flex; align-items: center; justify-content: center; }
+            .dm-location-popup__legend { display: none !important; }
+            .dm-location-popup__legend-item { display: none !important; }
+            .dm-location-popup__legend-dot { display: none !important; }
             .dm-location-popup__footer { padding: clamp(18px, 2.4vw, 28px) clamp(24px, 3.2vw, 40px) clamp(24px, 3vw, 36px); display: flex; flex-direction: column; gap: clamp(18px, 2.6vw, 28px); background: #ffffff; }
             .dm-location-popup__filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
             .dm-location-popup__search { flex: 1 1 220px; display: flex; align-items: center; gap: 10px; background: #f1f5f9; border-radius: 14px; padding: 10px 14px; border: 1px solid transparent; transition: border 0.2s ease, background 0.2s ease; }
@@ -122,26 +149,96 @@
             .dm-location-popup__badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #334155; padding: 6px 12px; border-radius: 999px; background: rgba(148, 163, 184, 0.16); }
             .dm-location-popup__badge-dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
             @media (max-width: 1024px) {
-                .dm-location-popup { padding: clamp(12px, 4vw, 24px); }
-                .dm-location-popup__surface { border-radius: 22px; max-height: 94vh; }
-                .dm-location-popup__header { padding: 20px; }
-                .dm-location-popup__plan { padding: 20px; }
-                .dm-location-popup__footer { padding: 20px; }
-                .dm-location-popup__filters { gap: 10px; }
-                .dm-location-popup__search { flex: 1 1 100%; }
-                .dm-location-popup__counter { width: 100%; text-align: right; order: 99; }
+                .dm-location-popup { padding: clamp(10px, 2vw, 16px); }
+                .dm-location-popup__surface { border-radius: clamp(16px, 2.5vw, 20px); max-height: 92vh; }
+                .dm-location-popup__header { padding: clamp(14px, 2.2vw, 18px) clamp(16px, 2.5vw, 24px); }
+                .dm-location-popup__plan { padding: clamp(12px, 2vw, 18px); }
             }
             @media (max-width: 720px) {
-                .dm-location-popup__surface { width: 100%; max-height: 96vh; border-radius: 18px; }
+                .dm-location-popup__surface { width: 95vw; max-height: 94vh; border-radius: clamp(14px, 2.2vw, 16px); }
                 .dm-location-popup__content { display: flex; flex-direction: column; }
-                .dm-location-popup__plan { padding: 18px; }
-                .dm-location-popup__plan-body { border-radius: 18px; }
-                .dm-location-popup__footer { padding: 18px; }
-                .dm-location-popup__table th, .dm-location-popup__table td { padding: 12px 14px; font-size: 0.85rem; }
-                .dm-location-popup__tooltip { min-width: 200px; }
+                .dm-location-popup__plan { padding: clamp(10px, 1.8vw, 14px); }
+                .dm-location-popup__plan-body { border-radius: clamp(12px, 2vw, 14px); }
+                .dm-location-popup__tooltip { min-width: 180px; max-width: 260px; }
+            }
+            @media (max-width: 480px) {
+                .dm-location-popup__surface { width: 98vw; max-height: 96vh; }
+                .dm-location-popup__header { flex-direction: column; gap: clamp(10px, 2vw, 12px); }
+                .dm-location-popup__close { align-self: flex-end; }
             }
             @media (prefers-reduced-motion: reduce) {
                 .dm-location-popup, .dm-location-popup * { transition-duration: 0s !important; animation-duration: 0s !important; }
+            }
+        `;
+        style.textContent += `
+            .dm-location-popup__footer--dashboard { padding: clamp(12px, 2vw, 20px); background: transparent; }
+            .dm-location-popup__footer--dashboard .dm-dashboard { gap: clamp(14px, 2vw, 20px); }
+            .dm-location-popup__footer--dashboard .dm-dashboard__card { margin: 0; }
+            .dm-dashboard { display: flex; flex-direction: column; gap: clamp(14px, 2vw, 20px); }
+            .dm-dashboard__card { background: var(--dm-surface, #ffffff); border-radius: clamp(16px, 2.5vw, 24px); border: 1px solid rgba(85, 60, 154, 0.08); padding: clamp(16px, 2.5vw, 28px) clamp(18px, 2.8vw, 32px); box-shadow: 0 18px 48px rgba(82, 51, 143, 0.06); }
+            .dm-dashboard__toolbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: stretch; column-gap: clamp(10px, 1.5vw, 14px); row-gap: clamp(10px, 1.5vw, 14px); width: 100%; --dm-dashboard-control-height: clamp(42px, 5vw, 50px); }
+            .dm-dashboard__toolbar-heading { display: none !important; }
+            .dm-dashboard__search { width: 100%; min-width: 160px; height: var(--dm-dashboard-control-height); border-radius: clamp(12px, 1.8vw, 14px); border: 1px solid #1C134F; background: #ffffff; display: flex; align-items: center; gap: clamp(8px, 1.2vw, 10px); padding: 0 clamp(12px, 1.8vw, 16px); transition: border-color 0.18s ease; }
+            .dm-dashboard__search:hover, .dm-dashboard__search:focus-within { border-color: #1C134F; }
+            .dm-dashboard__search input { flex: 1; background: transparent; border: none; font-size: clamp(13px, 1.6vw, 14px); color: #1C134F; height: 100%; }
+            .dm-dashboard__search input::placeholder { color: #1C134F; opacity: 0.7; }
+            .dm-dashboard__search input:focus { outline: none; }
+            .dm-dashboard__search-icon { color: #1C134F; opacity: 0.8; display: inline-flex; width: clamp(14px, 2vw, 16px); height: clamp(14px, 2vw, 16px); }
+            .dm-dashboard__search-icon svg { width: 100%; height: 100%; }
+            .dm-dashboard__select { position: relative; min-width: 140px; width: 100%; min-height: var(--dm-dashboard-control-height); }
+            .dm-dashboard__select .dm-field__input { width: 100%; height: var(--dm-dashboard-control-height); border-radius: clamp(12px, 1.8vw, 14px); border: 1px solid #1C134F; background: #ffffff; padding: 0 clamp(36px, 5vw, 44px) 0 clamp(12px, 1.8vw, 16px); font-size: clamp(13px, 1.6vw, 14px); font-weight: 500; color: #1C134F; box-shadow: none; }
+            .dm-dashboard__select select.dm-field__input { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10' fill='none' stroke='%231C134F' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 2 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right clamp(12px, 1.8vw, 16px) center; background-size: clamp(12px, 1.6vw, 14px) clamp(8px, 1.2vw, 9px); cursor: pointer; }
+            .dm-dashboard__select .dm-field__label { position: absolute; left: clamp(12px, 1.8vw, 16px); top: 50%; transform: translateY(-50%); font-size: clamp(12px, 1.4vw, 13px); color: #1C134F; pointer-events: none; transition: 0.18s ease; background: #ffffff; padding: 0 4px; }
+            .dm-dashboard__select select.dm-field__input:focus ~ .dm-field__label,
+            .dm-dashboard__select.dm-field--has-value .dm-field__label { top: 0; transform: translateY(-50%) scale(0.82); }
+            .dm-dashboard__legend { display: flex; align-items: center; gap: clamp(8px, 1.2vw, 10px); padding: clamp(10px, 1.5vw, 14px) clamp(12px, 1.8vw, 16px); border-radius: clamp(12px, 1.8vw, 14px); border: 1px solid rgba(85, 60, 154, 0.12); background: #ffffff; min-height: var(--dm-dashboard-control-height); grid-column: 1 / -1; flex-wrap: wrap; }
+            .dm-dashboard__legend-heading { font-size: clamp(11px, 1.4vw, 12px); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(28, 19, 79, 0.7); white-space: nowrap; margin-right: clamp(6px, 1vw, 8px); }
+            .dm-dashboard__legend-list { display: flex; align-items: center; gap: clamp(6px, 1vw, 8px); flex-wrap: wrap; flex: 1; }
+            .dm-dashboard__legend-badge { display: inline-flex; align-items: center; justify-content: center; padding: clamp(4px, 0.8vw, 6px) clamp(10px, 1.5vw, 12px); border-radius: 999px; font-size: clamp(12px, 1.4vw, 13px); font-weight: 600; color: rgba(45, 45, 78, 0.85); background: rgba(124, 58, 237, 0.08); transition: opacity 0.18s ease; white-space: nowrap; }
+            .dm-dashboard__legend-badge.is-inactive { opacity: 0.45; }
+            .dm-dashboard__legend-counter { margin-left: auto; font-size: clamp(12px, 1.4vw, 13px); font-weight: 500; color: rgba(45, 45, 78, 0.65); white-space: nowrap; }
+            .dm-dashboard__table-wrapper { background: #ffffff; border-radius: clamp(16px, 2.5vw, 20px); border: 1px solid #d2d2dc; padding: clamp(14px, 2.2vw, 20px); box-shadow: 0 8px 20px rgba(22, 22, 29, 0.05); overflow: visible; }
+            .dm-dashboard__table { display: flex; flex-direction: column; gap: clamp(10px, 1.5vw, 14px); overflow: visible; width: 100%; }
+            .dm-dashboard__table thead { display: block; }
+            .dm-dashboard__table thead tr { display: grid; grid-template-columns: minmax(70px, 0.8fr) minmax(100px, 1.2fr) minmax(80px, 0.9fr) minmax(70px, 0.8fr) minmax(70px, 0.8fr) minmax(80px, 0.9fr) minmax(90px, 1.1fr); gap: clamp(8px, 1.2vw, 12px); align-items: center; background: #e8e9f0; border-radius: clamp(14px, 2vw, 18px); padding: clamp(12px, 1.8vw, 16px) clamp(14px, 2vw, 18px); border: none; }
+            .dm-dashboard__table th { text-align: left; font-size: clamp(11px, 1.3vw, 12px); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(45, 45, 78, 0.7); padding: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: none; }
+            .dm-dashboard__table tbody { display: flex; flex-direction: column; gap: 0; }
+            .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(70px, 0.8fr) minmax(100px, 1.2fr) minmax(80px, 0.9fr) minmax(70px, 0.8fr) minmax(70px, 0.8fr) minmax(80px, 0.9fr) minmax(90px, 1.1fr); gap: clamp(8px, 1.2vw, 12px); align-items: center; padding: clamp(12px, 1.8vw, 16px) clamp(14px, 2vw, 18px); border-bottom: none; background: #ffffff !important; position: relative; border-left: none; border-right: none; border-top: none; box-shadow: none; }
+            .dm-dashboard__table tbody tr:last-child { border-bottom: none; }
+            .dm-dashboard__table tbody tr.is-hovered { background: rgba(77, 56, 255, 0.08) !important; border-radius: clamp(14px, 2vw, 18px); border-bottom-color: transparent; box-shadow: inset 0 0 0 1px rgba(77, 56, 255, 0.1); }
+            .dm-dashboard__table tbody tr.is-active { background: rgba(77, 56, 255, 0.12) !important; border-radius: clamp(16px, 2.2vw, 20px); border-bottom-color: transparent; box-shadow: inset 0 0 0 1px rgba(77, 56, 255, 0.18), 0 18px 36px rgba(17, 23, 64, 0.14); }
+            .dm-dashboard__table td { padding: 0; font-size: clamp(13px, 1.5vw, 14px); color: var(--dm-text, #1C134F); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: none; background: #ffffff !important; }
+            .dm-dashboard__cell--actions { display: none !important; }
+            .dm-dashboard__cell--status { cursor: pointer; }
+            .dm-dashboard__empty-row td { padding: clamp(32px, 5vw, 42px) clamp(18px, 2.8vw, 24px); grid-column: 1 / -1; }
+            .dm-dashboard__empty-state { text-align: center; display: flex; flex-direction: column; gap: clamp(14px, 2vw, 16px); align-items: center; justify-content: center; color: rgba(45, 45, 78, 0.75); font-size: clamp(13px, 1.6vw, 14px); max-width: 380px; margin: 0 auto; padding: clamp(32px, 5vw, 42px) clamp(28px, 4vw, 36px); border-radius: clamp(16px, 2.5vw, 20px); border: 1px dashed rgba(124, 58, 237, 0.28); background: linear-gradient(155deg, rgba(124, 58, 237, 0.1), rgba(124, 58, 237, 0.04)); box-shadow: 0 16px 32px rgba(36, 24, 76, 0.1); }
+            .dm-dashboard__empty-state h3 { font-size: clamp(16px, 2.2vw, 18px); font-weight: 700; color: #1C134F; margin: 0; }
+            .dm-dashboard__empty-state p { margin: 0; line-height: 1.5; color: rgba(45, 45, 78, 0.75); }
+            .dm-dashboard__empty-icon { width: clamp(42px, 5.5vw, 48px); height: clamp(42px, 5.5vw, 48px); display: grid; place-items: center; border-radius: clamp(12px, 2vw, 16px); background: rgba(124, 58, 237, 0.16); color: #5b21b6; box-shadow: 0 12px 22px rgba(124, 58, 237, 0.18); }
+            .dm-dashboard__empty-icon svg { width: clamp(18px, 2.5vw, 22px); height: clamp(18px, 2.5vw, 22px); }
+            .dm-status { display: inline-flex; align-items: center; justify-content: center; font-size: clamp(12px, 1.4vw, 13px); font-weight: 600; padding: clamp(5px, 1vw, 6px) clamp(12px, 1.8vw, 14px); border-radius: 999px; background: rgba(124, 58, 237, 0.08); color: rgba(45, 45, 78, 0.85); white-space: normal; word-wrap: break-word; max-width: 100%; text-align: center; line-height: 1.3; }
+            .dm-status--volne { background: #dcfce7; color: #15803d; }
+            .dm-status--obsadene, .dm-status--predane { background: #fee2e2; color: #b91c1c; }
+            .dm-status--rezervovane { background: #fef3c7; color: #b45309; }
+            .dm-status--unknown { background: rgba(124, 58, 237, 0.12); color: rgba(45, 45, 78, 0.65); }
+            @media (max-width: 960px) {
+                .dm-location-popup__footer--dashboard { padding: clamp(14px, 2.5vw, 18px); }
+                .dm-dashboard__toolbar { grid-template-columns: 1fr 1fr; }
+                .dm-dashboard__search { grid-column: 1 / -1; }
+                .dm-dashboard__legend { gap: clamp(6px, 1vw, 8px); padding: clamp(10px, 1.5vw, 12px); grid-column: 1 / -1; }
+                .dm-dashboard__legend-heading { font-size: clamp(10px, 1.3vw, 11px); }
+                .dm-dashboard__legend-counter { margin-left: 0; margin-top: 4px; flex: 0 0 100%; }
+                .dm-dashboard__table thead { display: none; }
+                .dm-dashboard__table { gap: clamp(12px, 2vw, 16px); }
+                .dm-dashboard__table tbody tr { display: flex; flex-direction: column; gap: clamp(10px, 1.5vw, 12px); padding: clamp(14px, 2.2vw, 18px) clamp(16px, 2.5vw, 20px); border: 1px solid #d5d6e0; border-radius: clamp(14px, 2vw, 16px); background: #ffffff !important; border-left: 1px solid #d5d6e0; border-right: 1px solid #d5d6e0; border-top: 1px solid #d5d6e0; }
+                .dm-dashboard__table tbody tr:last-child { border-bottom: 1px solid #d5d6e0; }
+                .dm-dashboard__table td { display: flex; justify-content: space-between; align-items: center; width: 100%; white-space: normal; border: none; }
+                .dm-dashboard__table td::before { content: attr(data-label); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: clamp(11px, 1.3vw, 12px); color: rgba(45, 45, 78, 0.6); margin-right: clamp(12px, 2vw, 14px); flex: 1; }
+                .dm-dashboard__cell--actions { justify-content: flex-start; flex-wrap: wrap; gap: clamp(8px, 1.2vw, 10px); }
+                .dm-dashboard__cell--actions::before { margin-bottom: clamp(4px, 0.8vw, 6px); flex: 0 0 100%; }
+            }
+            @media (max-width: 640px) {
+                .dm-dashboard__toolbar { grid-template-columns: 1fr; }
             }
         `;
         document.head.appendChild(style);
@@ -312,37 +409,51 @@
                         </div>
                         <ul class="dm-location-popup__legend" data-role="legend"></ul>
                     </section>
-                    <section class="dm-location-popup__footer">
-                        <div class="dm-location-popup__filters">
-                            <label class="dm-location-popup__search" data-role="search-wrapper">
-                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-                                <input type="search" placeholder="Vyhľadať..." data-role="search" aria-label="Vyhľadať lokalitu" />
-                            </label>
-                            <select class="dm-location-popup__select" data-role="status-filter" aria-label="Filtrovať podľa stavu">
-                                <option value="">Všetky stavy</option>
-                            </select>
-                            <select class="dm-location-popup__select" data-role="price-filter" aria-label="Zoradiť podľa ceny">
-                                <option value="">Všetky ceny</option>
-                                <option value="asc">Najnižšia cena</option>
-                                <option value="desc">Najvyššia cena</option>
-                            </select>
-                            <span class="dm-location-popup__counter" data-role="counter"></span>
-                        </div>
-                        <div class="dm-location-popup__table-wrapper">
-                            <table class="dm-location-popup__table">
-                                <thead>
-                                    <tr>
-                                        <th>Typ</th>
-                                        <th>Názov</th>
-                                        <th>Označenie</th>
-                                        <th>Rozloha</th>
-                                        <th>Cena</th>
-                                        <th>Prenájom</th>
-                                        <th>Stav</th>
-                                    </tr>
-                                </thead>
-                                <tbody data-role="table-body"></tbody>
-                            </table>
+                    <section class="dm-location-popup__footer dm-location-popup__footer--dashboard">
+                        <div class="dm-dashboard dm-dashboard--modal">
+                            <div class="dm-dashboard__card dm-dashboard__card--modal">
+                                <div class="dm-dashboard__toolbar dm-dashboard__toolbar--modal" role="search">
+                                    <label class="dm-dashboard__search" data-role="search-wrapper">
+                                        <span class="dm-dashboard__search-icon" aria-hidden="true">${DASHBOARD_TOOLBAR_ICONS.search}</span>
+                                        <input type="search" placeholder="Vyhľadať lokalitu..." data-role="search" aria-label="Vyhľadať lokalitu" />
+                                    </label>
+                                    <div class="dm-field dm-dashboard__select" data-role="status-filter-wrapper">
+                                        <select id="dm-location-popup-status" class="dm-field__input" data-role="status-filter" aria-label="Filtrovať podľa stavu">
+                                            <option value="">Všetky stavy</option>
+                                        </select>
+                                        <label class="dm-field__label" for="dm-location-popup-status">Stav</label>
+                                    </div>
+                                    <div class="dm-field dm-dashboard__select" data-role="price-filter-wrapper">
+                                        <select id="dm-location-popup-price" class="dm-field__input" data-role="price-filter" aria-label="Zoradiť podľa ceny">
+                                            <option value="">Všetky ceny</option>
+                                            <option value="asc">Najnižšia</option>
+                                            <option value="desc">Najvyššia</option>
+                                        </select>
+                                        <label class="dm-field__label" for="dm-location-popup-price">Cena</label>
+                                    </div>
+                                    <div class="dm-dashboard__legend" data-role="toolbar-legend">
+                                        <span class="dm-dashboard__legend-heading">Legenda stavov</span>
+                                        <div class="dm-dashboard__legend-list" data-role="toolbar-legend-list"></div>
+                                        <span class="dm-dashboard__legend-counter" data-role="counter"></span>
+                                    </div>
+                                </div>
+                                <div class="dm-dashboard__table-wrapper">
+                                    <table class="dm-dashboard__table" role="table">
+                                        <thead>
+                                            <tr role="row">
+                                                <th scope="col">Typ</th>
+                                                <th scope="col">Názov</th>
+                                                <th scope="col">Označenie</th>
+                                                <th scope="col">Rozloha</th>
+                                                <th scope="col">Cena</th>
+                                                <th scope="col">Prenájom</th>
+                                                <th scope="col">Stav</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody data-role="table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -370,13 +481,17 @@
         const tooltipPrice = root.querySelector('[data-role="tooltip-price"]');
         const tooltipRent = root.querySelector('[data-role="tooltip-rent"]');
         const tooltipDot = tooltip.querySelector('.dm-location-popup__tooltip-dot');
-        const tooltipClose = root.querySelector('[data-role="tooltip-close"]');
-        const tooltipCta = root.querySelector('[data-role="tooltip-cta"]');
-        const searchInput = root.querySelector('[data-role="search"]');
-        const statusFilter = root.querySelector('[data-role="status-filter"]');
-        const priceFilter = root.querySelector('[data-role="price-filter"]');
-        const counterEl = root.querySelector('[data-role="counter"]');
-        const tableBody = root.querySelector('[data-role="table-body"]');
+    const tooltipClose = root.querySelector('[data-role="tooltip-close"]');
+    const tooltipCta = root.querySelector('[data-role="tooltip-cta"]');
+    const searchInput = root.querySelector('[data-role="search"]');
+    const statusFilter = root.querySelector('[data-role="status-filter"]');
+    const priceFilter = root.querySelector('[data-role="price-filter"]');
+    const statusFilterWrapper = root.querySelector('[data-role="status-filter-wrapper"]');
+    const priceFilterWrapper = root.querySelector('[data-role="price-filter-wrapper"]');
+    const toolbarLegend = root.querySelector('[data-role="toolbar-legend"]');
+    const toolbarLegendList = root.querySelector('[data-role="toolbar-legend-list"]');
+    const counterEl = root.querySelector('[data-role="counter"]');
+    const tableBody = root.querySelector('[data-role="table-body"]');
 
         const state = {
             open: false,
@@ -390,6 +505,7 @@
             areaElements: new Map(),
             areaByFloor: new Map(),
             areaById: new Map(),
+            toolbarLegendItems: new Map(),
             searchTerm: '',
             statusFilter: '',
             priceOrder: '',
@@ -399,6 +515,146 @@
         };
 
         document.body.appendChild(root);
+
+        function slugifyStatus(label) {
+            if (!label) {
+                return 'unknown';
+            }
+            return String(label)
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-)|(-$)/g, '') || 'unknown';
+        }
+
+        function normaliseCurrencyDisplay(value) {
+            const raw = String(value ?? '').trim();
+            if (!raw) {
+                return '';
+            }
+            let result = raw.replace(/\beur\b/gi, '€');
+            result = result.replace(/\s+/g, ' ').trim();
+            if (result.includes('€')) {
+                result = result.replace(/\s*€\s*/g, ' € ').replace(/\s+/g, ' ').trim();
+                if (result.startsWith('€')) {
+                    const remainder = result.slice(1).trim();
+                    result = remainder ? `${remainder} €` : '€';
+                } else if (!result.endsWith('€')) {
+                    const parts = result.split('€');
+                    if (parts.length === 2) {
+                        const prefix = parts[0].trim();
+                        const suffix = parts[1].trim();
+                        result = suffix ? `${prefix} € ${suffix}` : `${prefix} €`;
+                    }
+                }
+                return result.replace(/\s+/g, ' ').trim();
+            }
+            return `${result} €`;
+        }
+
+        function formatPriceDisplay(value) {
+            const raw = String(value ?? '').trim();
+            if (!raw) {
+                return '—';
+            }
+            if (!/[0-9]/.test(raw)) {
+                return raw;
+            }
+            const display = normaliseCurrencyDisplay(value);
+            if (!display || display === '€') {
+                return '—';
+            }
+            return display;
+        }
+
+        function formatRentDisplay(value) {
+            const raw = String(value ?? '').trim();
+            if (!raw) {
+                return RENT_PLACEHOLDER;
+            }
+            const display = normaliseCurrencyDisplay(value);
+            if (!display) {
+                return RENT_PLACEHOLDER;
+            }
+            if (!/[0-9]/.test(raw)) {
+                return RENT_PLACEHOLDER;
+            }
+            const normalised = display.toLowerCase().replace(/\s+/g, '');
+            const hasPerMonth = normalised.includes('€/mes') || normalised.includes('€/mesiac');
+            if (hasPerMonth) {
+                const cleaned = display
+                    .replace(/€\s*\/\s*mesiac/gi, '€ /mes')
+                    .replace(/€\s*\/\s*mes/gi, '€ /mes')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .replace('€ /mes', '€/mes');
+                return cleaned && cleaned !== '€/mes' ? cleaned : RENT_PLACEHOLDER;
+            }
+            const base = display.replace(/\s*€$/, '').trim();
+            if (!base) {
+                return RENT_PLACEHOLDER;
+            }
+            return `${base} €/mes`;
+        }
+
+        function formatAreaDisplay(value) {
+            const raw = String(value ?? '').trim();
+            if (!raw) {
+                return '—';
+            }
+            const normalised = raw.toLowerCase().replace(/\s+/g, '');
+            if (normalised.endsWith('m²') || normalised.endsWith('m2')) {
+                return raw.replace(/m2$/i, 'm²');
+            }
+            return `${raw} m²`;
+        }
+
+        function applyStatusBadgeStyles(element, slug, color) {
+            if (!element) {
+                return;
+            }
+            const preset = PREDEFINED_STATUS_STYLES[slug];
+            if (preset) {
+                element.style.background = preset.background;
+                element.style.color = preset.color;
+                return;
+            }
+            const base = color || STATUS_FALLBACK_COLOR;
+            element.style.background = toRgba(base, 0.16);
+            element.style.color = base;
+        }
+
+        function syncSelectStates() {
+            if (statusFilterWrapper) {
+                const hasStatusValue = Boolean(statusFilter?.value);
+                statusFilterWrapper.classList.toggle('dm-field--has-value', hasStatusValue);
+                statusFilterWrapper.classList.toggle('dm-field--select-has-value', hasStatusValue);
+            }
+            if (priceFilterWrapper) {
+                const hasPriceValue = Boolean(priceFilter?.value);
+                priceFilterWrapper.classList.toggle('dm-field--has-value', hasPriceValue);
+                priceFilterWrapper.classList.toggle('dm-field--select-has-value', hasPriceValue);
+            }
+        }
+
+        function createActionButton(type, label, handler) {
+            const iconMarkup = DASHBOARD_ACTION_ICONS[type] ?? '';
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `dm-icon-button dm-icon-button--${type}`;
+            button.setAttribute('aria-label', label);
+            button.setAttribute('title', label);
+            button.innerHTML = `<span class="dm-icon-button__icon" aria-hidden="true">${iconMarkup}</span>`;
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                handler(event);
+            });
+            return button;
+        }
+
+        syncSelectStates();
 
         function hideTooltip() {
             tooltip.classList.remove('is-visible');
@@ -694,15 +950,18 @@
         }
 
         function renderLegendFromRows(rows) {
+            if (!legendList) {
+                return;
+            }
             const legendMap = new Map();
             rows.forEach((row) => {
-                const statusId = normaliseStatusId(row.statusId);
-                const label = row.statusLabel || state.statuses.get(statusId)?.label || 'Bez stavu';
-                const color = row.statusColor || state.statuses.get(statusId)?.color || STATUS_FALLBACK_COLOR;
-                if (!legendMap.has(statusId)) {
-                    legendMap.set(statusId, { label, color, count: 0 });
+                const statusKey = row.statusKey || normaliseStatusId(row.statusId) || slugifyStatus(row.statusLabel || 'unknown');
+                const label = row.statusLabel || state.statuses.get(normaliseStatusId(row.statusId))?.label || 'Bez stavu';
+                const color = row.statusColor || state.statuses.get(normaliseStatusId(row.statusId))?.color || STATUS_FALLBACK_COLOR;
+                if (!legendMap.has(statusKey)) {
+                    legendMap.set(statusKey, { label, color, count: 0 });
                 }
-                legendMap.get(statusId).count += 1;
+                legendMap.get(statusKey).count += 1;
             });
             legendList.innerHTML = '';
             legendMap.forEach((entry) => {
@@ -718,55 +977,141 @@
             });
         }
 
+        function buildToolbarLegend() {
+            if (!toolbarLegendList) {
+                return;
+            }
+            toolbarLegendList.innerHTML = '';
+            state.toolbarLegendItems.clear();
+            const resolved = new Map();
+
+            state.statuses.forEach((status) => {
+                if (!status) {
+                    return;
+                }
+                const key = normaliseStatusId(status.id) || slugifyStatus(status.label);
+                if (!key || resolved.has(key)) {
+                    return;
+                }
+                resolved.set(key, {
+                    key,
+                    label: status.label || 'Bez stavu',
+                    color: status.color || STATUS_FALLBACK_COLOR,
+                });
+            });
+
+            state.rows.forEach((row) => {
+                const key = row.statusKey || normaliseStatusId(row.statusId) || slugifyStatus(row.statusLabel || 'unknown');
+                if (!resolved.has(key)) {
+                    resolved.set(key, {
+                        key,
+                        label: row.statusLabel || 'Bez stavu',
+                        color: row.statusColor || STATUS_FALLBACK_COLOR,
+                    });
+                }
+            });
+
+            resolved.forEach((entry) => {
+                const badgeSlug = slugifyStatus(entry.label);
+                const badge = document.createElement('span');
+                badge.className = `dm-status dm-status--${badgeSlug} dm-dashboard__legend-badge`;
+                badge.dataset.statusKey = entry.key;
+                badge.dataset.baseLabel = entry.label;
+                badge.textContent = entry.label;
+                applyStatusBadgeStyles(badge, badgeSlug, entry.color);
+                toolbarLegendList.appendChild(badge);
+                state.toolbarLegendItems.set(entry.key, {
+                    element: badge,
+                    label: entry.label,
+                    color: entry.color,
+                });
+            });
+
+            updateToolbarLegend(state.filteredRows.length ? state.filteredRows : state.rows);
+        }
+
+        function updateToolbarLegend(rows) {
+            if (!toolbarLegendList) {
+                return;
+            }
+            const counts = new Map();
+            rows.forEach((row) => {
+                const key = row.statusKey || normaliseStatusId(row.statusId) || slugifyStatus(row.statusLabel || 'unknown');
+                counts.set(key, (counts.get(key) || 0) + 1);
+            });
+
+            state.toolbarLegendItems.forEach((entry, key) => {
+                const count = counts.get(key) || 0;
+                entry.element.textContent = count ? `${entry.label} (${count})` : entry.label;
+                entry.element.classList.toggle('is-inactive', count === 0);
+                entry.element.setAttribute('aria-disabled', count === 0 ? 'true' : 'false');
+                entry.element.setAttribute('title', count ? `${entry.label}: ${formatCountSk(count)}` : `${entry.label}: 0`);
+            });
+
+            if (toolbarLegend) {
+                toolbarLegend.hidden = state.toolbarLegendItems.size === 0;
+            }
+        }
+
         function renderRows(rows) {
             tableBody.innerHTML = '';
             if (!rows.length) {
-                const emptyRow = document.createElement('tr');
-                const cell = document.createElement('td');
-                cell.colSpan = 7;
-                cell.className = 'dm-location-popup__empty';
-                cell.innerHTML = '<strong>Žiadne naviazané lokality</strong><span>Pre túto lokalitu zatiaľ nie sú priradené deti.</span>';
-                emptyRow.appendChild(cell);
-                tableBody.appendChild(emptyRow);
+                tableBody.innerHTML = `
+                    <tr role="row" class="dm-dashboard__empty-row">
+                        <td role="cell" colspan="7" class="dm-dashboard__empty-cell">
+                            <div class="dm-dashboard__empty-state" role="group" aria-label="Žiadne lokality">
+                                <span class="dm-dashboard__empty-icon" aria-hidden="true">${DASHBOARD_TOOLBAR_ICONS.search}</span>
+                                <h3>Žiadne lokality</h3>
+                                <p>Pre túto lokalitu zatiaľ nie sú dostupné žiadne údaje.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
             const fragment = document.createDocumentFragment();
             rows.forEach((row) => {
                 const tr = document.createElement('tr');
-                tr.className = 'dm-location-popup__row';
+                tr.setAttribute('role', 'row');
                 tr.dataset.areaId = row.areaId;
                 tr.dataset.floorId = row.floorId;
 
-                const values = [
-                    row.type || '—',
-                    row.name || '—',
-                    row.designation || '—',
-                    row.area || '—',
-                    row.price || '—',
-                    row.rent || RENT_PLACEHOLDER,
+                const columns = [
+                    { label: 'Typ', value: row.type || '—' },
+                    { label: 'Názov', value: row.name || '—' },
+                    { label: 'Označenie', value: row.designation || '—' },
+                    { label: 'Rozloha', value: row.area || '—' },
+                    { label: 'Cena', value: row.price || '—' },
+                    { label: 'Prenájom', value: row.rent || RENT_PLACEHOLDER },
                 ];
 
-                values.forEach((value, index) => {
+                columns.forEach((column) => {
                     const td = document.createElement('td');
-                    td.textContent = value || '—';
-                    if (index === 3 && value && typeof value === 'string' && !value.toLowerCase().includes('m')) {
-                        td.textContent = `${value} m²`;
-                    }
+                    td.setAttribute('role', 'cell');
+                    td.dataset.label = column.label;
+                    td.textContent = column.value || '—';
                     tr.appendChild(td);
                 });
 
                 const statusCell = document.createElement('td');
-                const statusButton = document.createElement('button');
-                statusButton.type = 'button';
-                statusButton.className = 'dm-location-popup__status';
-                statusButton.style.setProperty('--dm-status-color', row.statusColor || STATUS_FALLBACK_COLOR);
-                statusButton.innerHTML = `<span>${row.statusLabel || 'Bez stavu'}</span>`;
-                statusButton.addEventListener('click', (event) => {
+                statusCell.setAttribute('role', 'cell');
+                statusCell.dataset.label = 'Stav';
+                statusCell.classList.add('dm-dashboard__cell--status');
+                const statusLabel = row.statusLabel || 'Bez stavu';
+                const statusSlug = slugifyStatus(statusLabel);
+                const statusBadge = document.createElement('span');
+                statusBadge.className = `dm-status dm-status--${statusSlug}`;
+                statusBadge.textContent = statusLabel;
+                const statusKey = normaliseStatusId(row.statusId) || statusSlug;
+                const statusInfo = statusKey ? state.statuses.get(statusKey) : null;
+                const statusColor = row.statusColor || statusInfo?.color || STATUS_FALLBACK_COLOR;
+                applyStatusBadgeStyles(statusBadge, statusSlug, statusColor);
+                statusCell.appendChild(statusBadge);
+                statusCell.addEventListener('click', (event) => {
                     event.preventDefault();
                     event.stopPropagation();
                     focusArea(row.areaId, { showTooltip: true });
                 });
-                statusCell.appendChild(statusButton);
                 tr.appendChild(statusCell);
 
                 tr.addEventListener('mouseenter', () => {
@@ -810,6 +1155,7 @@
             } else {
                 statusFilter.value = '';
             }
+            syncSelectStates();
         }
 
         function updateCounter(filteredCount, totalCount) {
@@ -843,6 +1189,7 @@
             state.filteredRows = rows;
             renderRows(rows);
             renderLegendFromRows(rows);
+            updateToolbarLegend(rows);
             updateCounter(rows.length, state.rows.length);
             if (!preserveActive && state.activeAreaId && !rows.some((row) => row.areaId === state.activeAreaId)) {
                 focusArea(null);
@@ -921,12 +1268,14 @@
 
         statusFilter.addEventListener('change', () => {
             state.statusFilter = statusFilter.value || '';
+            syncSelectStates();
             applyFilters({ preserveActive: true });
         });
 
         priceFilter.addEventListener('change', () => {
             const value = priceFilter.value;
             state.priceOrder = value === 'asc' || value === 'desc' ? value : '';
+            syncSelectStates();
             applyFilters({ preserveActive: true });
         });
 
@@ -966,6 +1315,12 @@
                             }
                         }
                         const mappedArea = areaEntries.find((entry) => entry.targetId === floorId);
+                        const areaDisplay = formatAreaDisplay(floor.area);
+                        const priceDisplay = formatPriceDisplay(floor.price);
+                        const rentDisplay = formatRentDisplay(floor.rent);
+                        const statusLabelResolved = statusInfo?.label ?? floor.statusLabel ?? floor.status ?? 'Bez stavu';
+                        const statusColor = statusInfo?.color ?? floor.statusColor ?? STATUS_FALLBACK_COLOR;
+                        const statusKey = normaliseStatusId(statusInfo?.id ?? statusId) || slugifyStatus(statusLabelResolved);
                         return {
                             floor,
                             floorId,
@@ -973,12 +1328,13 @@
                             type: floor.type ?? '',
                             name: floor.name ?? floor.title ?? '',
                             designation: floor.designation ?? floor.label ?? '',
-                            area: floor.area ?? '',
-                            price: floor.price ?? '',
-                            rent: floor.rent ?? '',
+                            area: areaDisplay,
+                            price: priceDisplay,
+                            rent: rentDisplay,
                             statusId,
-                            statusLabel: statusInfo?.label ?? floor.statusLabel ?? '',
-                            statusColor: statusInfo?.color ?? floor.statusColor ?? STATUS_FALLBACK_COLOR,
+                            statusKey,
+                            statusLabel: statusLabelResolved,
+                            statusColor,
                             detailUrl: floor.detailUrl ?? floor.url ?? '',
                         };
                     })
@@ -986,6 +1342,7 @@
 
                 setupBlueprint(areaEntries);
                 updateStatusFilterOptions();
+                buildToolbarLegend();
                 state.activeAreaId = null;
                 state.hoverAreaId = null;
                 state.searchTerm = '';
@@ -994,6 +1351,7 @@
                 searchInput.value = '';
                 statusFilter.value = '';
                 priceFilter.value = '';
+                syncSelectStates();
                 titleEl.textContent = String(state.region?.label ?? state.region?.name ?? 'Detail lokality');
                 subtitleEl.textContent = String(state.project?.name ?? state.project?.title ?? '');
                 if (state.project?.badge) {
