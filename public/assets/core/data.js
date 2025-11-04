@@ -8,7 +8,8 @@ export function createInitialData() {
         types: [],
         statuses: [],
         colors: [],
-        fonts: [],
+        availableFonts: [],
+        selectedFont: null,
     };
 }
 
@@ -44,5 +45,16 @@ export function getDefaultColors() {
         { id: 'color-1', name: 'Farba tlačidiel', value: '#7c3aed' },
         { id: 'color-2', name: 'Farba nadpisov', value: '#1C134F' },
         { id: 'color-3', name: 'Farba obsahových textov', value: '#6b7280' },
+    ];
+}
+
+export function getAvailableFonts() {
+    return [
+        { id: 'inter', label: 'Inter (predvolený)', value: "'Inter', 'Segoe UI', sans-serif", description: 'Moderný, čitateľný sans-serif' },
+        { id: 'roboto', label: 'Roboto', value: "'Roboto', 'Segoe UI', sans-serif", description: 'Google Material Design font' },
+        { id: 'poppins', label: 'Poppins', value: "'Poppins', sans-serif", description: 'Geometrický, výrazný sans-serif' },
+        { id: 'playfair', label: 'Playfair Display', value: "'Playfair Display', Georgia, serif", description: 'Elegantný serif pre luxusný vzhľad' },
+        { id: 'fira-code', label: 'Fira Code', value: "'Fira Code', 'Courier New', monospace", description: 'Monospace font pre technický vzhľad' },
+        { id: 'courier', label: 'Courier Prime', value: "'Courier Prime', 'Courier New', monospace", description: 'Klasický písací stroj' },
     ];
 }

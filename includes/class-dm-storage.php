@@ -27,8 +27,9 @@ final class DM_Storage_Manager
         'dm-statuses'            => ['scope' => 'option'],
         'dm-colors'              => ['scope' => 'option'],
         'dm-expanded-projects'   => ['scope' => 'user'],
-        'dm-images'              => ['scope' => 'option'],
-        'dm-selected-font'       => ['scope' => 'option'],
+    'dm-images'              => ['scope' => 'option'],
+    'dm-selected-font'       => ['scope' => 'option'],
+    'dm-fonts'               => ['scope' => 'option'],
     ];
 
     /**

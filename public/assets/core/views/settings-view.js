@@ -1,5 +1,6 @@
 import { SETTINGS_SECTIONS } from '../constants.js';
 import { escapeHtml } from '../utils/html.js';
+import { getAvailableFonts } from '../data.js';
 
 const ICONS = {
     edit: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen-icon lucide-square-pen"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>',
@@ -150,18 +151,23 @@ function renderSettingsStatuses(data) {
 }
 
 function renderSettingsColors(data) {
-    // Debug: Log colors data to console
-    console.log('[Settings] Colors data:', data.colors);
-    
+    const colors = Array.isArray(data.colors) ? data.colors : [];
+
+    if (!colors.length) {
+        return `
+        <div class="dm-card dm-card--settings">
+            <h2>Základné farby mapy</h2>
+            <p style="margin: 0; color: var(--dm-text-muted);">Žiadne farby zatiaľ nie sú definované.</p>
+        </div>`;
+    }
+
     return `
         <div class="dm-card dm-card--settings">
             <h2>Základné farby mapy</h2>
             <div class="dm-settings__list">
-                ${data.colors
+                ${colors
                     .map(
-                        (item) => {
-                            console.log('[Settings] Rendering color:', item);
-                            return `
+                        (item) => `
                             <div class="dm-settings__item">
                                 <div class="dm-pill">
                                     <span class="dm-pill__dot" style="background:${item.value || '#cccccc'}"></span>
@@ -173,8 +179,7 @@ function renderSettingsColors(data) {
                                     </button>
                                 </div>
                             </div>
-                        `;
-                        }
+                        `
                     )
                     .join('')}
             </div>
@@ -183,18 +188,19 @@ function renderSettingsColors(data) {
 }
 
 function renderSettingsFonts(data) {
-    console.log('[Settings] Fonts selectedFont:', data.selectedFont);
-    
-    const fonts = [
-        { id: 'inter', label: 'Inter (predvolený)', value: "'Inter', 'Segoe UI', sans-serif", description: 'Moderný, čitateľný sans-serif' },
-        { id: 'roboto', label: 'Roboto', value: "'Roboto', 'Segoe UI', sans-serif", description: 'Google Material Design font' },
-        { id: 'poppins', label: 'Poppins', value: "'Poppins', sans-serif", description: 'Geometrický, výrazný sans-serif' },
-        { id: 'playfair', label: 'Playfair Display', value: "'Playfair Display', Georgia, serif", description: 'Elegantný serif pre luxusný vzhľad' },
-        { id: 'fira-code', label: 'Fira Code', value: "'Fira Code', 'Courier New', monospace", description: 'Monospace font pre technický vzhľad' },
-        { id: 'courier', label: 'Courier Prime', value: "'Courier Prime', 'Courier New', monospace", description: 'Klasický písací stroj' },
-    ];
-    
-    const selectedFont = (data.selectedFont && data.selectedFont.id) || 'inter';
+    const fonts = Array.isArray(data.availableFonts) && data.availableFonts.length > 0
+        ? data.availableFonts
+        : getAvailableFonts();
+
+    const selectedFont = (data.selectedFont && data.selectedFont.id) || (fonts[0] && fonts[0].id) || 'inter';
+
+    if (!fonts.length) {
+        return `
+        <div class="dm-card dm-card--settings">
+            <h2>Fonty</h2>
+            <p style="margin: 0; color: var(--dm-text-muted);">Nie sú dostupné žiadne fonty.</p>
+        </div>`;
+    }
     
     return `
         <div class="dm-card dm-card--settings">

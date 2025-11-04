@@ -20,9 +20,10 @@ async function loadModules() {
         SETTINGS_SECTIONS: constants.SETTINGS_SECTIONS,
         DRAW_VIEWBOX: constants.DRAW_VIEWBOX,
         createInitialData: data.createInitialData,
-        getDefaultTypes: data.getDefaultTypes,
-        getDefaultStatuses: data.getDefaultStatuses,
-        getDefaultColors: data.getDefaultColors,
+    getDefaultTypes: data.getDefaultTypes,
+    getDefaultStatuses: data.getDefaultStatuses,
+    getDefaultColors: data.getDefaultColors,
+    getAvailableFonts: data.getAvailableFonts,
         renderAppShell: layout.renderAppShell,
         renderModal: modals.renderModal,
         createStorageClient: storage.createStorageClient,
@@ -46,7 +47,7 @@ export async function initDeveloperMap(options) {
     const modules = await loadModules();
     const { 
         APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX,
-        createInitialData, getDefaultTypes, getDefaultStatuses, getDefaultColors,
+        createInitialData, getDefaultTypes, getDefaultStatuses, getDefaultColors, getAvailableFonts,
         renderAppShell, renderModal, createStorageClient, WPAdminLayoutManager
     } = modules;
 
@@ -74,7 +75,9 @@ export async function initDeveloperMap(options) {
         projects: null,
         expanded: [],
         images: {},
+        availableFonts: null,
         selectedFont: null,
+        fontBundle: null,
     };
 
     const data = createInitialData();
@@ -404,9 +407,73 @@ export async function initDeveloperMap(options) {
     // Load colors from storage cache
     function loadColors() {
         if (Array.isArray(storageCache.colors)) {
-            return cloneForStorage(storageCache.colors);
+            return cloneForStorage(ensureColorsHaveNames(storageCache.colors));
         }
         return null;
+    }
+
+    function ensureColorsHaveNames(colors) {
+        if (!Array.isArray(colors)) {
+            return [];
+        }
+
+        const defaults = getDefaultColors();
+        const defaultNameMap = new Map(defaults.map((color) => [color.id, color.name]));
+
+        return colors.map((color, index) => {
+            if (!color || typeof color !== 'object') {
+                return color;
+            }
+
+            const next = { ...color };
+            const rawLabel = typeof next.label === 'string' ? next.label.trim() : '';
+            const rawName = typeof next.name === 'string' ? next.name.trim() : '';
+            const validLabel = rawLabel && rawLabel.toLowerCase() !== 'undefined' ? rawLabel : '';
+            const validName = rawName && rawName.toLowerCase() !== 'undefined' ? rawName : '';
+
+            const fallbackName = validLabel || defaultNameMap.get(next.id) || `Farba ${index + 1}`;
+
+            if (!validName) {
+                next.name = fallbackName;
+            } else {
+                next.name = validName;
+            }
+
+            if (!validLabel) {
+                next.label = next.name;
+            }
+
+            return next;
+        });
+    }
+
+    function haveColorsChanged(original, next) {
+        if (!Array.isArray(original) || !Array.isArray(next)) {
+            return true;
+        }
+
+        if (original.length !== next.length) {
+            return true;
+        }
+
+        for (let index = 0; index < next.length; index += 1) {
+            const a = original[index] || {};
+            const b = next[index] || {};
+            if ((a.id || '') !== (b.id || '')) {
+                return true;
+            }
+            if ((a.value || '').trim() !== (b.value || '').trim()) {
+                return true;
+            }
+            if ((a.name || '').trim() !== (b.name || '').trim()) {
+                return true;
+            }
+            if ((a.label || '').trim() !== (b.label || '').trim()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Apply colors to CSS custom properties
@@ -453,8 +520,75 @@ export async function initDeveloperMap(options) {
 
     // Save colors via storage client
     function saveColors(colors) {
-        storageCache.colors = cloneForStorage(colors);
-        persistValue('dm-colors', storageCache.colors);
+        const normalised = ensureColorsHaveNames(colors);
+        const previous = Array.isArray(storageCache.colors) ? cloneForStorage(storageCache.colors) : null;
+        storageCache.colors = cloneForStorage(normalised);
+        data.colors = ensureColorsHaveNames(normalised);
+        if (!previous || haveColorsChanged(previous, storageCache.colors)) {
+            persistValue('dm-colors', storageCache.colors);
+        }
+    }
+
+    function resolveString(value, fallback) {
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (trimmed) {
+                return trimmed;
+            }
+        } else if (value !== undefined && value !== null) {
+            const str = String(value).trim();
+            if (str) {
+                return str;
+            }
+        }
+        return fallback;
+    }
+
+    function normaliseAvailableFonts(fonts) {
+        const defaults = getAvailableFonts();
+        const defaultMap = new Map(defaults.map((font) => [font.id, font]));
+        const list = Array.isArray(fonts) ? fonts : [];
+
+        if (!list.length) {
+            return defaults.map((font) => ({ ...font }));
+        }
+
+        const normalised = [];
+        const usedIds = new Set();
+
+        list.forEach((item, index) => {
+            if (!item || typeof item !== 'object') {
+                return;
+            }
+            const fallbackDefault = (item.id && defaultMap.get(item.id)) || defaults[index] || null;
+            const fallbackId = fallbackDefault?.id || `font-${index + 1}`;
+            const id = resolveString(item.id, fallbackId);
+            if (!id || usedIds.has(id)) {
+                return;
+            }
+            const base = fallbackDefault || {};
+            const fallbackLabel = resolveString(base.label, `Font ${index + 1}`);
+            const label = resolveString(item.label ?? item.name, fallbackLabel);
+            const baseValue = resolveString(base.value, '');
+            const safeLabel = label.replace(/'/g, "\\'");
+            const fallbackValue = baseValue || `'` + safeLabel + `', sans-serif`;
+            const value = resolveString(item.value ?? item.family, fallbackValue);
+            const fallbackDescription = resolveString(base.description, '');
+            const description = resolveString(item.description, fallbackDescription);
+            normalised.push({
+                id,
+                label,
+                value,
+                description,
+            });
+            usedIds.add(id);
+        });
+
+        if (!normalised.length) {
+            return defaults.map((font) => ({ ...font }));
+        }
+
+        return normalised;
     }
 
     // Load selected font from storage cache
@@ -462,7 +596,91 @@ export async function initDeveloperMap(options) {
         if (storageCache.selectedFont && typeof storageCache.selectedFont === 'object') {
             return cloneForStorage(storageCache.selectedFont);
         }
+        if (storageCache.fontBundle && storageCache.fontBundle.selected && typeof storageCache.fontBundle.selected === 'object') {
+            return cloneForStorage(storageCache.fontBundle.selected);
+        }
         return null;
+    }
+
+    function loadAvailableFonts() {
+        if (Array.isArray(storageCache.availableFonts)) {
+            return cloneForStorage(storageCache.availableFonts);
+        }
+        if (storageCache.fontBundle && Array.isArray(storageCache.fontBundle.available)) {
+            return cloneForStorage(storageCache.fontBundle.available);
+        }
+        return null;
+    }
+
+    function persistFontBundle({ persist = true } = {}) {
+        const payload = {};
+        if (Array.isArray(storageCache.availableFonts) && storageCache.availableFonts.length > 0) {
+            payload.available = cloneForStorage(storageCache.availableFonts);
+        }
+        if (storageCache.selectedFont && typeof storageCache.selectedFont === 'object') {
+            payload.selected = cloneForStorage(storageCache.selectedFont);
+        }
+        const hasPayload = Object.keys(payload).length > 0;
+        const nextBundle = hasPayload ? cloneForStorage(payload) : null;
+        const previousSerial = storageCache.fontBundle ? JSON.stringify(storageCache.fontBundle) : null;
+        const nextSerial = nextBundle ? JSON.stringify(nextBundle) : null;
+        storageCache.fontBundle = nextBundle;
+        if (previousSerial === nextSerial || !persist) {
+            return;
+        }
+        if (hasPayload) {
+            persistValue('dm-fonts', payload);
+            if (payload.selected) {
+                persistValue('dm-selected-font', payload.selected);
+            } else {
+                removePersistedValue('dm-selected-font');
+            }
+        } else {
+            removePersistedValue('dm-fonts');
+            removePersistedValue('dm-selected-font');
+        }
+    }
+
+    function setAvailableFonts(fonts, { persist = true } = {}) {
+        const normalised = normaliseAvailableFonts(fonts);
+        data.availableFonts = normalised;
+        storageCache.availableFonts = cloneForStorage(normalised);
+        persistFontBundle({ persist });
+        return normalised;
+    }
+
+    function normaliseSelectedFont(fontData, fonts) {
+        const list = Array.isArray(fonts) ? fonts : [];
+        if (!list.length) {
+            return normaliseSelectedFont(fontData, normaliseAvailableFonts(getAvailableFonts()));
+        }
+
+        if (fontData && typeof fontData === 'object') {
+            const explicitId = resolveString(fontData.id, '');
+            if (explicitId) {
+                const base = list.find((font) => font.id === explicitId);
+                if (base) {
+                    return { ...base, ...fontData, id: base.id };
+                }
+            }
+        }
+
+        if (typeof fontData === 'string' && fontData.trim()) {
+            const candidate = list.find((font) => font.id === fontData.trim());
+            if (candidate) {
+                return { ...candidate };
+            }
+        }
+
+        const fallback = list.find((font) => font.id === 'inter') || list[0];
+        return fallback ? { ...fallback } : null;
+    }
+
+    function isSameFont(a, b) {
+        if (!a || !b) {
+            return false;
+        }
+        return a.id === b.id && a.value === b.value && a.label === b.label;
     }
 
     // Apply selected font to CSS
@@ -489,8 +707,21 @@ export async function initDeveloperMap(options) {
 
     // Save selected font via storage client
     function saveSelectedFont(fontData) {
-        storageCache.selectedFont = cloneForStorage(fontData);
-        persistValue('dm-selected-font', storageCache.selectedFont);
+        if (!Array.isArray(data.availableFonts) || data.availableFonts.length === 0) {
+            setAvailableFonts(getAvailableFonts(), { persist: false });
+        }
+        const fonts = Array.isArray(data.availableFonts) ? data.availableFonts : normaliseAvailableFonts(getAvailableFonts());
+        const normalisedFont = normaliseSelectedFont(fontData, fonts);
+        if (!normalisedFont) {
+            return;
+        }
+        const previous = data.selectedFont;
+        data.selectedFont = normalisedFont;
+        storageCache.selectedFont = cloneForStorage(normalisedFont);
+        if (!Array.isArray(storageCache.availableFonts)) {
+            storageCache.availableFonts = cloneForStorage(fonts);
+        }
+        persistFontBundle();
     }
 
     // Convert status label to CSS class name
@@ -616,7 +847,7 @@ export async function initDeveloperMap(options) {
             const dataset = response?.data && typeof response.data === 'object' ? response.data : response;
             if (dataset && typeof dataset === 'object') {
                 if (Array.isArray(dataset['dm-colors'])) {
-                    storageCache.colors = cloneForStorage(dataset['dm-colors']);
+                    storageCache.colors = ensureColorsHaveNames(cloneForStorage(dataset['dm-colors']));
                 }
                 if (Array.isArray(dataset['dm-types'])) {
                     storageCache.types = cloneForStorage(dataset['dm-types']);
@@ -633,8 +864,42 @@ export async function initDeveloperMap(options) {
                 if (dataset['dm-images'] && typeof dataset['dm-images'] === 'object') {
                     storageCache.images = { ...dataset['dm-images'] };
                 }
-                if (dataset['dm-selected-font'] && typeof dataset['dm-selected-font'] === 'object') {
-                    storageCache.selectedFont = cloneForStorage(dataset['dm-selected-font']);
+
+                let fontsHydrated = false;
+                if (dataset['dm-fonts'] && typeof dataset['dm-fonts'] === 'object') {
+                    const fontPayload = dataset['dm-fonts'];
+                    if (Array.isArray(fontPayload.available)) {
+                        const normalised = normaliseAvailableFonts(fontPayload.available);
+                        storageCache.availableFonts = cloneForStorage(normalised);
+                    }
+                    const fontsForSelection = Array.isArray(storageCache.availableFonts)
+                        ? cloneForStorage(storageCache.availableFonts)
+                        : normaliseAvailableFonts(getAvailableFonts());
+                    if (fontPayload.selected && typeof fontPayload.selected === 'object') {
+                        const selected = normaliseSelectedFont(fontPayload.selected, fontsForSelection);
+                        if (selected) {
+                            storageCache.selectedFont = cloneForStorage(selected);
+                        }
+                    }
+                    const bundle = {};
+                    if (Array.isArray(storageCache.availableFonts)) {
+                        bundle.available = cloneForStorage(storageCache.availableFonts);
+                    }
+                    if (storageCache.selectedFont && typeof storageCache.selectedFont === 'object') {
+                        bundle.selected = cloneForStorage(storageCache.selectedFont);
+                    }
+                    storageCache.fontBundle = Object.keys(bundle).length ? bundle : null;
+                    fontsHydrated = true;
+                }
+
+                if (!fontsHydrated && dataset['dm-selected-font'] && typeof dataset['dm-selected-font'] === 'object') {
+                    const fonts = Array.isArray(storageCache.availableFonts)
+                        ? cloneForStorage(storageCache.availableFonts)
+                        : normaliseAvailableFonts(getAvailableFonts());
+                    const selected = normaliseSelectedFont(dataset['dm-selected-font'], fonts);
+                    if (selected) {
+                        storageCache.selectedFont = cloneForStorage(selected);
+                    }
                 }
             }
         } catch (error) {
@@ -720,26 +985,47 @@ export async function initDeveloperMap(options) {
     // Initialize colors
     const savedColors = loadColors();
     if (savedColors && savedColors.length > 0) {
-        data.colors = savedColors;
+        const normalisedColors = ensureColorsHaveNames(savedColors);
+        data.colors = normalisedColors;
+        if (haveColorsChanged(savedColors, normalisedColors)) {
+            saveColors(normalisedColors);
+        }
     } else {
         // Create default colors on first installation
-        data.colors = getDefaultColors();
+        data.colors = ensureColorsHaveNames(getDefaultColors());
         saveColors(data.colors);
         console.log('[Developer Map] Created default colors');
     }
+    data.colors = ensureColorsHaveNames(data.colors);
     applyColors(data.colors);
 
     // Initialize fonts
-    const savedFont = loadSelectedFont();
-    if (savedFont) {
-        data.selectedFont = savedFont;
-    } else {
-        // Set default font
-        data.selectedFont = { id: 'inter', label: 'Inter (predvolený)', value: "'Inter', 'Segoe UI', sans-serif", description: 'Moderný, čitateľný sans-serif' };
-        saveSelectedFont(data.selectedFont);
-        console.log('[Developer Map] Created default font');
+    const storedFonts = loadAvailableFonts();
+    const hadStoredFonts = Array.isArray(storedFonts) && storedFonts.length > 0;
+    let availableFonts = hadStoredFonts
+        ? normaliseAvailableFonts(storedFonts)
+        : normaliseAvailableFonts(getAvailableFonts());
+
+    availableFonts = setAvailableFonts(availableFonts, { persist: true });
+    if (!hadStoredFonts) {
+        console.log('[Developer Map] Created default font list');
     }
-    applySelectedFont(data.selectedFont);
+
+    const savedFont = loadSelectedFont();
+    let selectedFont = normaliseSelectedFont(savedFont || { id: 'inter' }, availableFonts);
+    let createdDefaultFont = false;
+
+    if (!savedFont || !selectedFont) {
+        selectedFont = normaliseSelectedFont({ id: 'inter' }, availableFonts);
+        createdDefaultFont = true;
+    }
+
+    if (createdDefaultFont) {
+        console.log('[Developer Map] Created default font selection');
+    }
+
+    saveSelectedFont(selectedFont);
+    applySelectedFont(selectedFont);
 
     // Initialize types
     const savedTypes = loadTypes();
@@ -2053,19 +2339,10 @@ export async function initDeveloperMap(options) {
             button.addEventListener('click', (event) => {
                 event.preventDefault();
                 const fontId = button.getAttribute('data-dm-select-font');
-                
-                const fonts = [
-                    { id: 'inter', label: 'Inter (predvolený)', value: "'Inter', 'Segoe UI', sans-serif", description: 'Moderný, čitateľný sans-serif' },
-                    { id: 'roboto', label: 'Roboto', value: "'Roboto', 'Segoe UI', sans-serif", description: 'Google Material Design font' },
-                    { id: 'poppins', label: 'Poppins', value: "'Poppins', sans-serif", description: 'Geometrický, výrazný sans-serif' },
-                    { id: 'playfair', label: 'Playfair Display', value: "'Playfair Display', Georgia, serif", description: 'Elegantný serif pre luxusný vzhľad' },
-                    { id: 'fira-code', label: 'Fira Code', value: "'Fira Code', 'Courier New', monospace", description: 'Monospace font pre technický vzhľad' },
-                    { id: 'courier', label: 'Courier Prime', value: "'Courier Prime', 'Courier New', monospace", description: 'Klasický písací stroj' },
-                ];
-                
-                const selectedFont = fonts.find(f => f.id === fontId);
+                const fonts = Array.isArray(data.availableFonts) && data.availableFonts.length > 0 ? data.availableFonts : getAvailableFonts();
+
+                const selectedFont = fonts.find((f) => f.id === fontId);
                 if (selectedFont) {
-                    data.selectedFont = selectedFont;
                     saveSelectedFont(selectedFont);
                     applySelectedFont(selectedFont);
                     render();
