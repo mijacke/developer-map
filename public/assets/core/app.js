@@ -1,9 +1,34 @@
-import { APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX } from './constants.js';
-import { createInitialData, getDefaultTypes, getDefaultStatuses, getDefaultColors } from './data.js';
-import { renderAppShell } from './layout/app-shell.js';
-import { renderModal } from './modals/index.js';
-import { createStorageClient } from './storage-client.js';
-import { WPAdminLayoutManager } from './wp-admin-layout.js';
+// Dynamic imports with cache-busting for production compatibility
+const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfig?.ver) || Date.now();
+
+async function loadModules() {
+    const ver = getVersion();
+    const base = import.meta.url.substring(0, import.meta.url.lastIndexOf('/'));
+    
+    const [constants, data, layout, modals, storage, wpAdmin] = await Promise.all([
+        import(`${base}/constants.js?ver=${ver}`),
+        import(`${base}/data.js?ver=${ver}`),
+        import(`${base}/layout/app-shell.js?ver=${ver}`),
+        import(`${base}/modals/index.js?ver=${ver}`),
+        import(`${base}/storage-client.js?ver=${ver}`),
+        import(`${base}/wp-admin-layout.js?ver=${ver}`)
+    ]);
+    
+    return {
+        APP_VIEWS: constants.APP_VIEWS,
+        MAP_SECTIONS: constants.MAP_SECTIONS,
+        SETTINGS_SECTIONS: constants.SETTINGS_SECTIONS,
+        DRAW_VIEWBOX: constants.DRAW_VIEWBOX,
+        createInitialData: data.createInitialData,
+        getDefaultTypes: data.getDefaultTypes,
+        getDefaultStatuses: data.getDefaultStatuses,
+        getDefaultColors: data.getDefaultColors,
+        renderAppShell: layout.renderAppShell,
+        renderModal: modals.renderModal,
+        createStorageClient: storage.createStorageClient,
+        WPAdminLayoutManager: wpAdmin.WPAdminLayoutManager
+    };
+}
 
 /**
  * Initialise the Developer Map dashboard inside the provided root element.
@@ -16,6 +41,14 @@ import { WPAdminLayoutManager } from './wp-admin-layout.js';
  */
 export async function initDeveloperMap(options) {
     const { root, runtimeConfig, storageClient: providedStorage } = options;
+    
+    // Load all modules with cache-busting
+    const modules = await loadModules();
+    const { 
+        APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX,
+        createInitialData, getDefaultTypes, getDefaultStatuses, getDefaultColors,
+        renderAppShell, renderModal, createStorageClient, WPAdminLayoutManager
+    } = modules;
 
     if (!root || !(root instanceof HTMLElement)) {
         throw new Error('Developer Map: initDeveloperMap requires a valid root element.');
@@ -393,8 +426,10 @@ export async function initDeveloperMap(options) {
         root.style.setProperty('--dm-map-modal-content-color', staticTextColor);
 
         colors.forEach((color) => {
-            if (!color || typeof color.label !== 'string') return;
-            const label = color.label.trim();
+            // Support both 'name' and 'label' properties
+            const colorName = color.name || color.label;
+            if (!color || typeof colorName !== 'string') return;
+            const label = colorName.trim();
             if (!label) return;
 
             if (label === 'Farba nadpisov' && typeof color.value === 'string' && color.value.trim()) {
@@ -3474,12 +3509,7 @@ export async function initDeveloperMap(options) {
         // Initialize new manager pre editor aj modály
         try {
             wpAdminLayoutManager = new WPAdminLayoutManager(['.dm-editor-overlay', '.dm-modal-overlay']);
-            const initialized = wpAdminLayoutManager.init();
-            
-            if (!initialized) {
-                console.warn('[DM] WP Admin Layout Manager failed to initialize');
-                wpAdminLayoutManager = null;
-            }
+            wpAdminLayoutManager.init();
         } catch (error) {
             console.error('[DM] Error initializing WP Admin Layout Manager:', error);
             wpAdminLayoutManager = null;

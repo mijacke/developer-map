@@ -150,25 +150,31 @@ function renderSettingsStatuses(data) {
 }
 
 function renderSettingsColors(data) {
+    // Debug: Log colors data to console
+    console.log('[Settings] Colors data:', data.colors);
+    
     return `
         <div class="dm-card dm-card--settings">
             <h2>Základné farby mapy</h2>
             <div class="dm-settings__list">
                 ${data.colors
                     .map(
-                        (item) => `
+                        (item) => {
+                            console.log('[Settings] Rendering color:', item);
+                            return `
                             <div class="dm-settings__item">
                                 <div class="dm-pill">
-                                    <span class="dm-pill__dot" style="background:${item.value}"></span>
-                                    ${item.name || item.label}
+                                    <span class="dm-pill__dot" style="background:${item.value || '#cccccc'}"></span>
+                                    ${item.name || item.label || 'Bez názvu'}
                                 </div>
                                 <div class="dm-settings__item-actions">
-                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-color" data-dm-payload="${item.id}" aria-label="Upraviť ${item.name || item.label}" title="Upraviť">
+                                    <button type="button" class="dm-icon-button dm-icon-button--edit" data-dm-modal="edit-color" data-dm-payload="${item.id}" aria-label="Upraviť ${item.name || item.label || 'farbu'}" title="Upraviť">
                                         <span class="dm-icon-button__icon" aria-hidden="true">${ICONS.edit}</span>
                                     </button>
                                 </div>
                             </div>
-                        `,
+                        `;
+                        }
                     )
                     .join('')}
             </div>
@@ -177,6 +183,8 @@ function renderSettingsColors(data) {
 }
 
 function renderSettingsFonts(data) {
+    console.log('[Settings] Fonts selectedFont:', data.selectedFont);
+    
     const fonts = [
         { id: 'inter', label: 'Inter (predvolený)', value: "'Inter', 'Segoe UI', sans-serif", description: 'Moderný, čitateľný sans-serif' },
         { id: 'roboto', label: 'Roboto', value: "'Roboto', 'Segoe UI', sans-serif", description: 'Google Material Design font' },

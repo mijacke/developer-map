@@ -72,8 +72,11 @@ export class WPAdminLayoutManager {
         this.findTargets();
         
         if (this.targets.length === 0) {
-            console.warn('[WPAdminLayout] No target elements found');
-            return false;
+            // Toto nie je chyba - editor/modály sa zobrazujú až neskôr
+            // Len nastav listeners, aby sme boli pripravení
+            this.attachListeners();
+            this.setupObserver();
+            return true; // Vráť true, aby nedošlo k console.warn
         }
         
         // Počiatočné meranie
@@ -85,7 +88,6 @@ export class WPAdminLayoutManager {
         // Nastav MutationObserver pre zmeny v DOM
         this.setupObserver();
         
-        console.log('[WPAdminLayout] Initialized successfully with', this.targets.length, 'targets');
         return true;
     }
     
@@ -94,8 +96,10 @@ export class WPAdminLayoutManager {
      */
     findTargets() {
         this.targets = [];
+        let foundCount = 0;
         this.targetSelectors.forEach(selector => {
             const elements = document.querySelectorAll(selector);
+            foundCount += elements.length;
             elements.forEach(el => {
                 if (!this.targets.includes(el)) {
                     this.targets.push(el);

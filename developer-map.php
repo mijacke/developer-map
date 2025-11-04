@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Developer Map
- * Description: Administrátorský dashboard načítaný výhradne cez shortcode [devmap] na stránke /devtest-9kq7wza3.
- * Version: 0.3.5
+ * Description: Administrátorský dashboard
+ * Version: 0.4.0
  * Author: Mario
  */
 
@@ -77,7 +77,7 @@ function dm_handle_ajax_ping(): void
 }
 add_action('wp_ajax_dm_ping', 'dm_handle_ajax_ping');
 
-define('DM_PLUGIN_VERSION', '0.3.5');
+define('DM_PLUGIN_VERSION', '0.4.0');
 define('DM_DEV_PAGE_SLUG', 'devtest-9kq7wza3');
 define('DM_PLUGIN_STYLE_HANDLE', 'developer-map-style');
 define('DM_PLUGIN_SCRIPT_HANDLE', 'developer-map-script');

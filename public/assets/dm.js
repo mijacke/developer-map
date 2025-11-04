@@ -64,12 +64,14 @@ async function boot() {
 
     const base = new URL('./', import.meta.url);
     const ver  = runtimeConfig.ver || Date.now();
+    
+    // Use import map workaround: append version to all module URLs
     const appUrl = new URL(`./core/app.js?ver=${ver}`, base).href;
     
     console.log('[DM] Loading app from:', appUrl);
     console.log('[DM] Runtime config:', runtimeConfig);
     
-    const mod  = await import(appUrl);
+    const mod  = await import(/* @vite-ignore */ appUrl);
 
     const init = mod.initDeveloperMap || mod.default;
     if (typeof init !== 'function') throw new Error('initDeveloperMap missing');
