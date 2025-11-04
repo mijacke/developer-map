@@ -2294,26 +2294,80 @@ export async function initDeveloperMap(options) {
 
         // Copy to clipboard functionality
         const copyButtons = root.querySelectorAll('[data-dm-copy]');
+
+        const resolveShortcodeText = (button) => {
+            const codeElement = button.closest('code');
+            if (codeElement) {
+                const textNode = codeElement.querySelector('span');
+                if (textNode && textNode.textContent) {
+                    return textNode.textContent.trim();
+                }
+            }
+            const attributeValue = button.getAttribute('data-dm-copy');
+            return attributeValue ? attributeValue.trim() : '';
+        };
+
+        const legacyCopyToClipboard = (text) => {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'fixed';
+            textarea.style.top = '-9999px';
+            textarea.style.opacity = '0';
+            textarea.style.pointerEvents = 'none';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+
+            let succeeded = false;
+            try {
+                succeeded = document.execCommand('copy');
+            } catch (err) {
+                console.warn('Legacy clipboard copy failed:', err);
+            }
+
+            document.body.removeChild(textarea);
+            return succeeded;
+        };
+
         copyButtons.forEach((button) => {
             button.addEventListener('click', async (event) => {
                 event.preventDefault();
-                const textToCopy = button.getAttribute('data-dm-copy');
-                
-                try {
-                    await navigator.clipboard.writeText(textToCopy);
-                    
-                    // Visual feedback - len zmena ikony bez zmeny farieb
-                    const originalContent = button.innerHTML;
-                    button.innerHTML = '<span class="dm-copy-button__icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8L6.5 11.5L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg></span>';
-                    button.classList.add('is-copied');
-                    
-                    setTimeout(() => {
-                        button.innerHTML = originalContent;
-                        button.classList.remove('is-copied');
-                    }, 1500);
-                } catch (err) {
-                    console.error('Failed to copy text:', err);
+                const textToCopy = resolveShortcodeText(button);
+                if (!textToCopy) {
+                    console.warn('Copy button clicked but no shortcode text was found.');
+                    return;
                 }
+
+                const originalContent = button.innerHTML;
+                let copied = false;
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    try {
+                        await navigator.clipboard.writeText(textToCopy);
+                        copied = true;
+                    } catch (err) {
+                        console.warn('Clipboard API copy failed, attempting fallback.', err);
+                    }
+                }
+
+                if (!copied) {
+                    copied = legacyCopyToClipboard(textToCopy);
+                }
+
+                if (!copied) {
+                    console.error('Failed to copy text to clipboard.');
+                    return;
+                }
+
+                // Visual feedback - len zmena ikony bez zmeny farieb
+                button.innerHTML = '<span class="dm-copy-button__icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8L6.5 11.5L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></svg></span>';
+                button.classList.add('is-copied');
+
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('is-copied');
+                }, 1500);
             });
         });
 
