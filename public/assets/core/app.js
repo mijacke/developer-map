@@ -3998,8 +3998,12 @@ export async function initDeveloperMap(options) {
         const regionList = drawRoot.querySelector('[data-dm-region-list]');
         const addRegionButton = drawRoot.querySelector('[data-dm-add-region]');
         const removeRegionButton = drawRoot.querySelector('[data-dm-remove-region]');
-    const regionNameInput = drawRoot.querySelector('[data-dm-region-name]');
-    const regionDetailUrlInput = drawRoot.querySelector('[data-dm-region-detail-url]');
+        const regionNameInput = drawRoot.querySelector('[data-dm-region-name]');
+        const regionUrlInput = drawRoot.querySelector('[data-dm-region-url]');
+        const regionStrokeWidthInput = drawRoot.querySelector('[data-dm-region-stroke-width]');
+        const regionStrokeOpacityInput = drawRoot.querySelector('[data-dm-region-stroke-opacity]');
+        const regionFillOpacityInput = drawRoot.querySelector('[data-dm-region-fill-opacity]');
+        const regionDetailUrlInput = drawRoot.querySelector('[data-dm-region-detail-url]');
         const regionChildrenFieldset = drawRoot.querySelector('[data-dm-region-children]');
         const fullscreenToggle = drawRoot.querySelector('[data-dm-fullscreen-toggle]');
         const ownerTypeAttr = drawRoot.dataset.dmOwner ?? 'project';
@@ -4122,6 +4126,46 @@ export async function initDeveloperMap(options) {
                 if (item && typeof item === 'object') return { ...item };
                 return item;
             });
+        }
+
+        function sanitiseRegionUrl(value) {
+            if (typeof value !== 'string') {
+                if (value === null || typeof value === 'undefined') {
+                    return '';
+                }
+                value = String(value);
+            }
+            return value.trim();
+        }
+
+        function normaliseNumericField(value, { min = Number.NEGATIVE_INFINITY, max = Number.POSITIVE_INFINITY, precision = null } = {}) {
+            if (value === null || typeof value === 'undefined') {
+                return null;
+            }
+            let numeric = value;
+            if (typeof numeric === 'string') {
+                const trimmed = numeric.trim();
+                if (!trimmed) {
+                    return null;
+                }
+                numeric = Number(trimmed.replace(',', '.'));
+            } else if (typeof numeric !== 'number') {
+                numeric = Number(numeric);
+            }
+            if (!Number.isFinite(numeric)) {
+                return null;
+            }
+            if (Number.isFinite(min)) {
+                numeric = Math.max(min, numeric);
+            }
+            if (Number.isFinite(max)) {
+                numeric = Math.min(max, numeric);
+            }
+            if (Number.isFinite(precision) && precision >= 0) {
+                const factor = 10 ** precision;
+                numeric = Math.round(numeric * factor) / factor;
+            }
+            return numeric;
         }
 
         function cloneRegionSnapshot(region) {
@@ -4283,6 +4327,52 @@ export async function initDeveloperMap(options) {
                 delete meta.detailUrl;
             }
 
+            const resolvedUrl = (() => {
+                const metaUrl = sanitiseRegionUrl(meta.url);
+                if (metaUrl) {
+                    return metaUrl;
+                }
+                return sanitiseRegionUrl(source.url ?? '');
+            })();
+            if (resolvedUrl) {
+                meta.url = resolvedUrl;
+            } else if (Object.prototype.hasOwnProperty.call(meta, 'url')) {
+                delete meta.url;
+            }
+
+            const resolvedStrokeWidth = normaliseNumericField(meta.strokeWidth ?? source.strokeWidth, {
+                min: 1,
+                max: 10,
+                precision: 2,
+            });
+            if (resolvedStrokeWidth !== null) {
+                meta.strokeWidth = resolvedStrokeWidth;
+            } else if (Object.prototype.hasOwnProperty.call(meta, 'strokeWidth')) {
+                delete meta.strokeWidth;
+            }
+
+            const resolvedStrokeOpacity = normaliseNumericField(meta.strokeOpacity ?? source.strokeOpacity, {
+                min: 0,
+                max: 100,
+                precision: 2,
+            });
+            if (resolvedStrokeOpacity !== null) {
+                meta.strokeOpacity = resolvedStrokeOpacity;
+            } else if (Object.prototype.hasOwnProperty.call(meta, 'strokeOpacity')) {
+                delete meta.strokeOpacity;
+            }
+
+            const resolvedFillOpacity = normaliseNumericField(meta.fillOpacity ?? source.fillOpacity, {
+                min: 0,
+                max: 100,
+                precision: 2,
+            });
+            if (resolvedFillOpacity !== null) {
+                meta.fillOpacity = resolvedFillOpacity;
+            } else if (Object.prototype.hasOwnProperty.call(meta, 'fillOpacity')) {
+                delete meta.fillOpacity;
+            }
+
             const regionClone = {
                 id,
                 label,
@@ -4299,6 +4389,18 @@ export async function initDeveloperMap(options) {
 
             if (detailUrl) {
                 regionClone.detailUrl = detailUrl;
+            }
+            if (resolvedUrl) {
+                regionClone.url = resolvedUrl;
+            }
+            if (resolvedStrokeWidth !== null) {
+                regionClone.strokeWidth = resolvedStrokeWidth;
+            }
+            if (resolvedStrokeOpacity !== null) {
+                regionClone.strokeOpacity = resolvedStrokeOpacity;
+            }
+            if (resolvedFillOpacity !== null) {
+                regionClone.fillOpacity = resolvedFillOpacity;
             }
 
             if (Array.isArray(source.tags)) {
@@ -4563,6 +4665,35 @@ export async function initDeveloperMap(options) {
                 regionDetailUrlInput.value = detailUrl;
                 updateFieldFilledState(regionDetailUrlInput);
             }
+            if (regionUrlInput) {
+                const regionUrl = sanitiseRegionUrl(region?.url ?? region?.meta?.url ?? '');
+                regionUrlInput.value = regionUrl;
+                updateFieldFilledState(regionUrlInput);
+            }
+            if (regionStrokeWidthInput) {
+                const strokeWidthValue = normaliseNumericField(
+                    region?.strokeWidth ?? region?.meta?.strokeWidth,
+                    { min: 1, max: 10, precision: 2 },
+                );
+                regionStrokeWidthInput.value = strokeWidthValue === null ? '' : String(strokeWidthValue);
+                updateFieldFilledState(regionStrokeWidthInput);
+            }
+            if (regionStrokeOpacityInput) {
+                const strokeOpacityValue = normaliseNumericField(
+                    region?.strokeOpacity ?? region?.meta?.strokeOpacity,
+                    { min: 0, max: 100, precision: 2 },
+                );
+                regionStrokeOpacityInput.value = strokeOpacityValue === null ? '' : String(strokeOpacityValue);
+                updateFieldFilledState(regionStrokeOpacityInput);
+            }
+            if (regionFillOpacityInput) {
+                const fillOpacityValue = normaliseNumericField(
+                    region?.fillOpacity ?? region?.meta?.fillOpacity,
+                    { min: 0, max: 100, precision: 2 },
+                );
+                regionFillOpacityInput.value = fillOpacityValue === null ? '' : String(fillOpacityValue);
+                updateFieldFilledState(regionFillOpacityInput);
+            }
             if (regionChildrenFieldset) {
                 const selected = new Set(
                     Array.isArray(region?.children) ? region.children.map((child) => String(child)) : [],
@@ -4652,6 +4783,78 @@ export async function initDeveloperMap(options) {
                     region.detailUrl = '';
                 }
                 updateFieldFilledState(regionDetailUrlInput);
+            });
+        }
+
+        if (regionUrlInput) {
+            regionUrlInput.addEventListener('input', (event) => {
+                const region = getActiveRegion();
+                if (!region) {
+                    return;
+                }
+                const sanitised = sanitiseRegionUrl(event.target.value);
+                if (!region.meta || typeof region.meta !== 'object') {
+                    region.meta = {};
+                }
+                if (sanitised) {
+                    region.meta.url = sanitised;
+                    region.url = sanitised;
+                } else {
+                    delete region.meta.url;
+                    delete region.url;
+                }
+                if (event.target.value !== sanitised) {
+                    event.target.value = sanitised;
+                }
+                updateFieldFilledState(regionUrlInput);
+            });
+        }
+
+        function handleNumericUpdate(event, { key, min, max }) {
+            const region = getActiveRegion();
+            if (!region) {
+                return null;
+            }
+            if (!region.meta || typeof region.meta !== 'object') {
+                region.meta = {};
+            }
+            const normalised = normaliseNumericField(event.target.value, {
+                min,
+                max,
+                precision: 2,
+            });
+            if (normalised === null) {
+                delete region.meta[key];
+                delete region[key];
+            } else {
+                region.meta[key] = normalised;
+                region[key] = normalised;
+            }
+            const nextValue = normalised === null ? '' : String(normalised);
+            if (event.target.value !== nextValue) {
+                event.target.value = nextValue;
+            }
+            return normalised;
+        }
+
+        if (regionStrokeWidthInput) {
+            regionStrokeWidthInput.addEventListener('input', (event) => {
+                handleNumericUpdate(event, { key: 'strokeWidth', min: 1, max: 10 });
+                updateFieldFilledState(regionStrokeWidthInput);
+            });
+        }
+
+        if (regionStrokeOpacityInput) {
+            regionStrokeOpacityInput.addEventListener('input', (event) => {
+                handleNumericUpdate(event, { key: 'strokeOpacity', min: 0, max: 100 });
+                updateFieldFilledState(regionStrokeOpacityInput);
+            });
+        }
+
+        if (regionFillOpacityInput) {
+            regionFillOpacityInput.addEventListener('input', (event) => {
+                handleNumericUpdate(event, { key: 'fillOpacity', min: 0, max: 100 });
+                updateFieldFilledState(regionFillOpacityInput);
             });
         }
 
@@ -5207,6 +5410,42 @@ export async function initDeveloperMap(options) {
                             } else if (Object.prototype.hasOwnProperty.call(meta, 'detailUrl')) {
                                 delete meta.detailUrl;
                             }
+                            const regionUrl = sanitiseRegionUrl(meta.url ?? region.url ?? '');
+                            if (regionUrl) {
+                                meta.url = regionUrl;
+                            } else if (Object.prototype.hasOwnProperty.call(meta, 'url')) {
+                                delete meta.url;
+                            }
+                            const strokeWidth = normaliseNumericField(meta.strokeWidth ?? region.strokeWidth, {
+                                min: 1,
+                                max: 10,
+                                precision: 2,
+                            });
+                            if (strokeWidth !== null) {
+                                meta.strokeWidth = strokeWidth;
+                            } else if (Object.prototype.hasOwnProperty.call(meta, 'strokeWidth')) {
+                                delete meta.strokeWidth;
+                            }
+                            const strokeOpacity = normaliseNumericField(meta.strokeOpacity ?? region.strokeOpacity, {
+                                min: 0,
+                                max: 100,
+                                precision: 2,
+                            });
+                            if (strokeOpacity !== null) {
+                                meta.strokeOpacity = strokeOpacity;
+                            } else if (Object.prototype.hasOwnProperty.call(meta, 'strokeOpacity')) {
+                                delete meta.strokeOpacity;
+                            }
+                            const fillOpacity = normaliseNumericField(meta.fillOpacity ?? region.fillOpacity, {
+                                min: 0,
+                                max: 100,
+                                precision: 2,
+                            });
+                            if (fillOpacity !== null) {
+                                meta.fillOpacity = fillOpacity;
+                            } else if (Object.prototype.hasOwnProperty.call(meta, 'fillOpacity')) {
+                                delete meta.fillOpacity;
+                            }
                             const children = Array.isArray(region.children)
                                 ? region.children
                                       .map((child) => {
@@ -5230,6 +5469,18 @@ export async function initDeveloperMap(options) {
                             };
                             if (detailUrl) {
                                 payload.detailUrl = detailUrl;
+                            }
+                            if (regionUrl) {
+                                payload.url = regionUrl;
+                            }
+                            if (strokeWidth !== null) {
+                                payload.strokeWidth = strokeWidth;
+                            }
+                            if (strokeOpacity !== null) {
+                                payload.strokeOpacity = strokeOpacity;
+                            }
+                            if (fillOpacity !== null) {
+                                payload.fillOpacity = fillOpacity;
                             }
                             if (Array.isArray(region.tags)) {
                                 payload.tags = [...region.tags];

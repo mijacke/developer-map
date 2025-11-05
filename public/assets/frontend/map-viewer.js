@@ -146,6 +146,22 @@
         }
     };
 
+    const normaliseUrl = (value) => {
+        if (!value) {
+            return '';
+        }
+        const trimmed = String(value).trim();
+        if (!trimmed) {
+            return '';
+        }
+        try {
+            const resolved = new URL(trimmed, window.location.origin);
+            return resolved.toString();
+        } catch (error) {
+            return trimmed;
+        }
+    };
+
     async function renderMap(container) {
         const key = container.dataset.dmMapKey;
         if (!key) {
@@ -619,16 +635,20 @@
                 const summary = summariseRegion(region);
                 renderPopover(region, summary);
 
-                const detailUrlCandidate =
+                const detailUrlCandidate = normaliseUrl(
                     region?.meta?.detailUrl ??
+                    region?.meta?.url ??
                     region?.detailUrl ??
                     region?.url ??
                     (() => {
                         const withUrl = summary.linkedFloors.find((floor) => floor.detailUrl || floor.url);
-                        return withUrl ? withUrl.detailUrl ?? withUrl.url : '';
-                    })();
+                        const fallback = withUrl ? withUrl.detailUrl ?? withUrl.url : '';
+                        return normaliseUrl(fallback);
+                    })()
+                );
 
                 ctaButton.hidden = !detailUrlCandidate && !summary.linkedFloors.length;
+                ctaButton.dataset.href = detailUrlCandidate || '';
                 ctaButton.onclick = (event) => {
                     event.preventDefault();
                     const detailPayload = {
