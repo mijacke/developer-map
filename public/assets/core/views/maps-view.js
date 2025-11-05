@@ -177,7 +177,7 @@ function renderProjectRow(project, shortcodeKey, floors = []) {
                     'data-dm-modal': 'edit-map',
                     'data-dm-payload': project.id,
                 })}
-                ${renderActionButton('open', 'Lokality', {
+                ${renderActionButton('open', 'Editor súradníc', {
                     'data-dm-modal': 'draw-coordinates',
                     'data-dm-payload': project.id,
                 })}
@@ -226,7 +226,7 @@ function renderFloorRow(floor, parentShortcodeKey, index) {
     return `
         <div class="dm-board__row dm-board__row--floor dm-board__row--child" role="row" data-dm-child-id="${floor.id}">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
-                <div class="dm-board__thumb dm-board__thumb--floor dm-board__thumb--clickable" data-dm-modal="draw-coordinates" data-dm-payload="${floor.id}" role="button" tabindex="0" aria-label="${escapeHtml(`Zobraziť lokalitu ${floor.name}`)}">
+                <div class="dm-board__thumb dm-board__thumb--floor dm-board__thumb--clickable" data-dm-modal="draw-coordinates" data-dm-payload="${floor.id}" role="button" tabindex="0" aria-label="${escapeHtml(`Editor súradníc ${floor.name}`)}">
                     <img src="${escapeHtml(floorImage)}" alt="${escapeHtml(`Pôdorys ${floor.name}`)}" loading="lazy" />
                     <span class="dm-board__thumb-floor-highlight"></span>
                 </div>
@@ -234,15 +234,15 @@ function renderFloorRow(floor, parentShortcodeKey, index) {
             </div>
             <div class="dm-board__cell dm-board__cell--type" role="cell" data-label="Typ:">${escapeHtml(floor.type)}</div>
             <div class="dm-board__cell dm-board__cell--actions" role="cell" data-label="Akcie:">
-                ${renderActionButton('edit', `Upraviť lokalitu ${floor.name}`, {
+                ${renderActionButton('edit', 'Upraviť', {
                     'data-dm-modal': 'edit-location',
                     'data-dm-payload': floor.id,
                 })}
-                ${renderActionButton('open', `Zobraziť lokalitu ${floor.name}`, {
+                ${renderActionButton('open', 'Editor súradníc', {
                     'data-dm-modal': 'draw-coordinates',
                     'data-dm-payload': floor.id,
                 })}
-                ${renderActionButton('delete', `Zmazať lokalitu ${floor.name}`, {
+                ${renderActionButton('delete', 'Zmazať', {
                     'data-dm-modal': 'delete-map',
                     'data-dm-payload': floor.id,
                 })}

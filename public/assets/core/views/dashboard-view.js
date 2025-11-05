@@ -277,19 +277,19 @@ export function renderDashboardView(state, data) {
                                     'edit',
                                     'edit-location',
                                     floor.id,
-                                    `Upraviť lokalitu ${floor.name}`,
+                                    'Upraviť',
                                 )}
                                 ${renderDashboardAction(
                                     'open',
                                     'draw-coordinates',
                                     floor.id,
-                                    `Zobraziť lokalitu ${floor.name}`,
+                                    'Editor súradníc',
                                 )}
                                 ${renderDashboardAction(
                                     'delete',
                                     'delete-map',
                                     floor.id,
-                                    `Zmazať lokalitu ${floor.name}`,
+                                    'Zmazať',
                                 )}
                             </td>
                         </tr>

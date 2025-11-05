@@ -204,58 +204,26 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
                                             <label class="dm-field__label">Názov<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Minimálne možné oddialenie mapy" data-tooltip="Minimálne možné oddialenie mapy">${infoIcon}</button>
-                                            <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input" placeholder=" ">
-                                            <label class="dm-field__label">Minimálny zoom<span class="dm-field__required">*</span></label>
-                                        </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Maximálne možné priblíženie mapy" data-tooltip="Maximálne možné priblíženie mapy">${infoIcon}</button>
-                                            <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input" placeholder=" ">
-                                            <label class="dm-field__label">Maximálny zoom<span class="dm-field__required">*</span></label>
+                                            <button type="button" class="dm-field__info" aria-label="URL adresa mapy" data-tooltip="URL adresa mapy">${infoIcon}</button>
+                                            <input type="url" autocomplete="off" class="dm-field__input" data-dm-field="url" placeholder=" " value="${escapeHtml(editItem?.url ?? '')}">
+                                            <label class="dm-field__label">URL</label>
                                         </div>
                                     </div>
                                     <div class="dm-form__column">
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Východzie priblíženie mapy pri načítaní" data-tooltip="Východzie priblíženie mapy pri načítaní">${infoIcon}</button>
-                                            <input required type="number" step="0.1" min="0.1" max="5.0" autocomplete="off" class="dm-field__input" placeholder=" ">
-                                            <label class="dm-field__label">Východzí zoom<span class="dm-field__required">*</span></label>
-                                        </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Šírka obrázku mapy v pixeloch" data-tooltip="Šírka obrázku mapy v pixeloch">${infoIcon}</button>
-                                            <input required type="number" step="1" autocomplete="off" class="dm-field__input" placeholder=" ">
-                                            <label class="dm-field__label">Šírka mapy<span class="dm-field__required">*</span></label>
-                                        </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Výška obrázku mapy v pixeloch" data-tooltip="Výška obrázku mapy v pixeloch">${infoIcon}</button>
-                                            <input required type="number" step="1" autocomplete="off" class="dm-field__input" placeholder=" ">
-                                            <label class="dm-field__label">Výška mapy<span class="dm-field__required">*</span></label>
-                                        </div>
-                                        <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Šírka čiary ohraničenia lokality v pixeloch" data-tooltip="Šírka čiary ohraničenia lokality v pixeloch">${infoIcon}</button>
-                                            <input required type="number" step="1" min="1" max="10" autocomplete="off" class="dm-field__input" placeholder=" ">
-                                            <label class="dm-field__label">Hrúbka ohraničenia<span class="dm-field__required">*</span></label>
+                                            <input type="number" step="1" min="1" max="10" autocomplete="off" class="dm-field__input" data-dm-field="stroke-width" placeholder=" " value="${escapeHtml(editItem?.strokeWidth ?? '')}">
+                                            <label class="dm-field__label">Hrúbka ohraničenia</label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Priehľadnosť čiary ohraničenia (0-100%)" data-tooltip="Priehľadnosť čiary ohraničenia (0-100%)">${infoIcon}</button>
-                                            <input required type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" placeholder=" ">
-                                            <label class="dm-field__label">Prehľadnosť ohraničenia<span class="dm-field__required">*</span></label>
+                                            <input type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" data-dm-field="stroke-opacity" placeholder=" " value="${escapeHtml(editItem?.strokeOpacity ?? '')}">
+                                            <label class="dm-field__label">Prehľadnosť ohraničenia</label>
                                         </div>
-                                    </div>
-                                    <div class="dm-form__column">
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Priehľadnosť výplne lokality (0-100%)" data-tooltip="Priehľadnosť výplne lokality (0-100%)">${infoIcon}</button>
-                                            <input required type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" placeholder=" ">
-                                            <label class="dm-field__label">Prehľadnosť pozadia<span class="dm-field__required">*</span></label>
-                                        </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Smer orientácie objektu" data-tooltip="Smer orientácie objektu">${infoIcon}</button>
-                                            <input required type="text" autocomplete="off" class="dm-field__input" placeholder=" ">
-                                            <label class="dm-field__label">Smer<span class="dm-field__required">*</span></label>
-                                        </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Uhol natočenia objektu v stupňoch" data-tooltip="Uhol natočenia objektu v stupňoch">${infoIcon}</button>
-                                            <input required type="text" autocomplete="off" class="dm-field__input" placeholder=" ">
-                                            <label class="dm-field__label">Uhol<span class="dm-field__required">*</span></label>
+                                            <input type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" data-dm-field="fill-opacity" placeholder=" " value="${escapeHtml(editItem?.fillOpacity ?? '')}">
+                                            <label class="dm-field__label">Prehľadnosť pozadia</label>
                                         </div>
                                     </div>
                                 </div>
@@ -1004,10 +972,6 @@ function renderDrawModal(state, data) {
                                 <div class="dm-field">
                                     <input type="text" autocomplete="off" class="dm-field__input" data-dm-region-name placeholder=" " value="${escapeHtml(regionNameValue)}">
                                     <label class="dm-field__label">Názov zóny</label>
-                                </div>
-                                <div class="dm-field">
-                                    <input type="text" autocomplete="off" class="dm-field__input" data-dm-region-detail-url placeholder=" " value="${escapeHtml(regionDetailUrlValue)}">
-                                    <label class="dm-field__label">Detail URL</label>
                                 </div>
                             </div>
                         </div>
