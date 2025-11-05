@@ -29,7 +29,7 @@ export function renderHeader(state) {
             </button>
             <div class="dm-topbar__search">
                 <span class="dm-topbar__search-icon" aria-hidden="true">${NAV_ICONS.search}</span>
-                <input type="search" placeholder="Vyhľadať mapu..." aria-label="Vyhľadať mapu" data-dm-role="search" value="${escapeHtml(state.searchTerm)}" />
+                <input type="search" placeholder="Vyhľadať mapu..." aria-label="Vyhľadať mapu" data-dm-role="search" data-dm-preserve-focus="topbar-search" value="${escapeHtml(state.searchTerm)}" />
             </div>
             <nav class="dm-topbar__nav">
                 <button type="button" class="dm-topbar__link${settingsActive}" data-dm-nav="settings">

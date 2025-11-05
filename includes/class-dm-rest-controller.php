@@ -240,18 +240,56 @@ final class DM_Rest_Controller
             );
         }
 
-        $projects = DM_Storage_Manager::get('dm-projects');
-        $projects = is_array($projects) ? $projects : [];
+        $requested_key = strtolower(trim($public_key));
+        $stored = DM_Storage_Manager::get('dm-projects');
+        $raw_projects = is_array($stored) ? $stored : [];
 
-        foreach ($projects as $project) {
+        $projects = [];
+        foreach ($raw_projects as $project) {
             if (!is_array($project)) {
                 continue;
             }
-            $candidate = isset($project['publicKey']) ? (string) $project['publicKey'] : '';
-            if ($candidate && strcasecmp($candidate, $public_key) === 0) {
-                return new WP_REST_Response([
-                    'project' => $project,
-                ]);
+            $projects[] = self::normalize_project_payload($project);
+        }
+
+        foreach ($projects as $project) {
+            $candidates = [];
+            if (!empty($project['publicKey'])) {
+                $candidates[] = (string) $project['publicKey'];
+            }
+            if (!empty($project['shortcode'])) {
+                $candidates[] = (string) $project['shortcode'];
+            }
+            $resolved = self::resolve_project_shortcode($project);
+            $candidates[] = $resolved;
+
+            foreach ($candidates as $candidate) {
+                $normalizedCandidate = strtolower(trim((string) $candidate));
+                if ($normalizedCandidate !== '' && $normalizedCandidate === $requested_key) {
+                    return new WP_REST_Response([
+                        'project' => $project,
+                    ]);
+                }
+            }
+        }
+
+        foreach ($projects as $project) {
+            if (empty($project['floors']) || !is_array($project['floors'])) {
+                continue;
+            }
+
+            foreach ($project['floors'] as $floor) {
+                if (!is_array($floor)) {
+                    continue;
+                }
+
+                $floorKey = strtolower(trim((string) ($floor['shortcode'] ?? '')));
+                if ($floorKey !== '' && $floorKey === $requested_key) {
+                    $childPayload = self::build_floor_project_payload($project, $floor);
+                    return new WP_REST_Response([
+                        'project' => $childPayload,
+                    ]);
+                }
             }
         }
 
@@ -348,6 +386,142 @@ final class DM_Rest_Controller
             'next'     => $next_index,
             'modified' => $modified,
         ];
+    }
+
+    private static function slugify_token($value, string $fallback = 'mapa'): string
+    {
+        $string = is_string($value) ? trim($value) : '';
+        if ($string === '') {
+            return $fallback;
+        }
+
+        if (function_exists('remove_accents')) {
+            $string = remove_accents($string);
+        }
+
+        $string = strtolower($string);
+        $string = preg_replace('/[^a-z0-9]+/', '-', $string ?? '');
+        $string = trim((string) $string, '-');
+
+        return $string !== '' ? $string : $fallback;
+    }
+
+    private static function resolve_project_shortcode(array $project): string
+    {
+        $fallback = 'mapa';
+
+        if (!empty($project['shortcode']) && is_string($project['shortcode'])) {
+            $candidate = trim((string) $project['shortcode']);
+            if ($candidate !== '') {
+                return self::slugify_token($candidate, $fallback);
+            }
+        }
+
+        if (!empty($project['publicKey']) && is_string($project['publicKey'])) {
+            $candidate = trim((string) $project['publicKey']);
+            if ($candidate !== '') {
+                return self::slugify_token($candidate, $fallback);
+            }
+        }
+
+        if (!empty($project['name']) && is_string($project['name'])) {
+            return self::slugify_token((string) $project['name'], $fallback);
+        }
+
+        if (!empty($project['title']) && is_string($project['title'])) {
+            return self::slugify_token((string) $project['title'], $fallback);
+        }
+
+        if (!empty($project['id'])) {
+            return self::slugify_token((string) $project['id'], $fallback);
+        }
+
+        return $fallback;
+    }
+
+    private static function resolve_floor_shortcode(array $project, array $floor, int $index, ?string $parentShortcode = null): string
+    {
+        $base = $parentShortcode ?: self::resolve_project_shortcode($project);
+        $fallback = sprintf('%s-%d', $base, $index + 1);
+
+        if (!empty($floor['shortcode']) && is_string($floor['shortcode'])) {
+            $candidate = trim((string) $floor['shortcode']);
+            if ($candidate !== '') {
+                return self::slugify_token($candidate, $fallback);
+            }
+        }
+
+        return $fallback;
+    }
+
+    private static function normalize_project_payload(array $project): array
+    {
+        $normalized = $project;
+        $parentShortcode = self::resolve_project_shortcode($project);
+        $normalized['shortcode'] = $parentShortcode;
+
+        if (isset($normalized['floors']) && is_array($normalized['floors'])) {
+            $floors = [];
+            $ordinal = 0;
+            foreach ($normalized['floors'] as $floor) {
+                if (!is_array($floor)) {
+                    $floors[] = $floor;
+                    continue;
+                }
+                $floorCopy = $floor;
+                $floorCopy['shortcode'] = self::resolve_floor_shortcode($normalized, $floorCopy, $ordinal, $parentShortcode);
+                $floors[] = $floorCopy;
+                $ordinal++;
+            }
+            $normalized['floors'] = $floors;
+        }
+
+        return $normalized;
+    }
+
+    private static function build_floor_project_payload(array $project, array $floor): array
+    {
+        $payload = $project;
+        $floorPayload = $floor;
+
+        $floorImage = '';
+        if (!empty($floorPayload['image']) && is_string($floorPayload['image'])) {
+            $floorImage = trim((string) $floorPayload['image']);
+        } elseif (!empty($floorPayload['imageUrl']) && is_string($floorPayload['imageUrl'])) {
+            $floorImage = trim((string) $floorPayload['imageUrl']);
+        }
+
+        if ($floorImage !== '') {
+            $payload['image'] = $floorImage;
+            $payload['imageUrl'] = $floorImage;
+        } else {
+            $payload['image'] = $payload['image'] ?? ($payload['imageUrl'] ?? '');
+            $payload['imageUrl'] = $payload['imageUrl'] ?? ($payload['image'] ?? '');
+        }
+
+        $payload['publicKey'] = $floorPayload['shortcode'] ?? $payload['shortcode'];
+        $payload['shortcode'] = $floorPayload['shortcode'] ?? $payload['shortcode'];
+        $payload['activeFloorId'] = $floorPayload['id'] ?? null;
+        $payload['name'] = $floorPayload['name'] ?? ($payload['name'] ?? '');
+        if (!empty($floorPayload['label'])) {
+            $payload['label'] = $floorPayload['label'];
+        } elseif (!isset($payload['label'])) {
+            $payload['label'] = $payload['name'];
+        }
+
+        $payload['floors'] = [$floorPayload];
+        $payload['regions'] = isset($floorPayload['regions']) && is_array($floorPayload['regions'])
+            ? $floorPayload['regions']
+            : [];
+
+        $payload['parent'] = [
+            'id'        => $project['id'] ?? null,
+            'name'      => $project['name'] ?? '',
+            'shortcode' => $project['shortcode'] ?? self::resolve_project_shortcode($project),
+            'publicKey' => $project['publicKey'] ?? ($project['shortcode'] ?? ''),
+        ];
+
+        return $payload;
     }
 
     /**

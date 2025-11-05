@@ -805,6 +805,9 @@ export async function initDeveloperMap(options) {
 
     // Save projects (maps) via storage
     function saveProjects(projects) {
+        if (Array.isArray(projects)) {
+            ensureProjectShortcodes(projects);
+        }
         storageCache.projects = cloneForStorage(projects);
         persistValue('dm-projects', storageCache.projects);
     }
@@ -1369,6 +1372,49 @@ export async function initDeveloperMap(options) {
         return mutated;
     }
 
+    function ensureProjectShortcodes(projects) {
+        if (!Array.isArray(projects)) {
+            return false;
+        }
+
+        let mutated = false;
+
+        projects.forEach((project) => {
+            if (!project || typeof project !== 'object') {
+                return;
+            }
+
+            const parentKey = typeof project.publicKey === 'string' && project.publicKey.trim()
+                ? project.publicKey.trim()
+                : slugifyKey(project.name ?? project.title ?? project.id ?? 'mapa');
+
+            if (project.shortcode !== parentKey) {
+                project.shortcode = parentKey;
+                mutated = true;
+            }
+
+            if (!Array.isArray(project.floors)) {
+                return;
+            }
+
+            let ordinal = 1;
+            project.floors.forEach((floor) => {
+                if (!floor || typeof floor !== 'object') {
+                    return;
+                }
+
+                const expected = `${parentKey}-${ordinal}`;
+                if (floor.shortcode !== expected) {
+                    floor.shortcode = expected;
+                    mutated = true;
+                }
+                ordinal += 1;
+            });
+        });
+
+        return mutated;
+    }
+
     function ensureFloorStatusReferences() {
         if (!Array.isArray(data.projects) || data.projects.length === 0) {
             return false;
@@ -1554,6 +1600,10 @@ export async function initDeveloperMap(options) {
         if (ensureProjectPublicKeys(data.projects)) {
             projectsDirty = true;
         }
+        projectsDirty = true;
+    }
+
+    if (ensureProjectShortcodes(data.projects)) {
         projectsDirty = true;
     }
 

@@ -64,9 +64,61 @@ function renderColumnHeader(label, iconKey, extraClass = '') {
     `;
 }
 
+function formatShortcode(mapKey) {
+    const key = String(mapKey ?? '').trim();
+    return key ? `[fuudobre_map map_key="${key}"]` : '[fuudobre_map]';
+}
+
+function normaliseText(value) {
+    return String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function matchesProject(project, needle) {
+    if (!needle) {
+        return true;
+    }
+    const candidates = [
+        normaliseText(project?.name),
+        normaliseText(project?.type),
+        normaliseText(project?.label),
+        normaliseText(project?.designation),
+    ].filter(Boolean);
+    return candidates.some((value) => value.includes(needle));
+}
+
+function matchesFloor(floor, needle) {
+    if (!needle) {
+        return true;
+    }
+    const candidates = [
+        normaliseText(floor?.name),
+        normaliseText(floor?.label),
+        normaliseText(floor?.designation),
+        normaliseText(floor?.type),
+    ].filter(Boolean);
+    return candidates.some((value) => value.includes(needle));
+}
+
 function renderMapList(data, state) {
     const projects = data.projects ?? [];
-    const filterTerm = state.searchTerm.trim().toLowerCase();
+    const needle = normaliseText(state.searchTerm);
+    const hasNeedle = Boolean(needle);
+
+    const visibleProjects = hasNeedle
+        ? projects.filter((project) => {
+            const projectMatches = matchesProject(project, needle);
+            if (projectMatches) {
+                return true;
+            }
+            const floors = Array.isArray(project?.floors) ? project.floors : [];
+            return floors.some((floor) => matchesFloor(floor, needle));
+        })
+        : projects;
 
     return `
         <div class="dm-board dm-board--list">
@@ -77,14 +129,15 @@ function renderMapList(data, state) {
                     ${renderColumnHeader('Akcie', 'actions', 'dm-board__cell--head-actions')}
                     ${renderColumnHeader('Vloženie na web', 'embed')}
                 </div>
-                ${projects.map((project) => {
+                ${visibleProjects.map((project) => {
                     const publicKey = project.publicKey ?? project.id;
-                    const shortcode = `[fuudobre_map map_key="${publicKey}"]`;
-                    const floors = project.floors ?? [];
-                    const filteredFloors = filterTerm
-                        ? floors.filter((floor) => `${floor.name} ${floor.type}`.toLowerCase().includes(filterTerm))
-                        : floors;
-                    return renderProjectRow(project, shortcode, filteredFloors);
+                    const parentKeyCandidate = project.shortcode ?? publicKey;
+                    const shortcodeKey = parentKeyCandidate ?? '';
+                    const floors = Array.isArray(project?.floors) ? project.floors : [];
+                    const projectMatches = matchesProject(project, needle);
+                    const filteredFloors = hasNeedle ? floors.filter((floor) => matchesFloor(floor, needle)) : floors;
+                    const floorsToRender = !hasNeedle || projectMatches ? floors : filteredFloors;
+                    return renderProjectRow(project, shortcodeKey, floorsToRender);
                 }).join('')}
             </div>
             <div class="dm-board__footer">
@@ -97,8 +150,11 @@ function renderMapList(data, state) {
     `;
 }
 
-function renderProjectRow(project, shortcode, floors = []) {
+function renderProjectRow(project, shortcodeKey, floors = []) {
     const floorsCount = floors.length;
+    const fallbackKey = project.publicKey ?? project.id ?? '';
+    const resolvedKey = String(shortcodeKey ?? fallbackKey ?? '').trim() || String(fallbackKey ?? '').trim();
+    const parentShortcode = formatShortcode(resolvedKey);
     const toggleIcon = `
         <svg viewBox="0 0 16 16" aria-hidden="true">
             <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
@@ -132,8 +188,8 @@ function renderProjectRow(project, shortcode, floors = []) {
             </div>
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
                 <code>
-                    <span>${escapeHtml(shortcode)}</span>
-                    <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(shortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
+                    <span>${escapeHtml(parentShortcode)}</span>
+                    <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(parentShortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
                         <span class="dm-copy-button__icon" aria-hidden="true">${HEADER_ICONS.copy}</span>
                     </button>
                 </code>
@@ -147,15 +203,26 @@ function renderProjectRow(project, shortcode, floors = []) {
         ${floorsCount > 0 ? `
             <div class="dm-board__children" data-dm-children="${project.id}">
                 <div class="dm-board__children-inner">
-                    ${floors.map((floor) => renderFloorRow(floor, shortcode)).join('')}
+                    ${floors.map((floor, index) => renderFloorRow(floor, resolvedKey, index)).join('')}
                 </div>
             </div>
         ` : ''}
     `;
 }
 
-function renderFloorRow(floor, shortcode) {
+function renderFloorRow(floor, parentShortcodeKey, index) {
     const floorImage = floor.image ?? '';
+    const baseParentKey = String(parentShortcodeKey ?? '').trim();
+    const fallbackIndex = typeof index === 'number' ? index : 0;
+    let floorKey = '';
+    if (typeof floor.shortcode === 'string' && floor.shortcode.trim()) {
+        floorKey = floor.shortcode.trim();
+    } else if (baseParentKey) {
+        floorKey = `${baseParentKey}-${fallbackIndex + 1}`;
+    } else if (floor.id) {
+        floorKey = String(floor.id);
+    }
+    const floorShortcode = formatShortcode(floorKey);
     return `
         <div class="dm-board__row dm-board__row--floor dm-board__row--child" role="row" data-dm-child-id="${floor.id}">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
@@ -182,8 +249,8 @@ function renderFloorRow(floor, shortcode) {
             </div>
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
                 <code>
-                    <span>${escapeHtml(shortcode)}</span>
-                    <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(shortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
+                    <span>${escapeHtml(floorShortcode)}</span>
+                    <button type="button" class="dm-copy-button" data-dm-copy="${escapeHtml(floorShortcode)}" aria-label="Kopírovať shortcode" title="Kopírovať do schránky">
                         <span class="dm-copy-button__icon" aria-hidden="true">${HEADER_ICONS.copy}</span>
                     </button>
                 </code>
