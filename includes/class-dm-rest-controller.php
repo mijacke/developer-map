@@ -476,7 +476,108 @@ final class DM_Rest_Controller
             $normalized['floors'] = $floors;
         }
 
-        return $normalized;
+        return self::hydrate_project_palette($normalized);
+    }
+
+    private static function hydrate_project_palette(array $project): array
+    {
+        static $cachedGlobalStatuses = null;
+        if ($cachedGlobalStatuses === null) {
+            $stored = DM_Storage_Manager::get('dm-statuses');
+            $cachedGlobalStatuses = is_array($stored) ? $stored : [];
+        }
+
+        if (empty($cachedGlobalStatuses)) {
+            return $project;
+        }
+
+        $palette = isset($project['palette']) && is_array($project['palette']) ? $project['palette'] : [];
+        $paletteStatuses = isset($palette['statuses']) && is_array($palette['statuses']) ? $palette['statuses'] : [];
+
+        $globalByKey = [];
+        foreach ($cachedGlobalStatuses as $status) {
+            if (!is_array($status)) {
+                continue;
+            }
+            $key = '';
+            if (isset($status['key']) && $status['key'] !== '') {
+                $key = (string) $status['key'];
+            }
+            if ($key === '' && isset($status['id'])) {
+                $key = (string) $status['id'];
+            }
+            if ($key === '') {
+                continue;
+            }
+
+            $normalised = [
+                'id'        => isset($status['id']) ? (string) $status['id'] : $key,
+                'key'       => $key,
+                'label'     => isset($status['label']) ? (string) $status['label'] : '',
+                'color'     => isset($status['color']) ? (string) $status['color'] : '',
+            ];
+
+            if (isset($status['available'])) {
+                $normalised['available'] = $status['available'];
+            }
+
+            $globalByKey[$key] = $normalised;
+        }
+
+        if (empty($globalByKey)) {
+            return $project;
+        }
+
+        $merged = [];
+        $seenKeys = [];
+
+        foreach ($paletteStatuses as $status) {
+            if (!is_array($status)) {
+                continue;
+            }
+            $key = '';
+            if (isset($status['key']) && $status['key'] !== '') {
+                $key = (string) $status['key'];
+            }
+            if ($key === '' && isset($status['id'])) {
+                $key = (string) $status['id'];
+            }
+            if ($key === '') {
+                $merged[] = $status;
+                continue;
+            }
+
+            $seenKeys[$key] = true;
+            if (isset($globalByKey[$key])) {
+                $globalStatus = $globalByKey[$key];
+                $mergedStatus = $status;
+                $mergedStatus['id'] = $globalStatus['id'];
+                $mergedStatus['key'] = $globalStatus['key'];
+                if ($globalStatus['label'] !== '') {
+                    $mergedStatus['label'] = $globalStatus['label'];
+                }
+                if ($globalStatus['color'] !== '') {
+                    $mergedStatus['color'] = $globalStatus['color'];
+                }
+                if (array_key_exists('available', $globalStatus)) {
+                    $mergedStatus['available'] = $globalStatus['available'];
+                }
+                $merged[] = $mergedStatus;
+                unset($globalByKey[$key]);
+            } else {
+                $merged[] = $status;
+            }
+        }
+
+        foreach ($globalByKey as $key => $globalStatus) {
+            $seenKeys[$key] = true;
+            $merged[] = $globalStatus;
+        }
+
+        $palette['statuses'] = $merged;
+        $project['palette'] = $palette;
+
+        return $project;
     }
 
     private static function build_floor_project_payload(array $project, array $floor): array
@@ -521,7 +622,7 @@ final class DM_Rest_Controller
             'publicKey' => $project['publicKey'] ?? ($project['shortcode'] ?? ''),
         ];
 
-        return $payload;
+        return self::hydrate_project_palette($payload);
     }
 
     /**

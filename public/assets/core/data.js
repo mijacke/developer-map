@@ -31,9 +31,9 @@ export function getDefaultTypes() {
  */
 export function getDefaultStatuses() {
     return [
-        { id: 'status-1', label: 'Voľný', color: '#49CD40' },
-        { id: 'status-2', label: 'Rezervovaný', color: '#D79E21' },
-        { id: 'status-3', label: 'Predaný', color: '#CD4040' },
+        { id: 'status-1', label: 'Voľné', color: '#49CD40' },
+        { id: 'status-2', label: 'Rezervované', color: '#D79E21' },
+        { id: 'status-3', label: 'Predané', color: '#CD4040' },
     ];
 }
 

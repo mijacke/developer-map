@@ -7,7 +7,7 @@
         return;
     }
 
-    const AVAILABLE_KEYWORDS = ['available', 'free', 'voln', 'volne', 'volny', 'volny apartman', 'volne apartmany'];
+    const AVAILABLE_KEYWORDS = ['available', 'free', 'voln', 'volne', 'volny', 'volny apartman', 'volne apartmany', 'predaj', 'na predaj'];
 
     function ensureStyles() {
         const STYLE_ID = 'dm-map-viewer-style';
@@ -132,6 +132,20 @@
             .replace(/'/g, '&#39;');
     }
 
+    const withCacheBusting = (url) => {
+        if (!url || typeof url !== 'string') {
+            return url;
+        }
+        try {
+            const urlObj = new URL(url, window.location.origin);
+            urlObj.searchParams.set('_', String(Date.now()));
+            return urlObj.toString();
+        } catch (error) {
+            const delimiter = url.includes('?') ? '&' : '?';
+            return `${url}${delimiter}_=${Date.now()}`;
+        }
+    };
+
     async function renderMap(container) {
         const key = container.dataset.dmMapKey;
         if (!key) {
@@ -146,11 +160,13 @@
 
         try {
             // Pokús sa o štandardný REST API endpoint
-            let response = await fetch(`${endpoint}?public_key=${encodeURIComponent(key)}`, {
+            let response = await fetch(withCacheBusting(`${endpoint}?public_key=${encodeURIComponent(key)}`), {
                 credentials: 'same-origin',
                 headers: {
                     Accept: 'application/json',
+                    'Cache-Control': 'no-cache',
                 },
+                cache: 'no-store',
             });
 
             // Ak zlyhá (404 = REST API endpoint neexistuje), skús alternatívny endpoint
@@ -159,11 +175,13 @@
                 const pluginUrl = window.location.origin + '/wp-content/plugins/developer-map';
                 const alternativeUrl = `${pluginUrl}/get-project.php?public_key=${encodeURIComponent(key)}`;
                 
-                response = await fetch(alternativeUrl, {
+                response = await fetch(withCacheBusting(alternativeUrl), {
                     credentials: 'same-origin',
                     headers: {
                         Accept: 'application/json',
+                        'Cache-Control': 'no-cache',
                     },
+                    cache: 'no-store',
                 });
             }
 
@@ -318,6 +336,8 @@
             const listEl = popover.querySelector('[data-role="list"]');
             const emptyEl = popover.querySelector('[data-role="empty"]');
             const ctaButton = popover.querySelector('[data-role="cta"]');
+            listEl.hidden = true;
+            emptyEl.hidden = true;
             let activeRegionId = null;
 
             const sanitiseId = (value) => String(value ?? '').trim();
@@ -380,13 +400,34 @@
                         (statusIdRaw || 'Bez stavu');
                     const key = (statusInfo?.id ?? statusInfo?.key ?? statusIdRaw) || label;
                     const color = statusInfo?.color ?? floor.statusColor ?? '#6366f1';
-                    const entry = entriesMap.get(key) ?? { label, color, count: 0 };
+                    const normalisedLabel = normaliseLabel(label);
+                    const entry =
+                        entriesMap.get(key) ?? {
+                            label,
+                            color,
+                            count: 0,
+                            normalisedLabel,
+                            isAvailable: false,
+                            isReserved: false,
+                            isSold: false,
+                        };
                     entry.count += 1;
-                    entriesMap.set(key, entry);
-
-                    if (parseAvailability(statusInfo, statusIdRaw, label)) {
-                        availableCount += 1;
+                    if (color) {
+                        entry.color = color;
                     }
+                    entry.normalisedLabel = normalisedLabel || entry.normalisedLabel;
+                    const isAvailable = parseAvailability(statusInfo, statusIdRaw, label);
+                    if (isAvailable) {
+                        availableCount += 1;
+                        entry.isAvailable = true;
+                    }
+                    if (normalisedLabel.includes('rezerv')) {
+                        entry.isReserved = true;
+                    }
+                    if (normalisedLabel.includes('predan')) {
+                        entry.isSold = true;
+                    }
+                    entriesMap.set(key, entry);
                 });
 
                 const entries = Array.from(entriesMap.values()).sort((a, b) => b.count - a.count);
@@ -395,6 +436,7 @@
 
             const baseFillColor = '#3445eb';
             const positiveFillColor = '#2b864c';
+            const reservedFillColor = '#f97316';
             const negativeFillColor = '#dc3545';
             const neutralFillColor = '#94a3b8';
             const idleAlpha = 0.32;
@@ -406,30 +448,77 @@
             const idleOpacity = 0.42;
             const hoverOpacity = 0.64;
             const selectedOpacity = 0.78;
+            const headlinePreparingColor = '#64748b';
+            const headlineDefaultColor = '#1c134f';
+
+            const sanitiseColorValue = (value, fallback) => {
+                const raw = String(value ?? '').trim();
+                if (!raw) {
+                    return fallback;
+                }
+                const lower = raw.toLowerCase();
+                if (lower.startsWith('var(') || lower.startsWith('rgb(') || lower.startsWith('rgba(') || lower.startsWith('hsl(') || lower.startsWith('hsla(')) {
+                    return raw;
+                }
+                if (lower.startsWith('#')) {
+                    const trimmed = lower.replace(/[^0-9a-f]/g, '');
+                    if (trimmed.length === 3 || trimmed.length === 4 || trimmed.length === 6 || trimmed.length === 8) {
+                        return `#${trimmed}`;
+                    }
+                    return fallback;
+                }
+                const hexCandidate = lower.replace(/[^0-9a-f]/g, '');
+                if (hexCandidate.length === 3 || hexCandidate.length === 6 || hexCandidate.length === 8) {
+                    return `#${hexCandidate}`;
+                }
+                return fallback;
+            };
+
+            const resolveRegionState = (summary) => {
+                const emptyState = {
+                    state: 'preparing',
+                    headline: 'Pripravujeme',
+                    headlineColor: headlinePreparingColor,
+                    fillColor: neutralFillColor,
+                };
+
+                if (!summary || !Array.isArray(summary.entries) || summary.entries.length === 0) {
+                    return emptyState;
+                }
+
+                const primaryEntry = summary.entries[0] ?? null;
+                const availableEntry = summary.entries.find((entry) => entry.isAvailable);
+                const reservedEntry = summary.entries.find((entry) => entry.isReserved);
+                const soldEntry = summary.entries.find((entry) => entry.isSold);
+
+                if (availableEntry) {
+                    const color = sanitiseColorValue(availableEntry.color, positiveFillColor);
+                    const headline = availableEntry.label || 'Dostupné';
+                    return { state: 'available', headline, headlineColor: color, fillColor: color };
+                }
+                if (reservedEntry) {
+                    const color = sanitiseColorValue(reservedEntry.color, reservedFillColor);
+                    const headline = reservedEntry.label || 'Rezervované';
+                    return { state: 'reserved', headline, headlineColor: color, fillColor: color };
+                }
+                if (soldEntry) {
+                    const color = sanitiseColorValue(soldEntry.color, negativeFillColor);
+                    const headline = soldEntry.label || 'Predané';
+                    return { state: 'sold', headline, headlineColor: color, fillColor: color };
+                }
+                if (primaryEntry && primaryEntry.label) {
+                    const color = sanitiseColorValue(primaryEntry.color, neutralFillColor);
+                    return { state: 'custom', headline: primaryEntry.label, headlineColor: color, fillColor: color };
+                }
+                return emptyState;
+            };
 
             const applyRegionFill = (polygon, summary) => {
                 if (!polygon) {
                     return;
                 }
-                const hasSummary = summary && Array.isArray(summary.entries);
-                let color = baseFillColor;
-                let availabilityState = 'empty';
-
-                if (hasSummary) {
-                    if (!summary.entries.length) {
-                        color = neutralFillColor;
-                        availabilityState = 'empty';
-                    } else if (summary.availableCount > 0) {
-                        color = positiveFillColor;
-                        availabilityState = 'available';
-                    } else {
-                        color = negativeFillColor;
-                        availabilityState = 'unavailable';
-                    }
-                } else {
-                    color = neutralFillColor;
-                    availabilityState = 'empty';
-                }
+                const { state, fillColor = baseFillColor } = resolveRegionState(summary);
+                const color = fillColor || baseFillColor;
 
                 const isSelected = polygon.dataset.dmSelected === 'true';
                 const isHover = polygon.dataset.dmHover === 'true';
@@ -445,54 +534,34 @@
                 polygon.style.paintOrder = 'fill stroke';
                 polygon.style.vectorEffect = 'non-scaling-stroke';
                 polygon.style.opacity = String(opacity);
-                polygon.dataset.dmAvailability = availabilityState;
+                switch (state) {
+                    case 'available':
+                        polygon.dataset.dmAvailability = 'available';
+                        break;
+                    case 'reserved':
+                        polygon.dataset.dmAvailability = 'reserved';
+                        break;
+                    case 'sold':
+                        polygon.dataset.dmAvailability = 'unavailable';
+                        break;
+                    case 'custom':
+                        polygon.dataset.dmAvailability = 'custom';
+                        break;
+                    default:
+                        polygon.dataset.dmAvailability = 'empty';
+                        break;
+                }
+                polygon.dataset.dmStatusState = state;
+                polygon.dataset.dmStatusColor = color;
             };
 
             const renderPopover = (region, summary) => {
-                if (!summary.entries.length) {
-                    summaryEl.innerHTML = '<strong>Žiadne naviazané lokality</strong>';
-                    listEl.hidden = true;
-                    listEl.innerHTML = '';
-                    emptyEl.textContent = 'Pre tento segment nie sú naviazané žiadne lokality.';
-                    return;
-                }
-
-                const unitLabelSingular = region?.meta?.unitLabel ?? 'apartmán';
-                const unitLabelPlural =
-                    region?.meta?.unitLabelPlural ??
-                    (unitLabelSingular === 'apartmán'
-                        ? 'apartmány'
-                        : unitLabelSingular.endsWith('a')
-                            ? `${unitLabelSingular.slice(0, -1)}y`
-                            : `${unitLabelSingular}s`);
-                const hasAvailable = summary.availableCount > 0;
-                const statusWord = hasAvailable
-                    ? summary.availableCount === 1
-                        ? 'voľný'
-                        : 'voľné'
-                    : 'Žiadne voľné';
-                const unitsWord = hasAvailable
-                    ? summary.availableCount === 1
-                        ? unitLabelSingular
-                        : unitLabelPlural
-                    : unitLabelPlural;
-                const headlineText = hasAvailable
-                    ? `${summary.availableCount === 1 ? '1' : String(summary.availableCount)} ${statusWord} ${unitsWord}`
-                    : `${statusWord} ${unitsWord}`;
-                const headlineColor = hasAvailable ? '#16a34a' : '#dc2626';
-                summaryEl.innerHTML = `<strong style="color:${headlineColor}">${escapeHtml(headlineText)}</strong>`;
-                listEl.hidden = false;
-                listEl.innerHTML = summary.entries
-                    .map(
-                        (entry) => `
-                            <li>
-                                <span class="dm-map-viewer__popover-dot" style="--dm-status-color:${escapeHtml(entry.color ?? '#6366f1')}"></span>
-                                <span>${escapeHtml(entry.label)}</span>
-                                <span>${escapeHtml(String(entry.count))}</span>
-                            </li>
-                        `,
-                    )
-                    .join('');
+                const { headline, headlineColor } = resolveRegionState(summary);
+                const tone = headlineColor || headlineDefaultColor;
+                summaryEl.innerHTML = `<strong style="color:${escapeHtml(tone)}">${escapeHtml(headline)}</strong>`;
+                listEl.hidden = true;
+                listEl.innerHTML = '';
+                emptyEl.hidden = true;
                 emptyEl.textContent = '';
             };
 
@@ -529,8 +598,9 @@
                 popover.classList.remove('is-visible');
                 summaryEl.textContent = '';
                 listEl.innerHTML = '';
-                listEl.hidden = false;
+                listEl.hidden = true;
                 emptyEl.textContent = '';
+                emptyEl.hidden = true;
                 ctaButton.hidden = true;
                 ctaButton.onclick = null;
                 regionElements.forEach((polygon) => {
