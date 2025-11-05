@@ -5123,6 +5123,16 @@ body:not(.wp-admin) .dm-editor-overlay {
     padding-right: 50px !important;
 }
 
+/* Center placeholders inside editor inputs */
+.dm-editor__panel-content .dm-field__input::placeholder {
+    text-align: center;
+}
+
+.dm-editor__panel-content .dm-field:not(.dm-field--filled):not(:focus-within) .dm-field__label {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 /* Field info tooltips in editor */
 .dm-editor__panel-content .dm-field__info {
     position: absolute;
