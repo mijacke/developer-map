@@ -1225,6 +1225,24 @@ export async function initDeveloperMap(options) {
             }
         }
 
+        const detailUrlCandidate = (() => {
+            const metaUrl = typeof region.meta?.detailUrl === 'string' ? region.meta.detailUrl.trim() : '';
+            if (metaUrl) {
+                return metaUrl;
+            }
+            const topLevel = typeof region.detailUrl === 'string' ? region.detailUrl.trim() : '';
+            return topLevel;
+        })();
+        if (detailUrlCandidate) {
+            if (!next.meta || typeof next.meta !== 'object') {
+                next.meta = {};
+            }
+            next.meta.detailUrl = detailUrlCandidate;
+            next.detailUrl = detailUrlCandidate;
+        } else if (next.meta && Object.prototype.hasOwnProperty.call(next.meta, 'detailUrl')) {
+            delete next.meta.detailUrl;
+        }
+
         const extras = { ...region };
         delete extras.id;
         delete extras.label;
@@ -1235,6 +1253,7 @@ export async function initDeveloperMap(options) {
         delete extras.geometry;
         delete extras.meta;
         delete extras.children;
+        delete extras.detailUrl;
         Object.keys(extras).forEach((key) => {
             if (!Object.prototype.hasOwnProperty.call(next, key)) {
                 next[key] = extras[key];
@@ -1834,6 +1853,7 @@ export async function initDeveloperMap(options) {
         const statusSelect = form.querySelector('select[data-dm-field="location-status"]');
         const parentSelect = form.querySelector('select[data-dm-field="parent"]');
         const urlInput = form.querySelector('input[data-dm-field="url"]');
+    const detailUrlInput = form.querySelector('input[data-dm-field="detail-url"]');
         const areaInput = form.querySelector('input[data-dm-field="area"]');
         const suffixInput = form.querySelector('input[data-dm-field="suffix"]');
         const prefixInput = form.querySelector('input[data-dm-field="prefix"]');
@@ -1875,6 +1895,7 @@ export async function initDeveloperMap(options) {
             return '';
         })();
         const urlValue = urlInput ? urlInput.value.trim() : '';
+    const detailUrlValue = detailUrlInput ? detailUrlInput.value.trim() : '';
         const areaValue = areaInput ? areaInput.value.trim() : '';
         const suffixValue = suffixInput ? suffixInput.value.trim() : 'm²';
         const prefixValue = prefixInput ? prefixInput.value.trim() : '';
@@ -1897,6 +1918,7 @@ export async function initDeveloperMap(options) {
             statusId: statusIdValue,
             parentId,
             url: urlValue,
+            detailUrl: detailUrlValue,
             area: areaValue,
             suffix: suffixValue,
             prefix: prefixValue,
@@ -1907,6 +1929,7 @@ export async function initDeveloperMap(options) {
                 nameInput,
                 typeSelect,
                 statusSelect,
+                detailUrlInput,
             },
         };
     }
@@ -2951,6 +2974,7 @@ export async function initDeveloperMap(options) {
         result.item.statusId = sanitiseStatusId(fields.statusId || fallbackStatusMatch?.id);
         result.item.label = fields.designation || fields.name;
         result.item.url = fields.url;
+        result.item.detailUrl = fields.detailUrl;
         result.item.area = fields.area;
         result.item.suffix = fields.suffix;
         result.item.prefix = fields.prefix;
@@ -3069,6 +3093,7 @@ export async function initDeveloperMap(options) {
                 statusLabel: fields.status,
                 label: fields.designation || fields.name,
                 url: fields.url,
+                detailUrl: fields.detailUrl,
                 area: fields.area,
                 suffix: fields.suffix,
                 prefix: fields.prefix,
@@ -3973,7 +3998,8 @@ export async function initDeveloperMap(options) {
         const regionList = drawRoot.querySelector('[data-dm-region-list]');
         const addRegionButton = drawRoot.querySelector('[data-dm-add-region]');
         const removeRegionButton = drawRoot.querySelector('[data-dm-remove-region]');
-        const regionNameInput = drawRoot.querySelector('[data-dm-region-name]');
+    const regionNameInput = drawRoot.querySelector('[data-dm-region-name]');
+    const regionDetailUrlInput = drawRoot.querySelector('[data-dm-region-detail-url]');
         const regionChildrenFieldset = drawRoot.querySelector('[data-dm-region-children]');
         const fullscreenToggle = drawRoot.querySelector('[data-dm-fullscreen-toggle]');
         const ownerTypeAttr = drawRoot.dataset.dmOwner ?? 'project';
@@ -4243,6 +4269,19 @@ export async function initDeveloperMap(options) {
             }
             const closed = typeof meta.closed === 'boolean' ? Boolean(meta.closed) : geometryPoints.length >= 3;
             meta.closed = closed;
+            const detailUrl = (() => {
+                const metaUrl = typeof meta.detailUrl === 'string' ? meta.detailUrl.trim() : '';
+                if (metaUrl) {
+                    return metaUrl;
+                }
+                const raw = typeof source.detailUrl === 'string' ? source.detailUrl.trim() : '';
+                return raw;
+            })();
+            if (detailUrl) {
+                meta.detailUrl = detailUrl;
+            } else if (Object.prototype.hasOwnProperty.call(meta, 'detailUrl')) {
+                delete meta.detailUrl;
+            }
 
             const regionClone = {
                 id,
@@ -4257,6 +4296,10 @@ export async function initDeveloperMap(options) {
                 meta: { ...meta },
                 children: [...children],
             };
+
+            if (detailUrl) {
+                regionClone.detailUrl = detailUrl;
+            }
 
             if (Array.isArray(source.tags)) {
                 regionClone.tags = [...source.tags];
@@ -4515,6 +4558,11 @@ export async function initDeveloperMap(options) {
                 regionNameInput.value = region?.label ?? region?.name ?? '';
                 updateFieldFilledState(regionNameInput);
             }
+            if (regionDetailUrlInput) {
+                const detailUrl = region?.detailUrl ?? region?.meta?.detailUrl ?? '';
+                regionDetailUrlInput.value = detailUrl;
+                updateFieldFilledState(regionDetailUrlInput);
+            }
             if (regionChildrenFieldset) {
                 const selected = new Set(
                     Array.isArray(region?.children) ? region.children.map((child) => String(child)) : [],
@@ -4582,6 +4630,28 @@ export async function initDeveloperMap(options) {
                 if (!region) return;
                 region.label = String(event.target.value ?? '').trim();
                 refreshRegionList();
+            });
+        }
+
+        if (regionDetailUrlInput) {
+            regionDetailUrlInput.addEventListener('input', (event) => {
+                const region = getActiveRegion();
+                if (!region) {
+                    return;
+                }
+                const rawValue = String(event.target.value ?? '');
+                if (!region.meta || typeof region.meta !== 'object') {
+                    region.meta = {};
+                }
+                const trimmed = rawValue.trim();
+                if (trimmed) {
+                    region.meta.detailUrl = trimmed;
+                    region.detailUrl = trimmed;
+                } else {
+                    delete region.meta.detailUrl;
+                    region.detailUrl = '';
+                }
+                updateFieldFilledState(regionDetailUrlInput);
             });
         }
 
@@ -5124,6 +5194,19 @@ export async function initDeveloperMap(options) {
                             if (meta && Object.prototype.hasOwnProperty.call(meta, 'hatchClass')) {
                                 delete meta.hatchClass;
                             }
+                            const detailUrl = (() => {
+                                const metaUrl = typeof meta.detailUrl === 'string' ? meta.detailUrl.trim() : '';
+                                if (metaUrl) {
+                                    return metaUrl;
+                                }
+                                const raw = typeof region.detailUrl === 'string' ? region.detailUrl.trim() : '';
+                                return raw;
+                            })();
+                            if (detailUrl) {
+                                meta.detailUrl = detailUrl;
+                            } else if (Object.prototype.hasOwnProperty.call(meta, 'detailUrl')) {
+                                delete meta.detailUrl;
+                            }
                             const children = Array.isArray(region.children)
                                 ? region.children
                                       .map((child) => {
@@ -5145,6 +5228,9 @@ export async function initDeveloperMap(options) {
                                 },
                                 children,
                             };
+                            if (detailUrl) {
+                                payload.detailUrl = detailUrl;
+                            }
                             if (Array.isArray(region.tags)) {
                                 payload.tags = [...region.tags];
                             }

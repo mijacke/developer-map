@@ -368,6 +368,7 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
 
     // Field values - always set, even if empty (like in renderFormModal)
     const urlValue = editLocation?.url ?? '';
+    const detailUrlValue = editLocation?.detailUrl ?? '';
     const areaValue = editLocation?.area ?? '';
     const suffixValue = editLocation?.suffix ?? '';
     const prefixValue = editLocation?.prefix ?? '';
@@ -446,6 +447,11 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <button type="button" class="dm-field__info" aria-label="URL lokality" data-tooltip="URL lokality">${infoIcon}</button>
                                             <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="url" placeholder=" " value="${escapeHtml(urlValue)}">
                                             <label class="dm-field__label">URL</label>
+                                        </div>
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Detail URL lokality" data-tooltip="Odkaz na detail lokality">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="detail-url" placeholder=" " value="${escapeHtml(detailUrlValue)}">
+                                            <label class="dm-field__label">Detail URL</label>
                                         </div>
                                         <div class="dm-field dm-field--with-unit" data-unit="m²">
                                             <button type="button" class="dm-field__info" aria-label="Rozloha lokality v m²" data-tooltip="Rozloha lokality v m²">${infoIcon}</button>
@@ -824,6 +830,7 @@ function renderDrawModal(state, data) {
             `;
 
     const regionNameValue = activeRegion?.label ?? activeRegion?.name ?? '';
+    const regionDetailUrlValue = activeRegion?.meta?.detailUrl ?? activeRegion?.detailUrl ?? '';
     const childSelectorMarkup =
         contextType === 'project' && floorsForChildren.length
             ? `
@@ -997,6 +1004,10 @@ function renderDrawModal(state, data) {
                                 <div class="dm-field">
                                     <input type="text" autocomplete="off" class="dm-field__input" data-dm-region-name placeholder=" " value="${escapeHtml(regionNameValue)}">
                                     <label class="dm-field__label">Názov zóny</label>
+                                </div>
+                                <div class="dm-field">
+                                    <input type="text" autocomplete="off" class="dm-field__input" data-dm-region-detail-url placeholder=" " value="${escapeHtml(regionDetailUrlValue)}">
+                                    <label class="dm-field__label">Detail URL</label>
                                 </div>
                             </div>
                         </div>
