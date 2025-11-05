@@ -203,28 +203,8 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
                                             <input required type="text" autocomplete="off" class="dm-field__input" data-dm-field="name" placeholder=" " value="${escapeHtml(resolvedName)}">
                                             <label class="dm-field__label">Názov<span class="dm-field__required">*</span></label>
                                         </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="URL adresa mapy" data-tooltip="URL adresa mapy">${infoIcon}</button>
-                                            <input type="url" autocomplete="off" class="dm-field__input" data-dm-field="url" placeholder=" " value="${escapeHtml(editItem?.url ?? '')}">
-                                            <label class="dm-field__label">URL</label>
-                                        </div>
                                     </div>
                                     <div class="dm-form__column">
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Šírka čiary ohraničenia lokality v pixeloch" data-tooltip="Šírka čiary ohraničenia lokality v pixeloch">${infoIcon}</button>
-                                            <input type="number" step="1" min="1" max="10" autocomplete="off" class="dm-field__input" data-dm-field="stroke-width" placeholder=" " value="${escapeHtml(editItem?.strokeWidth ?? '')}">
-                                            <label class="dm-field__label">Hrúbka ohraničenia</label>
-                                        </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Priehľadnosť čiary ohraničenia (0-100%)" data-tooltip="Priehľadnosť čiary ohraničenia (0-100%)">${infoIcon}</button>
-                                            <input type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" data-dm-field="stroke-opacity" placeholder=" " value="${escapeHtml(editItem?.strokeOpacity ?? '')}">
-                                            <label class="dm-field__label">Prehľadnosť ohraničenia</label>
-                                        </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Priehľadnosť výplne lokality (0-100%)" data-tooltip="Priehľadnosť výplne lokality (0-100%)">${infoIcon}</button>
-                                            <input type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" data-dm-field="fill-opacity" placeholder=" " value="${escapeHtml(editItem?.fillOpacity ?? '')}">
-                                            <label class="dm-field__label">Prehľadnosť pozadia</label>
-                                        </div>
                                     </div>
                                 </div>
                                 <div class="dm-modal__actions">
@@ -411,16 +391,6 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                         </div>
                                     </div>
                                     <div class="dm-form__column">
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="URL lokality" data-tooltip="URL lokality">${infoIcon}</button>
-                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="url" placeholder=" " value="${escapeHtml(urlValue)}">
-                                            <label class="dm-field__label">URL</label>
-                                        </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Detail URL lokality" data-tooltip="Odkaz na detail lokality">${infoIcon}</button>
-                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="detail-url" placeholder=" " value="${escapeHtml(detailUrlValue)}">
-                                            <label class="dm-field__label">Detail URL</label>
-                                        </div>
                                         <div class="dm-field dm-field--with-unit" data-unit="m²">
                                             <button type="button" class="dm-field__info" aria-label="Rozloha lokality v m²" data-tooltip="Rozloha lokality v m²">${infoIcon}</button>
                                             <input type="number" step="0.01" autocomplete="off" class="dm-field__input" data-dm-field="area" placeholder=" " value="${escapeHtml(areaValue)}">
@@ -972,6 +942,26 @@ function renderDrawModal(state, data) {
                                 <div class="dm-field">
                                     <input type="text" autocomplete="off" class="dm-field__input" data-dm-region-name placeholder=" " value="${escapeHtml(regionNameValue)}">
                                     <label class="dm-field__label">Názov zóny</label>
+                                </div>
+                                <div class="dm-field" style="margin-top: 1.5rem;">
+                                    <button type="button" class="dm-field__info" aria-label="URL adresa zóny" data-tooltip="URL adresa zóny"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
+                                    <input type="url" autocomplete="off" class="dm-field__input" data-dm-region-url placeholder=" " value="${escapeHtml(activeRegion?.url ?? '')}">
+                                    <label class="dm-field__label">URL</label>
+                                </div>
+                                <div class="dm-field" style="margin-top: 1.5rem;">
+                                    <button type="button" class="dm-field__info" aria-label="Šírka čiary ohraničenia v pixeloch (1-10)" data-tooltip="Šírka čiary ohraničenia v pixeloch (1-10)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
+                                    <input type="number" step="1" min="1" max="10" autocomplete="off" class="dm-field__input" data-dm-region-stroke-width placeholder=" " value="${escapeHtml(activeRegion?.strokeWidth ?? '')}">
+                                    <label class="dm-field__label">Hrúbka ohraničenia</label>
+                                </div>
+                                <div class="dm-field" style="margin-top: 1.5rem;">
+                                    <button type="button" class="dm-field__info" aria-label="Priehľadnosť čiary ohraničenia (0-100%)" data-tooltip="Priehľadnosť čiary ohraničenia (0-100%)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
+                                    <input type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" data-dm-region-stroke-opacity placeholder=" " value="${escapeHtml(activeRegion?.strokeOpacity ?? '')}">
+                                    <label class="dm-field__label">Prehľadnosť ohraničenia</label>
+                                </div>
+                                <div class="dm-field" style="margin-top: 1.5rem;">
+                                    <button type="button" class="dm-field__info" aria-label="Priehľadnosť výplne zóny (0-100%)" data-tooltip="Priehľadnosť výplne zóny (0-100%)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
+                                    <input type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" data-dm-region-fill-opacity placeholder=" " value="${escapeHtml(activeRegion?.fillOpacity ?? '')}">
+                                    <label class="dm-field__label">Prehľadnosť pozadia</label>
                                 </div>
                             </div>
                         </div>

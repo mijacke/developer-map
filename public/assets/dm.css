@@ -5106,6 +5106,88 @@ body:not(.wp-admin) .dm-editor-overlay {
     max-height: calc(100vh - 300px);
 }
 
+/* Number inputs in editor - remove spinners */
+.dm-editor__panel-content input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.dm-editor__panel-content input[type="number"]::-webkit-outer-spin-button,
+.dm-editor__panel-content input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Add padding to inputs with info button to prevent text overlap */
+.dm-editor__panel-content .dm-field:has(.dm-field__info) .dm-field__input {
+    padding-right: 50px !important;
+}
+
+/* Field info tooltips in editor */
+.dm-editor__panel-content .dm-field__info {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #5a3bff;
+    cursor: help;
+    transition: transform 0.18s ease;
+    z-index: 10;
+}
+
+.dm-editor__panel-content .dm-field__info svg {
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+}
+
+.dm-editor__panel-content .dm-field__info::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 12px);
+    right: 0;
+    padding: 8px 14px;
+    background: rgba(22, 22, 29, 0.96);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    border-radius: 10px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dm-editor__panel-content .dm-field__info::after {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 4px);
+    right: 6px;
+    border: 6px solid transparent;
+    border-top-color: rgba(22, 22, 29, 0.96);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 10000;
+}
+
+.dm-editor__panel-content .dm-field__info:hover::before,
+.dm-editor__panel-content .dm-field__info:hover::after {
+    opacity: 1;
+}
+
 .dm-editor__panel-footer {
     padding: 16px;
     border-top: 1px solid var(--dm-border);
