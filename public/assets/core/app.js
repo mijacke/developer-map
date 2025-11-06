@@ -26,6 +26,7 @@ async function loadModules() {
     getAvailableFonts: data.getAvailableFonts,
         renderAppShell: layout.renderAppShell,
         renderModal: modals.renderModal,
+        renderLocalitiesPopup: modals.renderLocalitiesPopup,
         createStorageClient: storage.createStorageClient,
         WPAdminLayoutManager: wpAdmin.WPAdminLayoutManager
     };
@@ -48,7 +49,7 @@ export async function initDeveloperMap(options) {
     const { 
         APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX,
         createInitialData, getDefaultTypes, getDefaultStatuses, getDefaultColors, getAvailableFonts,
-        renderAppShell, renderModal, createStorageClient, WPAdminLayoutManager
+        renderAppShell, renderModal, renderLocalitiesPopup, createStorageClient, WPAdminLayoutManager
     } = modules;
 
     if (!root || !(root instanceof HTMLElement)) {
@@ -397,6 +398,33 @@ export async function initDeveloperMap(options) {
         };
         projects.forEach((project) => {
             remapKeys(project);
+            if (project && Object.prototype.hasOwnProperty.call(project, 'parentId')) {
+                const rawParentId = project.parentId;
+                const trimmedParentId =
+                    typeof rawParentId === 'string' || typeof rawParentId === 'number'
+                        ? String(rawParentId).trim()
+                        : '';
+                const selfId = String(project.id ?? '').trim();
+                if (!trimmedParentId || (selfId && trimmedParentId === selfId)) {
+                    if (project.parentId !== null) {
+                        project.parentId = null;
+                        mutated = true;
+                    }
+                } else {
+                    const parentExists = projects.some((candidate) => String(candidate?.id ?? '') === trimmedParentId);
+                    if (parentExists) {
+                        if (project.parentId !== trimmedParentId) {
+                            project.parentId = trimmedParentId;
+                            mutated = true;
+                        } else {
+                            project.parentId = trimmedParentId;
+                        }
+                    } else if (project.parentId !== null) {
+                        project.parentId = null;
+                        mutated = true;
+                    }
+                }
+            }
             if (Array.isArray(project?.floors)) {
                 project.floors.forEach((floor) => remapKeys(floor));
             }
@@ -1664,7 +1692,14 @@ export async function initDeveloperMap(options) {
         const soughtId = String(itemId);
         for (const project of data.projects ?? []) {
             if (String(project.id) === soughtId) {
-                return { item: project, type: 'project', parent: null };
+                const parentIdRaw = project?.parentId;
+                const parentId = typeof parentIdRaw === 'string' || typeof parentIdRaw === 'number'
+                    ? String(parentIdRaw).trim()
+                    : '';
+                const parentProject = parentId
+                    ? (data.projects ?? []).find((candidate) => String(candidate?.id ?? '') === parentId) ?? null
+                    : null;
+                return { item: project, type: 'project', parent: parentProject };
             }
             for (const floor of project.floors ?? []) {
                 if (String(floor.id) === soughtId) {
@@ -1826,7 +1861,8 @@ export async function initDeveloperMap(options) {
         let parentId = null;
         if (parentSelect) {
             const rawValue = parentSelect.value;
-            parentId = rawValue && rawValue !== 'none' ? rawValue : null;
+            const candidate = typeof rawValue === 'string' ? rawValue.trim() : String(rawValue ?? '').trim();
+            parentId = candidate && candidate !== 'none' ? candidate : null;
         } else if (state.modal && state.modal.parentId) {
             parentId = state.modal.parentId;
         }
@@ -1838,6 +1874,7 @@ export async function initDeveloperMap(options) {
             elements: {
                 nameInput,
                 typeSelect,
+                parentSelect,
             },
         };
     }
@@ -1906,7 +1943,8 @@ export async function initDeveloperMap(options) {
         let parentId = null;
         if (parentSelect) {
             const rawValue = parentSelect.value;
-            parentId = rawValue && rawValue !== 'none' ? rawValue : null;
+            const candidate = typeof rawValue === 'string' ? rawValue.trim() : String(rawValue ?? '').trim();
+            parentId = candidate && candidate !== 'none' ? candidate : null;
         } else if (state.modal && state.modal.parentId) {
             parentId = state.modal.parentId;
         }
@@ -2047,7 +2085,7 @@ export async function initDeveloperMap(options) {
                     modal: {
                         type: normalizedType,
                         payload: String(result.item.id),
-                        parentId: result.type === 'floor' && result.parent ? String(result.parent.id) : null,
+                        parentId: result.parent ? String(result.parent.id) : (result.type === 'project' && result.item.parentId ? String(result.item.parentId) : null),
                         imageSelection: getEntityImageSelection(result.item),
                         imagePreview: result.item.image ?? result.item.imageUrl ?? null,
                         targetType: result.type,
@@ -2307,49 +2345,92 @@ export async function initDeveloperMap(options) {
         });
 
         // Hierarchické rozbaľovanie/zabaľovanie
+        const findChildrenContainer = (row) => {
+            if (!row) {
+                return null;
+            }
+            let sibling = row.nextElementSibling;
+            while (sibling) {
+                if (sibling.matches('.dm-board__children')) {
+                    return sibling;
+                }
+                if (sibling.matches('[data-dm-parent-id]')) {
+                    break;
+                }
+                sibling = sibling.nextElementSibling;
+            }
+            return null;
+        };
+
+        const collapseDescendants = (container) => {
+            if (!container) {
+                return [];
+            }
+            const collapsed = [];
+            const descendantRows = container.querySelectorAll('[data-dm-parent-id]');
+            descendantRows.forEach((row) => {
+                const rowId = row.getAttribute('data-dm-parent-id') ?? '';
+                if (row.classList.contains('is-expanded')) {
+                    row.classList.remove('is-expanded');
+                    if (rowId) {
+                        collapsed.push(rowId);
+                    }
+                }
+                const toggle = row.querySelector('[data-dm-toggle]');
+                if (toggle) {
+                    toggle.setAttribute('aria-expanded', 'false');
+                    toggle.setAttribute('aria-label', 'Rozbaliť poschodia');
+                }
+            });
+            return collapsed;
+        };
+
         const toggleButtons = root.querySelectorAll('[data-dm-toggle]');
         toggleButtons.forEach((button) => {
-            button.addEventListener('click', (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                
+            const handleToggle = () => {
                 const parentId = button.getAttribute('data-dm-toggle');
-                const parentRow = root.querySelector(`[data-dm-parent-id="${parentId}"]`);
-                const childrenContainer = root.querySelector(`[data-dm-children="${parentId}"]`);
-                
-                if (!parentRow || !childrenContainer) return;
-                
+                const parentRow = button.closest('[data-dm-parent-id]');
+                const childrenContainer = findChildrenContainer(parentRow);
+                if (!parentRow || !childrenContainer) {
+                    return;
+                }
                 const isExpanded = parentRow.classList.contains('is-expanded');
-                
-                // Toggle expanded state
+                const expandedProjects = loadExpandedProjects();
+                const updatedExpanded = new Set(expandedProjects);
+
                 if (isExpanded) {
                     parentRow.classList.remove('is-expanded');
                     button.setAttribute('aria-expanded', 'false');
                     button.setAttribute('aria-label', 'Rozbaliť poschodia');
-                    
-                    // Remove from expanded list
-                    const expandedProjects = loadExpandedProjects();
-                    const updatedExpanded = expandedProjects.filter(id => id !== parentId);
-                    saveExpandedProjects(updatedExpanded);
+
+                    if (parentId) {
+                        updatedExpanded.delete(parentId);
+                    }
+                    const descendantIds = collapseDescendants(childrenContainer);
+                    descendantIds.forEach((id) => updatedExpanded.delete(id));
+                    saveExpandedProjects(Array.from(updatedExpanded));
                 } else {
                     parentRow.classList.add('is-expanded');
                     button.setAttribute('aria-expanded', 'true');
                     button.setAttribute('aria-label', 'Zabaliť poschodia');
-                    
-                    // Add to expanded list
-                    const expandedProjects = loadExpandedProjects();
-                    if (!expandedProjects.includes(parentId)) {
-                        expandedProjects.push(parentId);
-                        saveExpandedProjects(expandedProjects);
+
+                    if (parentId) {
+                        updatedExpanded.add(parentId);
                     }
+                    saveExpandedProjects(Array.from(updatedExpanded));
                 }
+            };
+
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                handleToggle();
             });
-            
-            // Keyboard support pre toggle button
+
             button.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    button.click();
+                    handleToggle();
                 }
             });
         });
@@ -2620,8 +2701,9 @@ export async function initDeveloperMap(options) {
         const parentSelect = root.querySelector('select[data-dm-field="parent"]');
         if (parentSelect) {
             parentSelect.addEventListener('change', (event) => {
-                const value = event.target.value;
-                const nextParentId = value === 'none' ? null : value;
+                const rawValue = event.target.value;
+                const trimmedValue = typeof rawValue === 'string' ? rawValue.trim() : String(rawValue ?? '').trim();
+                const nextParentId = !trimmedValue || trimmedValue === 'none' ? null : trimmedValue;
                 const currentParentId = state.modal ? state.modal.parentId ?? null : null;
                 if ((currentParentId ?? null) !== (nextParentId ?? null)) {
                     setState((prev) => {
@@ -2846,6 +2928,20 @@ export async function initDeveloperMap(options) {
             ) {
                 persistEntityImage('project', result.item.id, imageSelection);
             }
+
+            let sanitisedParentId = null;
+            if (targetParentId) {
+                const trimmedParentId = String(targetParentId).trim();
+                if (trimmedParentId && trimmedParentId !== String(result.item.id)) {
+                    const parentCandidate = data.projects.find((project) => String(project.id) === trimmedParentId);
+                    if (parentCandidate) {
+                        sanitisedParentId = String(parentCandidate.id);
+                    } else {
+                        console.warn('[Developer Map] Nenašla sa nadradená mapa pre úpravu:', targetParentId);
+                    }
+                }
+            }
+            result.item.parentId = sanitisedParentId;
             saveProjects(data.projects);
             setState({ modal: null });
             return;
@@ -3147,6 +3243,7 @@ export async function initDeveloperMap(options) {
                 type,
                 badge,
                 publicKey,
+                parentId: null,
                 image: projectImage,
                 imageUrl: projectImage,
                 image_id: imageSelection?.id ?? null,
@@ -3160,30 +3257,32 @@ export async function initDeveloperMap(options) {
         } else {
             const parentProject = data.projects.find((project) => String(project.id) === String(parentId));
             if (!parentProject) {
-                console.warn('[Developer Map] Nenašla sa nadradená mapa pre pridanie lokality:', parentId);
+                console.warn('[Developer Map] Nenašla sa nadradená mapa pre pridanie mapy:', parentId);
                 return;
             }
-            if (!Array.isArray(parentProject.floors)) {
-                parentProject.floors = [];
-            }
-            const newFloorId = generateId('floor');
-            const floorImage = imageData || '';
-            parentProject.floors.push({
-                id: newFloorId,
+            const newProjectId = generateId('project');
+            const badge = ensureBadge(name);
+            const projectImage = imageData || '';
+            const publicKey = generateProjectPublicKey(name, data.projects);
+            const resolvedParentId = String(parentProject.id);
+            const newProject = {
+                id: newProjectId,
                 name,
                 type,
-                label: name,
-                image: floorImage,
-                imageUrl: floorImage,
+                badge,
+                publicKey,
+                parentId: resolvedParentId,
+                image: projectImage,
+                imageUrl: projectImage,
                 image_id: imageSelection?.id ?? null,
                 imageAlt: imageSelection?.alt || name,
-                statusId: sanitiseStatusId(data.statuses[0]?.id),
-                regions: [],
-            });
+                floors: [],
+            };
+            data.projects.push(newProject);
             if (imageSelection?.id) {
-                persistEntityImage('floor', newFloorId, imageSelection);
+                persistEntityImage('project', newProjectId, imageSelection);
             }
-            newActiveProjectId = String(parentProject.id);
+            newActiveProjectId = newProjectId;
         }
 
         saveProjects(data.projects);
@@ -3414,7 +3513,14 @@ export async function initDeveloperMap(options) {
             // Vymazanie celého projektu
             const projectIndex = data.projects.findIndex((p) => p.id === result.item.id);
             if (projectIndex !== -1) {
+                const removedId = String(result.item.id);
                 data.projects.splice(projectIndex, 1);
+
+                data.projects.forEach((project) => {
+                    if (String(project?.parentId ?? '') === removedId) {
+                        project.parentId = null;
+                    }
+                });
                 
                 // Ak bol vymazaný aktívny projekt, nastav nový aktívny projekt
                 let newActiveProjectId = state.activeProjectId;
@@ -3975,6 +4081,84 @@ export async function initDeveloperMap(options) {
                 });
             });
         });
+
+        // Bind localities popup button
+        const openLocalitiesButton = root.querySelector('[data-dm-open-localities-popup]');
+        if (openLocalitiesButton) {
+            openLocalitiesButton.addEventListener('click', () => {
+                if (root.querySelector('.dm-localities-popup-overlay')) {
+                    return;
+                }
+
+                const stash = root.querySelector('[data-dm-localities-stash]');
+                const stashTable = stash?.querySelector('[data-dm-localities-stash-table]');
+                const localitiesBody = stashTable?.querySelector('[data-dm-region-children]');
+                if (!stash || !stashTable || !localitiesBody) {
+                    return;
+                }
+
+                const popupContainer = document.createElement('div');
+                popupContainer.innerHTML = renderLocalitiesPopup();
+                const overlayEl = popupContainer.firstElementChild;
+                if (!overlayEl) {
+                    return;
+                }
+
+                const popupBodySlot = overlayEl.querySelector('[data-dm-localities-popup-body]');
+                if (popupBodySlot) {
+                    popupBodySlot.replaceWith(localitiesBody);
+                }
+
+                root.appendChild(overlayEl);
+
+                const summaryEl = root.querySelector('[data-dm-localities-summary] strong');
+                const refreshSummary = () => {
+                    if (!summaryEl) {
+                        return;
+                    }
+                    const checkedCount = localitiesBody.querySelectorAll('input[data-dm-region-child]:checked').length;
+                    summaryEl.textContent = String(checkedCount);
+                };
+
+                const closePopup = () => {
+                    document.removeEventListener('keydown', onKeydown);
+                    const activeOverlay = root.querySelector('[data-dm-localities-popup-overlay]');
+                    if (!activeOverlay) {
+                        return;
+                    }
+                    const bodyInOverlay = activeOverlay.querySelector('[data-dm-region-children]');
+                    if (bodyInOverlay && stashTable) {
+                        stashTable.appendChild(bodyInOverlay);
+                    }
+                    activeOverlay.remove();
+                    refreshSummary();
+                    if (openLocalitiesButton && document.body && document.body.contains(openLocalitiesButton)) {
+                        openLocalitiesButton.focus();
+                    }
+                };
+
+                function onKeydown(event) {
+                    if (event.key === 'Escape' || event.key === 'Esc') {
+                        closePopup();
+                    }
+                }
+
+                document.addEventListener('keydown', onKeydown);
+
+                const closeButton = overlayEl.querySelector('[data-dm-close-localities-popup]');
+                if (closeButton) {
+                    closeButton.addEventListener('click', closePopup);
+                }
+
+                overlayEl.addEventListener('click', (event) => {
+                    if (event.target === overlayEl) {
+                        closePopup();
+                    }
+                });
+
+                refreshSummary();
+            });
+        }
     }
 
     function initDrawSurface(drawRoot) {
@@ -4005,6 +4189,15 @@ export async function initDeveloperMap(options) {
         const regionFillOpacityInput = drawRoot.querySelector('[data-dm-region-fill-opacity]');
         const regionDetailUrlInput = drawRoot.querySelector('[data-dm-region-detail-url]');
         const regionChildrenFieldset = drawRoot.querySelector('[data-dm-region-children]');
+        const localitiesSummaryCount = drawRoot.querySelector('[data-dm-localities-summary] strong');
+
+        const updateLocalitiesSummary = () => {
+            if (!localitiesSummaryCount || !regionChildrenFieldset) {
+                return;
+            }
+            const checkedCount = regionChildrenFieldset.querySelectorAll('input[data-dm-region-child]:checked').length;
+            localitiesSummaryCount.textContent = String(checkedCount);
+        };
         const fullscreenToggle = drawRoot.querySelector('[data-dm-fullscreen-toggle]');
         const ownerTypeAttr = drawRoot.dataset.dmOwner ?? 'project';
         const ownerIdAttr = drawRoot.dataset.dmOwnerId ?? '';
@@ -4644,7 +4837,21 @@ export async function initDeveloperMap(options) {
                 nameEl.className = 'dm-editor__zone-name';
                 nameEl.textContent = region.label ?? region.name ?? `Zóna ${index + 1}`;
                 trigger.append(nameEl);
-                const childCount = Array.isArray(region.children) ? region.children.length : 0;
+                
+                // Always count from the region.children array (updated by checkbox listeners)
+                // Filter out empty/invalid values and count both maps and locations
+                const validChildren = Array.isArray(region.children) 
+                    ? region.children.filter((child) => {
+                        const val = String(child ?? '').trim();
+                        if (!val || val === 'undefined' || val === 'null') {
+                            return false;
+                        }
+                        // Count both maps (format: map:{id}) and locations (format: location:{id})
+                        return val.startsWith('location:') || val.startsWith('map:');
+                    })
+                    : [];
+                const childCount = validChildren.length;
+                
                 const metaEl = document.createElement('span');
                 metaEl.className = 'dm-editor__zone-meta';
                 metaEl.textContent = childCount > 0 ? `Prepojených: ${childCount}` : 'Bez prepojení';
@@ -4701,7 +4908,12 @@ export async function initDeveloperMap(options) {
                 regionChildrenFieldset
                     .querySelectorAll('input[data-dm-region-child]')
                     .forEach((input) => {
-                        input.checked = selected.has(input.value);
+                        const isChecked = selected.has(input.value);
+                        input.checked = isChecked;
+                        const labelEl = input.parentElement?.querySelector('.dm-localities-checkbox__label');
+                        if (labelEl) {
+                            labelEl.textContent = isChecked ? 'Prepojené' : 'Neaktívne';
+                        }
                     });
             }
             if (removeRegionButton) {
@@ -4713,6 +4925,7 @@ export async function initDeveloperMap(options) {
                     removeRegionButton.setAttribute('aria-disabled', 'true');
                 }
             }
+            updateLocalitiesSummary();
         }
 
         // Region list click handler is now set up globally on root element
@@ -4872,16 +5085,108 @@ export async function initDeveloperMap(options) {
                 if (!value) {
                     return;
                 }
+
                 const current = new Set(
                     Array.isArray(region.children) ? region.children.map((child) => String(child)) : [],
                 );
+
+                const updateLabel = (targetInput, checked) => {
+                    const labelEl = targetInput?.parentElement?.querySelector('.dm-localities-checkbox__label');
+                    if (labelEl) {
+                        labelEl.textContent = checked ? 'Prepojené' : 'Neaktívne';
+                    }
+                };
+
+                const childType = input.dataset.dmChildType ?? 'location';
+                
+                // Pridaj alebo odober primárnu hodnotu ako prvé
                 if (input.checked) {
                     current.add(value);
                 } else {
                     current.delete(value);
                 }
+                
+                // Potom aplikuj na potomkov ak je to mapa
+                if (childType === 'map') {
+                    const descendantKeys = String(input.dataset.dmMapDescendants ?? '')
+                        .split(/\s+/)
+                        .map((item) => item.trim())
+                        .filter(Boolean);
+                    if (descendantKeys.length) {
+                        const descendantSet = new Set(descendantKeys);
+                        regionChildrenFieldset
+                            .querySelectorAll('input[data-dm-region-child]')
+                            .forEach((descendantInput) => {
+                                const descendantValue = String(descendantInput.value ?? '').trim();
+                                if (!descendantValue || !descendantSet.has(descendantValue) || descendantInput === input) {
+                                    return;
+                                }
+                                descendantInput.checked = input.checked;
+                                updateLabel(descendantInput, input.checked);
+                                if (input.checked) {
+                                    current.add(descendantValue);
+                                } else {
+                                    current.delete(descendantValue);
+                                }
+                            });
+                    }
+                }
+
                 region.children = Array.from(current);
+                updateLabel(input, input.checked);
                 refreshRegionList();
+                updateLocalitiesSummary();
+            });
+
+            regionChildrenFieldset.addEventListener('click', (event) => {
+                const toggleButton = event.target.closest('[data-dm-map-toggle]');
+                if (!toggleButton) {
+                    return;
+                }
+                event.preventDefault();
+                const row = toggleButton.closest('tr[data-dm-row-id]');
+                if (!row) {
+                    return;
+                }
+                const parentRowId = row.dataset.dmRowId ?? '';
+                const descendantRowIds = String(row.dataset.dmDescendantRows ?? '')
+                    .split(/\s+/)
+                    .map((item) => item.trim())
+                    .filter(Boolean);
+                if (!descendantRowIds.length) {
+                    return;
+                }
+                const expanded = toggleButton.getAttribute('aria-expanded') !== 'false';
+                const nextExpanded = !expanded;
+                toggleButton.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
+                row.classList.toggle('dm-localities-table__row--collapsed', !nextExpanded);
+
+                descendantRowIds.forEach((rowId) => {
+                    const descendantRow = regionChildrenFieldset.querySelector(`tr[data-dm-row-id="${rowId}"]`);
+                    if (!descendantRow) {
+                        return;
+                    }
+                    const hiddenAttr = descendantRow.dataset.dmHiddenParents ?? '';
+                    const hiddenParents = new Set(
+                        hiddenAttr
+                            .split(/\s+/)
+                            .map((item) => item.trim())
+                            .filter(Boolean),
+                    );
+                    if (nextExpanded) {
+                        hiddenParents.delete(parentRowId);
+                        if (hiddenParents.size) {
+                            descendantRow.dataset.dmHiddenParents = Array.from(hiddenParents).join(' ');
+                        } else {
+                            descendantRow.removeAttribute('data-dm-hidden-parents');
+                            descendantRow.classList.remove('dm-localities-table__row--hidden');
+                        }
+                    } else {
+                        hiddenParents.add(parentRowId);
+                        descendantRow.dataset.dmHiddenParents = Array.from(hiddenParents).join(' ');
+                        descendantRow.classList.add('dm-localities-table__row--hidden');
+                    }
+                });
             });
         }
 

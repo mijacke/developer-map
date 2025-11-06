@@ -104,21 +104,92 @@ function matchesFloor(floor, needle) {
     return candidates.some((value) => value.includes(needle));
 }
 
+function getProjectParentId(project) {
+    const raw = project?.parentId;
+    if (raw === null || typeof raw === 'undefined') {
+        return '';
+    }
+    const candidate = typeof raw === 'string' ? raw.trim() : String(raw ?? '').trim();
+    if (!candidate || candidate === 'none' || candidate === 'null') {
+        return '';
+    }
+    const selfId = String(project?.id ?? '').trim();
+    if (selfId && candidate === selfId) {
+        return '';
+    }
+    return candidate;
+}
+
 function renderMapList(data, state) {
     const projects = data.projects ?? [];
+    const projectById = new Map();
+    projects.forEach((project) => {
+        const key = String(project?.id ?? '').trim();
+        if (key) {
+            projectById.set(key, project);
+        }
+    });
+
+    const childProjectsMap = new Map();
+    projects.forEach((project) => {
+        const parentId = getProjectParentId(project);
+        const projectId = String(project?.id ?? '').trim();
+        if (!parentId || !projectId || !projectById.has(parentId)) {
+            return;
+        }
+        if (!childProjectsMap.has(parentId)) {
+            childProjectsMap.set(parentId, []);
+        }
+        childProjectsMap.get(parentId).push(project);
+    });
+
+    const topLevelProjects = projects.filter((project) => {
+        const parentId = getProjectParentId(project);
+        if (!parentId) {
+            return true;
+        }
+        return !projectById.has(parentId);
+    });
+
     const needle = normaliseText(state.searchTerm);
     const hasNeedle = Boolean(needle);
 
-    const visibleProjects = hasNeedle
-        ? projects.filter((project) => {
-            const projectMatches = matchesProject(project, needle);
-            if (projectMatches) {
-                return true;
+    const projectMatchesNeedle = (project, visited = new Set()) => {
+        if (!hasNeedle) {
+            return true;
+        }
+        if (!project) {
+            return false;
+        }
+        const projectId = String(project?.id ?? '').trim();
+        const nextVisited = new Set(visited);
+        if (projectId) {
+            if (visited.has(projectId)) {
+                return false;
             }
-            const floors = Array.isArray(project?.floors) ? project.floors : [];
-            return floors.some((floor) => matchesFloor(floor, needle));
-        })
-        : projects;
+            nextVisited.add(projectId);
+        }
+        if (matchesProject(project, needle)) {
+            return true;
+        }
+        const floors = Array.isArray(project?.floors) ? project.floors : [];
+        if (floors.some((floor) => matchesFloor(floor, needle))) {
+            return true;
+        }
+        const children = childProjectsMap.get(projectId) ?? [];
+        return children.some((child) => projectMatchesNeedle(child, nextVisited));
+    };
+
+    const visibleProjects = hasNeedle
+        ? topLevelProjects.filter((project) => projectMatchesNeedle(project, new Set()))
+        : topLevelProjects;
+
+    const renderContext = {
+        childProjectsMap,
+        hasNeedle,
+        needle,
+        projectMatchesNeedle,
+    };
 
     return `
         <div class="dm-board dm-board--list">
@@ -129,16 +200,9 @@ function renderMapList(data, state) {
                     ${renderColumnHeader('Akcie', 'actions', 'dm-board__cell--head-actions')}
                     ${renderColumnHeader('Vloženie na web', 'embed')}
                 </div>
-                ${visibleProjects.map((project) => {
-                    const publicKey = project.publicKey ?? project.id;
-                    const parentKeyCandidate = project.shortcode ?? publicKey;
-                    const shortcodeKey = parentKeyCandidate ?? '';
-                    const floors = Array.isArray(project?.floors) ? project.floors : [];
-                    const projectMatches = matchesProject(project, needle);
-                    const filteredFloors = hasNeedle ? floors.filter((floor) => matchesFloor(floor, needle)) : floors;
-                    const floorsToRender = !hasNeedle || projectMatches ? floors : filteredFloors;
-                    return renderProjectRow(project, shortcodeKey, floorsToRender);
-                }).join('')}
+                ${visibleProjects
+                    .map((project) => renderProjectRow(project, renderContext, { depth: 0 }))
+                    .join('')}
             </div>
             <div class="dm-board__footer">
                 <button class="dm-board__cta" data-dm-modal="add-map">
@@ -150,10 +214,13 @@ function renderMapList(data, state) {
     `;
 }
 
-function renderProjectRow(project, shortcodeKey, floors = []) {
-    const floorsCount = floors.length;
+function renderProjectRow(project, context, options = {}) {
+    const { childProjectsMap, hasNeedle, needle, projectMatchesNeedle } = context;
+    const depth = options.depth ?? 0;
+    const projectId = String(project?.id ?? '').trim();
     const fallbackKey = project.publicKey ?? project.id ?? '';
-    const resolvedKey = String(shortcodeKey ?? fallbackKey ?? '').trim() || String(fallbackKey ?? '').trim();
+    const resolvedKeyCandidate = project.shortcode ?? fallbackKey;
+    const resolvedKey = String(resolvedKeyCandidate ?? '').trim() || String(fallbackKey ?? '').trim();
     const parentShortcode = formatShortcode(resolvedKey);
     const toggleIcon = `
         <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -161,29 +228,79 @@ function renderProjectRow(project, shortcodeKey, floors = []) {
         </svg>
     `;
     const projectImage = project.image ?? '';
-    
+
+    const parentMatches = hasNeedle ? matchesProject(project, needle) : false;
+
+    const rawChildProjects = childProjectsMap.get(projectId) ?? [];
+    const childProjects = hasNeedle
+        ? rawChildProjects.filter((child) =>
+              parentMatches ? true : projectMatchesNeedle(child, new Set(projectId ? [projectId] : []))
+          )
+        : rawChildProjects;
+    const floors = Array.isArray(project?.floors) ? project.floors : [];
+    const renderableFloors = hasNeedle && !parentMatches
+        ? floors.filter((floor) => matchesFloor(floor, needle))
+        : floors;
+    const totalChildren = childProjects.length + renderableFloors.length;
+    const shouldAutoExpand = hasNeedle && totalChildren > 0;
+
+    const rowClasses = ['dm-board__row', 'dm-board__row--project', 'dm-board__row--parent'];
+    if (depth > 0) {
+        rowClasses.push('dm-board__row--nested');
+        rowClasses.push('dm-board__row--child');
+        rowClasses.push('dm-board__row--child-map');
+        rowClasses.push(`dm-board__row--depth-${Math.min(depth, 3)}`);
+    }
+
+    if (shouldAutoExpand) {
+        rowClasses.push('is-expanded');
+    }
+
+    const thumbClasses = ['dm-board__thumb', 'dm-board__thumb--project', 'dm-board__thumb--clickable'];
+    if (depth > 0) {
+        thumbClasses.push('dm-board__thumb--nested');
+    }
+
+    const childProjectsMarkup = childProjects
+        .map((childProject) => renderProjectRow(childProject, context, { depth: depth + 1 }))
+        .join('');
+
+    const floorsMarkup = renderableFloors
+        .map((floor, index) => renderFloorRow(floor, resolvedKey, index, depth + 1))
+        .join('');
+
+    const childrenMarkup = totalChildren > 0
+        ? `
+            <div class="dm-board__children" data-dm-children="${escapeHtml(projectId)}">
+                <div class="dm-board__children-inner">
+                    ${childProjectsMarkup}${floorsMarkup}
+                </div>
+            </div>
+        `
+        : '';
+
     return `
-        <div class="dm-board__row dm-board__row--project dm-board__row--parent" role="row" data-dm-parent-id="${project.id}">
+        <div class="${rowClasses.join(' ')}" role="row" data-dm-parent-id="${escapeHtml(projectId)}">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
-                <div class="dm-board__thumb dm-board__thumb--project dm-board__thumb--clickable" data-dm-project="${project.id}" role="button" tabindex="0" aria-label="${escapeHtml(`Otvoriť projekt ${project.name}`)}">
+                <div class="${thumbClasses.join(' ')}" data-dm-project="${escapeHtml(projectId)}" role="button" tabindex="0" aria-label="${escapeHtml(`Otvoriť projekt ${project.name}`)}">
                     <img src="${escapeHtml(projectImage)}" alt="${escapeHtml(`Náhľad projektu ${project.name}`)}" loading="lazy" />
                 </div>
                 <span class="dm-board__label">${escapeHtml(project.name)}</span>
-                ${floorsCount > 0 ? `<span class="dm-board__children-count">${floorsCount}</span>` : ''}
+                ${totalChildren > 0 ? `<span class="dm-board__children-count">${totalChildren}</span>` : ''}
             </div>
             <div class="dm-board__cell dm-board__cell--type" role="cell" data-label="Typ:">${escapeHtml(project.type)}</div>
             <div class="dm-board__cell dm-board__cell--actions" role="cell" data-label="Akcie:">
                  ${renderActionButton('edit', 'Upraviť', {
                     'data-dm-modal': 'edit-map',
-                    'data-dm-payload': project.id,
+                    'data-dm-payload': projectId,
                 })}
                 ${renderActionButton('open', 'Editor súradníc', {
                     'data-dm-modal': 'draw-coordinates',
-                    'data-dm-payload': project.id,
+                    'data-dm-payload': projectId,
                 })}
                 ${renderActionButton('delete', 'Zmazať', {
                     'data-dm-modal': 'delete-map',
-                    'data-dm-payload': project.id,
+                    'data-dm-payload': projectId,
                 })}
             </div>
             <div class="dm-board__cell dm-board__cell--shortcode" role="cell" data-label="Shortcode:">
@@ -194,23 +311,17 @@ function renderProjectRow(project, shortcodeKey, floors = []) {
                     </button>
                 </code>
             </div>
-            ${floorsCount > 0 ? `
-                <button type="button" class="dm-board__toggle" data-dm-toggle="${project.id}" aria-expanded="false" aria-label="Rozbaliť poschodia">
+            ${totalChildren > 0 ? `
+                <button type="button" class="dm-board__toggle" data-dm-toggle="${escapeHtml(projectId)}" aria-expanded="${shouldAutoExpand ? 'true' : 'false'}" aria-label="${shouldAutoExpand ? 'Zabaliť poschodia' : 'Rozbaliť poschodia'}">
                     <span class="dm-board__toggle-icon">${toggleIcon}</span>
                 </button>
             ` : ''}
         </div>
-        ${floorsCount > 0 ? `
-            <div class="dm-board__children" data-dm-children="${project.id}">
-                <div class="dm-board__children-inner">
-                    ${floors.map((floor, index) => renderFloorRow(floor, resolvedKey, index)).join('')}
-                </div>
-            </div>
-        ` : ''}
+        ${childrenMarkup}
     `;
 }
 
-function renderFloorRow(floor, parentShortcodeKey, index) {
+function renderFloorRow(floor, parentShortcodeKey, index, depth = 1) {
     const floorImage = floor.image ?? '';
     const baseParentKey = String(parentShortcodeKey ?? '').trim();
     const fallbackIndex = typeof index === 'number' ? index : 0;
@@ -223,8 +334,14 @@ function renderFloorRow(floor, parentShortcodeKey, index) {
         floorKey = String(floor.id);
     }
     const floorShortcode = formatShortcode(floorKey);
+    const rowClasses = ['dm-board__row', 'dm-board__row--floor', 'dm-board__row--child'];
+    if (depth > 1) {
+        rowClasses.push('dm-board__row--nested');
+    }
+    rowClasses.push(`dm-board__row--depth-${Math.min(depth, 3)}`);
+
     return `
-        <div class="dm-board__row dm-board__row--floor dm-board__row--child" role="row" data-dm-child-id="${floor.id}">
+        <div class="${rowClasses.join(' ')}" role="row" data-dm-child-id="${floor.id}">
             <div class="dm-board__cell dm-board__cell--main" role="cell">
                 <div class="dm-board__thumb dm-board__thumb--floor dm-board__thumb--clickable" data-dm-modal="draw-coordinates" data-dm-payload="${floor.id}" role="button" tabindex="0" aria-label="${escapeHtml(`Editor súradníc ${floor.name}`)}">
                     <img src="${escapeHtml(floorImage)}" alt="${escapeHtml(`Pôdorys ${floor.name}`)}" loading="lazy" />
