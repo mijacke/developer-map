@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Developer Map
- * Description: Administrátorský dashboard
- * Version: 0.4.1
+ * Plugin Name: Developer Map by FuuDobre
+ * Description: Administrátorský dashboard pre vytváranie interaktívnych máp a lokalít a ich zobrazenie na vašom webe.
+ * Version: 0.4.3
  * Author: Mario
  */
 
@@ -77,7 +77,7 @@ function dm_handle_ajax_ping(): void
 }
 add_action('wp_ajax_dm_ping', 'dm_handle_ajax_ping');
 
-define('DM_PLUGIN_VERSION', '0.4.1');
+define('DM_PLUGIN_VERSION', '0.4.3');
 define('DM_DEV_PAGE_SLUG', 'devtest-9kq7wza3');
 define('DM_PLUGIN_STYLE_HANDLE', 'developer-map-style');
 define('DM_PLUGIN_SCRIPT_HANDLE', 'developer-map-script');

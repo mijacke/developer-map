@@ -418,6 +418,11 @@
             .dm-dashboard--public .dm-status--rezervovane { background: #fef3c7; color: #b45309; }
             .dm-dashboard--public .dm-status--unknown { background: rgba(124, 58, 237, 0.12); color: rgba(45, 45, 78, 0.65); }
             .dm-dashboard--public .dm-dashboard__empty-row td { padding: 40px 24px; text-align: center; font-size: 0.95rem; color: #64748b; grid-column: 1 / -1; }
+            .dm-dashboard--public .dm-dashboard__legend { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 4px 0 12px; }
+            .dm-dashboard--public .dm-dashboard__legend-heading { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(45, 45, 78, 0.6); font-weight: 700; margin-right: 4px; }
+            .dm-dashboard--public .dm-dashboard__legend-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(28, 19, 79, 0.12); background: rgba(28, 19, 79, 0.04); color: #1C134F; }
+            .dm-dashboard--public .dm-dashboard__legend-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(28, 19, 79, 0.08); }
+            .dm-dashboard--public .dm-dashboard__legend--public { justify-content: flex-start; }
             .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table thead { display: none; }
             .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table tbody tr { display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(28, 19, 79, 0.08); border-radius: 18px; padding: 18px 18px; background: #ffffff; }
             .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table td { width: 100%; display: flex; justify-content: space-between; align-items: center; white-space: normal; background: transparent; }
@@ -477,6 +482,24 @@
         const g = (numeric >> 8) & 255;
         const b = numeric & 255;
         return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
+    }
+
+    function buildLegendEntries(rows, statuses) {
+        if (!Array.isArray(rows) || !rows.length) {
+            return [];
+        }
+        const unique = new Map();
+        rows.forEach((entry) => {
+            const descriptor = resolveStatusDisplay(entry.floor, statuses);
+            if (!descriptor) {
+                return;
+            }
+            const key = descriptor.variant || descriptor.label || `status-${unique.size}`;
+            if (!unique.has(key)) {
+                unique.set(key, descriptor);
+            }
+        });
+        return Array.from(unique.values());
     }
 
     function normaliseStatusId(value) {
@@ -997,6 +1020,7 @@
         const parentFloors = includeParent && Array.isArray(includeParent.floors) ? includeParent.floors : [];
         const parentName = includeParent?.name ?? includeParent?.title ?? includeParent?.label ?? '';
         const rows = buildTableRows(floors, parentFloors, parentName);
+        const resolvedStatuses = Array.isArray(statuses) ? statuses : [];
         const statusOptions = [
             '<option value="">Všetky stavy</option>',
             ...(Array.isArray(statuses) ? statuses : [])
@@ -1011,6 +1035,30 @@
                 })
                 .filter(Boolean),
         ].join('');
+        const legendEntries = buildLegendEntries(rows, resolvedStatuses);
+        const legendMarkup = legendEntries.length
+            ? `<div class="dm-dashboard__legend dm-dashboard__legend--public" role="list">
+                    <span class="dm-dashboard__legend-heading" aria-hidden="true">Legenda stavov</span>
+                    ${legendEntries
+                        .map((entry) => {
+                            const accent = entry.color || STATUS_FALLBACK_COLOR;
+                            const background = toRgba(accent, 0.18);
+                            const border = toRgba(accent, 0.32);
+                            const halo = toRgba(accent, 0.15);
+                            return `
+                                <span class="dm-dashboard__legend-badge" role="listitem" style="background:${escapeHtml(
+                                    background,
+                                )}; border-color:${escapeHtml(border)}; color:${escapeHtml(accent)};">
+                                    <span class="dm-dashboard__legend-dot" aria-hidden="true" style="background:${escapeHtml(
+                                        accent,
+                                    )}; box-shadow:0 0 0 4px ${escapeHtml(halo)};"></span>
+                                    ${escapeHtml(entry.label)}
+                                </span>
+                            `;
+                        })
+                        .join('')}
+                </div>`
+            : '';
 
         const instanceId = `dm-public-${++selectInstanceCounter}`;
         const statusLabelId = `${instanceId}-status-label`;
@@ -1064,6 +1112,7 @@
                         </select>
                     </div>
                 </div>
+                ${legendMarkup}
                 <div class="dm-dashboard__summary" data-role="table-summary"></div>
                 <p class="dm-dashboard__heading-note" data-role="parent-note"${noteText ? '' : ' hidden'}>${noteText}</p>
                 <div class="dm-dashboard__table-wrapper">
@@ -1088,7 +1137,7 @@
         createTableController({
             root: section,
             rows,
-            statuses: Array.isArray(statuses) ? statuses : [],
+            statuses: resolvedStatuses,
         });
 
         ensureDashboardStackObserver(section);
