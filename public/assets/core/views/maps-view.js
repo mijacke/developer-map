@@ -193,16 +193,18 @@ function renderMapList(data, state) {
 
     return `
         <div class="dm-board dm-board--list">
-            <div class="dm-board__table" role="table" aria-label="Zoznam máp">
-                <div class="dm-board__head" role="row">
-                    ${renderColumnHeader('Zoznam', 'list')}
-                    ${renderColumnHeader('Typ', 'type')}
-                    ${renderColumnHeader('Akcie', 'actions', 'dm-board__cell--head-actions')}
-                    ${renderColumnHeader('Vloženie na web', 'embed')}
+            <div class="dm-board__scroll">
+                <div class="dm-board__table" role="table" aria-label="Zoznam máp">
+                    <div class="dm-board__head" role="row">
+                        ${renderColumnHeader('Zoznam', 'list')}
+                        ${renderColumnHeader('Typ', 'type')}
+                        ${renderColumnHeader('Akcie', 'actions', 'dm-board__cell--head-actions')}
+                        ${renderColumnHeader('Vloženie na web', 'embed')}
+                    </div>
+                    ${visibleProjects
+                        .map((project) => renderProjectRow(project, renderContext, { depth: 0 }))
+                        .join('')}
                 </div>
-                ${visibleProjects
-                    .map((project) => renderProjectRow(project, renderContext, { depth: 0 }))
-                    .join('')}
             </div>
             <div class="dm-board__footer">
                 <button class="dm-board__cta" data-dm-modal="add-map">

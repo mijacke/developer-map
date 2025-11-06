@@ -216,6 +216,244 @@ final class DM_Rest_Controller
     }
 
     /**
+     * Build a normalised list of identifiers that can reference a project.
+     */
+    private static function project_lookup_candidates(array $project): array
+    {
+        $candidates = [];
+
+        if (!empty($project['publicKey'])) {
+            $candidates[] = strtolower(trim((string) $project['publicKey']));
+        }
+
+        if (!empty($project['shortcode'])) {
+            $candidates[] = strtolower(trim((string) $project['shortcode']));
+        }
+
+        $resolved = strtolower(trim(self::resolve_project_shortcode($project)));
+        if ($resolved !== '') {
+            $candidates[] = $resolved;
+        }
+
+        if (!empty($project['id'])) {
+            $candidates[] = strtolower(trim((string) $project['id']));
+        }
+
+        $unique = [];
+        foreach ($candidates as $candidate) {
+            if ($candidate === '') {
+                continue;
+            }
+            $unique[$candidate] = true;
+        }
+
+        return array_keys($unique);
+    }
+
+    /**
+     * Collect all linked projects that are referenced via map children.
+     *
+     * @param array $project        Root project payload.
+     * @param array<string, array> $projectsById  Projects indexed by ID.
+     * @param array<string, array> $projectsByKey Projects indexed by lookup key.
+     * @return array<string, array>
+     */
+    private static function resolve_linked_projects(array $project, array $projectsById, array $projectsByKey): array
+    {
+        $result = [];
+        $visited = [];
+
+        self::collect_linked_projects_recursive($project, $projectsById, $projectsByKey, $result, $visited);
+
+        $rootId = strtolower(trim((string) ($project['id'] ?? '')));
+        if ($rootId !== '' && isset($result[$rootId])) {
+            unset($result[$rootId]);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Recursive helper that walks map children and gathers projects.
+     *
+     * @param array $project
+     * @param array<string, array> $projectsById
+     * @param array<string, array> $projectsByKey
+     * @param array<string, array> $result
+     * @param array<string, bool> $visited
+     */
+    private static function collect_linked_projects_recursive(
+        array $project,
+        array $projectsById,
+        array $projectsByKey,
+        array &$result,
+        array &$visited
+    ): void {
+        $projectId = strtolower(trim((string) ($project['id'] ?? '')));
+        if ($projectId !== '') {
+            $visited[$projectId] = true;
+        }
+
+        $childIds = self::extract_map_child_ids($project);
+
+        foreach ($childIds as $childId) {
+            if (isset($visited[$childId])) {
+                continue;
+            }
+
+            $childProject = $projectsById[$childId] ?? ($projectsByKey[$childId] ?? null);
+            if ($childProject === null) {
+                $visited[$childId] = true;
+                continue;
+            }
+
+            $result[$childId] = $childProject;
+            $visited[$childId] = true;
+
+            self::collect_linked_projects_recursive($childProject, $projectsById, $projectsByKey, $result, $visited);
+        }
+    }
+
+    /**
+     * Extract referenced map identifiers from project and floor regions.
+     */
+    private static function extract_map_child_ids(array $project): array
+    {
+        $ids = [];
+        $seen = [];
+
+        $regions = isset($project['regions']) && is_array($project['regions']) ? $project['regions'] : [];
+        self::append_map_child_ids_from_regions($regions, $ids, $seen);
+
+        if (!empty($project['floors']) && is_array($project['floors'])) {
+            foreach ($project['floors'] as $floor) {
+                if (!is_array($floor)) {
+                    continue;
+                }
+                $floorRegions = isset($floor['regions']) && is_array($floor['regions']) ? $floor['regions'] : [];
+                self::append_map_child_ids_from_regions($floorRegions, $ids, $seen);
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Append map child IDs from the given regions into the accumulator.
+     *
+     * @param array<int, mixed> $regions
+     * @param array<string>     $ids
+     * @param array<string, bool> $seen
+     */
+    private static function append_map_child_ids_from_regions(array $regions, array &$ids, array &$seen): void
+    {
+        foreach ($regions as $region) {
+            if (!is_array($region)) {
+                continue;
+            }
+
+            $children = isset($region['children']) && is_array($region['children']) ? $region['children'] : [];
+
+            foreach ($children as $child) {
+                $parsed = self::parse_region_child_reference($child);
+                if ($parsed === null || $parsed['type'] !== 'map') {
+                    continue;
+                }
+
+                $identifier = strtolower(trim((string) $parsed['id']));
+                if ($identifier === '' || isset($seen[$identifier])) {
+                    continue;
+                }
+
+                $seen[$identifier] = true;
+                $ids[] = $identifier;
+            }
+        }
+    }
+
+    /**
+     * Parse a region child value into a normalised reference.
+     *
+     * @param mixed $value
+     * @return array{type: string, id: string}|null
+     */
+    private static function parse_region_child_reference($value): ?array
+    {
+        if (is_object($value)) {
+            $value = (array) $value;
+        }
+
+        if (is_array($value)) {
+            $rawId = '';
+            if (isset($value['id'])) {
+                $rawId = (string) $value['id'];
+            } elseif (isset($value['target'])) {
+                $rawId = (string) $value['target'];
+            } elseif (isset($value['value'])) {
+                $rawId = (string) $value['value'];
+            }
+
+            $rawId = trim($rawId);
+            if ($rawId === '') {
+                return null;
+            }
+
+            $rawType = '';
+            if (isset($value['type'])) {
+                $rawType = (string) $value['type'];
+            } elseif (isset($value['kind'])) {
+                $rawType = (string) $value['kind'];
+            } elseif (isset($value['nodeType'])) {
+                $rawType = (string) $value['nodeType'];
+            } elseif (isset($value['node_type'])) {
+                $rawType = (string) $value['node_type'];
+            }
+
+            $rawType = strtolower(trim($rawType));
+            $type = ($rawType === 'map' || $rawType === 'project') ? 'map' : 'location';
+
+            return [
+                'type' => $type,
+                'id'   => $rawId,
+            ];
+        }
+
+        if (!is_string($value) && !is_numeric($value)) {
+            return null;
+        }
+
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return null;
+        }
+
+        $parts = explode(':', $raw, 2);
+        if (count($parts) === 2) {
+            $prefix = strtolower(trim($parts[0]));
+            $remainder = trim($parts[1]);
+            if ($remainder === '') {
+                return null;
+            }
+            if ($prefix === 'map' || $prefix === 'project') {
+                return [
+                    'type' => 'map',
+                    'id'   => $remainder,
+                ];
+            }
+
+            return [
+                'type' => 'location',
+                'id'   => $remainder,
+            ];
+        }
+
+        return [
+            'type' => 'location',
+            'id'   => $raw,
+        ];
+    }
+
+    /**
      * Handle ping route.
      */
     public static function handle_ping(WP_REST_Request $request): WP_REST_Response
@@ -252,25 +490,37 @@ final class DM_Rest_Controller
             $projects[] = self::normalize_project_payload($project);
         }
 
-        foreach ($projects as $project) {
-            $candidates = [];
-            if (!empty($project['publicKey'])) {
-                $candidates[] = (string) $project['publicKey'];
-            }
-            if (!empty($project['shortcode'])) {
-                $candidates[] = (string) $project['shortcode'];
-            }
-            $resolved = self::resolve_project_shortcode($project);
-            $candidates[] = $resolved;
+        $projectsById = [];
+        $projectsByKey = [];
 
-            foreach ($candidates as $candidate) {
-                $normalizedCandidate = strtolower(trim((string) $candidate));
-                if ($normalizedCandidate !== '' && $normalizedCandidate === $requested_key) {
-                    return new WP_REST_Response([
-                        'project' => $project,
-                    ]);
-                }
+        foreach ($projects as $project) {
+            $projectId = strtolower(trim((string) ($project['id'] ?? '')));
+            if ($projectId !== '') {
+                $projectsById[$projectId] = $project;
             }
+
+            $candidates = self::project_lookup_candidates($project);
+            foreach ($candidates as $candidate) {
+                $projectsByKey[$candidate] = $project;
+            }
+        }
+
+        $matchedProject = null;
+
+        foreach ($projects as $project) {
+            $candidates = self::project_lookup_candidates($project);
+            if (in_array($requested_key, $candidates, true)) {
+                $matchedProject = $project;
+                break;
+            }
+        }
+
+        if ($matchedProject !== null) {
+            $linkedProjects = self::resolve_linked_projects($matchedProject, $projectsById, $projectsByKey);
+            return new WP_REST_Response([
+                'project' => $matchedProject,
+                'linkedProjects' => array_values($linkedProjects),
+            ]);
         }
 
         foreach ($projects as $project) {
@@ -286,8 +536,10 @@ final class DM_Rest_Controller
                 $floorKey = strtolower(trim((string) ($floor['shortcode'] ?? '')));
                 if ($floorKey !== '' && $floorKey === $requested_key) {
                     $childPayload = self::build_floor_project_payload($project, $floor);
+                    $linkedProjects = self::resolve_linked_projects($childPayload, $projectsById, $projectsByKey);
                     return new WP_REST_Response([
                         'project' => $childPayload,
+                        'linkedProjects' => array_values($linkedProjects),
                     ]);
                 }
             }

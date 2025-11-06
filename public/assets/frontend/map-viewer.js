@@ -37,7 +37,7 @@
             .dm-map-viewer__badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 10px; border-radius: 999px; background: rgba(124, 58, 237, 0.12); color: #5b21b6; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
             .dm-map-viewer__error { padding: 16px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
             .dm-map-viewer__loading { padding: 16px; border-radius: 12px; background: rgba(30, 64, 175, 0.08); color: #1d4ed8; }
-            .dm-map-viewer__empty { margin: 0; padding: 16px; borde+r-radius: 12px; background: rgba(15, 118, 110, 0.08); color: #0f766e; }
+            .dm-map-viewer__empty { margin: 0; padding: 16px; border-radius: 12px; background: rgba(15, 118, 110, 0.08); color: #0f766e; }
             .dm-map-viewer__popover { position: absolute; z-index: 10; display: none; pointer-events: auto; }
             .dm-map-viewer__popover.is-visible { display: block; }
             .dm-map-viewer__popover-card { background: #ffffff; border-radius: 16px; padding: 18px 20px; box-shadow: 0 18px 42px rgba(15, 23, 42, 0.22); min-width: 220px; max-width: 280px; border: 1px solid rgba(15, 23, 42, 0.08); display: flex; flex-direction: column; gap: 12px; }
@@ -54,8 +54,6 @@
         `;
         document.head.appendChild(style);
     }
-
-
 
     const STATUS_FALLBACK_COLOR = '#6366f1';
 
@@ -321,13 +319,254 @@
             }
             const regionElements = Array.from(container.querySelectorAll('.dm-map-viewer__region'));
 
-            const floorById = new Map();
-            floors.forEach((floor) => {
-                const id = String(floor?.id ?? floor?.floorId ?? floor?.uuid ?? '').trim();
-                if (id) {
-                    floorById.set(id, floor);
+            const sanitiseId = (value) => String(value ?? '').trim();
+
+            const parseRegionChildKey = (value) => {
+                if (value && typeof value === 'object') {
+                    const rawId = value.id ?? value.target ?? value.value ?? value.uuid;
+                    const id = sanitiseId(rawId);
+                    if (!id) {
+                        return null;
+                    }
+                    const rawType = String(value.type ?? value.kind ?? value.nodeType ?? value.node_type ?? '').toLowerCase();
+                    const type = rawType === 'map' || rawType === 'project' ? 'map' : 'location';
+                    return {
+                        type,
+                        id,
+                        key: type === 'map' ? `map:${id}` : `location:${id}`,
+                    };
                 }
+                const raw = sanitiseId(value);
+                if (!raw) {
+                    return null;
+                }
+                const colonIndex = raw.indexOf(':');
+                if (colonIndex <= 0) {
+                    return { type: 'location', key: raw, id: raw };
+                }
+                const prefix = raw.slice(0, colonIndex).toLowerCase();
+                const remainder = sanitiseId(raw.slice(colonIndex + 1));
+                if (!remainder) {
+                    return null;
+                }
+                if (prefix === 'map' || prefix === 'project') {
+                    return { type: 'map', key: raw, id: remainder };
+                }
+                return { type: 'location', key: raw, id: remainder };
+            };
+
+            const projectRegistry = new Map();
+            const registerProjectNode = (candidate) => {
+                if (!candidate || typeof candidate !== 'object') {
+                    return;
+                }
+                if (!Array.isArray(candidate.floors)) {
+                    return;
+                }
+                const projectIdCandidate = sanitiseId(
+                    candidate.id ?? candidate.projectId ?? candidate.uuid ?? candidate.shortcode ?? '',
+                );
+                if (!projectIdCandidate || projectRegistry.has(projectIdCandidate)) {
+                    return;
+                }
+                projectRegistry.set(projectIdCandidate, candidate);
+            };
+
+            const rootProjectId = sanitiseId(
+                project.id ?? project.projectId ?? project.uuid ?? project.shortcode ?? '',
+            );
+            if (rootProjectId) {
+                registerProjectNode(project);
+            }
+
+            const visitedPayloadNodes = new WeakSet();
+            const traversePayload = (value) => {
+                if (!value || typeof value !== 'object') {
+                    return;
+                }
+                if (visitedPayloadNodes.has(value)) {
+                    return;
+                }
+                visitedPayloadNodes.add(value);
+                if (Array.isArray(value)) {
+                    value.forEach(traversePayload);
+                    return;
+                }
+                registerProjectNode(value);
+                Object.keys(value).forEach((key) => {
+                    traversePayload(value[key]);
+                });
+            };
+            traversePayload(project);
+
+            const linkedProjects = Array.isArray(payload?.linkedProjects) ? payload.linkedProjects : [];
+            linkedProjects.forEach((linkedProject) => {
+                traversePayload(linkedProject);
             });
+
+            if (rootProjectId && !projectRegistry.has(rootProjectId)) {
+                projectRegistry.set(rootProjectId, project);
+            }
+
+            const mapChildrenByProjectId = new Map();
+            projectRegistry.forEach((projectNode, projectId) => {
+                const regionsList = Array.isArray(projectNode?.regions) ? projectNode.regions : [];
+                regionsList.forEach((region) => {
+                    const rawChildren = Array.isArray(region?.children) ? region.children : [];
+                    rawChildren.forEach((child) => {
+                        const parsed = parseRegionChildKey(child);
+                        if (!parsed || parsed.type !== 'map' || !parsed.id) {
+                            return;
+                        }
+                        const childId = sanitiseId(parsed.id);
+                        if (!childId || childId === projectId) {
+                            return;
+                        }
+                        if (!mapChildrenByProjectId.has(projectId)) {
+                            mapChildrenByProjectId.set(projectId, new Set());
+                        }
+                        mapChildrenByProjectId.get(projectId).add(childId);
+                    });
+                });
+            });
+
+            const floorById = new Map();
+            const registerFloorKeys = (floor, rawKeys, ownerId) => {
+                if (!floor || typeof floor !== 'object') {
+                    return;
+                }
+                const keys = rawKeys
+                    .filter((candidate) => candidate !== null && candidate !== undefined)
+                    .map((candidate) => sanitiseId(candidate))
+                    .filter(Boolean);
+                if (!keys.length) {
+                    return;
+                }
+                const ownerKey = sanitiseId(ownerId);
+                const storedFloor = (() => {
+                    const clone = { ...floor };
+                    if (ownerKey) {
+                        clone.__dmOwnerMapId = ownerKey;
+                    }
+                    return clone;
+                })();
+                keys.forEach((key) => {
+                    if (!floorById.has(key)) {
+                        floorById.set(key, storedFloor);
+                    }
+                    if (!key.includes(':')) {
+                        const prefixed = `location:${key}`;
+                        if (!floorById.has(prefixed)) {
+                            floorById.set(prefixed, storedFloor);
+                        }
+                    }
+                });
+            };
+
+            const registerProjectFloors = (projectNode, projectId) => {
+                const floorsList = Array.isArray(projectNode?.floors) ? projectNode.floors : [];
+                floorsList.forEach((floor) => {
+                    registerFloorKeys(floor, [
+                        floor?.id,
+                        floor?.floorId,
+                        floor?.uuid,
+                        floor?.slug,
+                        floor?.shortcode,
+                        floor?.code,
+                        floor?.identifier,
+                        floor?.externalId,
+                        floor?.externalID,
+                        floor?.meta?.id,
+                        floor?.meta?.floorId,
+                        floor?.meta?.uuid,
+                        floor?.meta?.slug,
+                        floor?.meta?.shortcode,
+                        floor?.meta?.identifier,
+                    ], projectId);
+                });
+            };
+
+            if (rootProjectId) {
+                registerProjectFloors(project, rootProjectId);
+            } else {
+                registerProjectFloors(project, '');
+            }
+            projectRegistry.forEach((projectNode, projectId) => {
+                if (projectNode === project && projectId === rootProjectId) {
+                    return;
+                }
+                registerProjectFloors(projectNode, projectId);
+            });
+
+            const wrapFloorForOwner = (floor, ownerId) => {
+                if (!floor || typeof floor !== 'object') {
+                    return null;
+                }
+                const canonicalKey = sanitiseId(
+                    floor.id ??
+                        floor.floorId ??
+                        floor.uuid ??
+                        floor.slug ??
+                        floor.shortcode ??
+                        floor.identifier ??
+                        floor.externalId ??
+                        floor.externalID ??
+                        '',
+                );
+                if (canonicalKey && floorById.has(canonicalKey)) {
+                    return floorById.get(canonicalKey);
+                }
+                if (canonicalKey && floorById.has(`location:${canonicalKey}`)) {
+                    return floorById.get(`location:${canonicalKey}`);
+                }
+                const clone = { ...floor };
+                const ownerKey = sanitiseId(ownerId);
+                if (ownerKey) {
+                    clone.__dmOwnerMapId = ownerKey;
+                }
+                return clone;
+            };
+
+            const aggregateFloorCache = new Map();
+            const collectProjectFloors = (projectId, stack = new Set()) => {
+                const normalisedId = sanitiseId(projectId);
+                if (!normalisedId) {
+                    return [];
+                }
+                if (aggregateFloorCache.has(normalisedId)) {
+                    return aggregateFloorCache.get(normalisedId);
+                }
+                if (stack.has(normalisedId)) {
+                    return [];
+                }
+                stack.add(normalisedId);
+                const projectNode = projectRegistry.get(normalisedId);
+                if (!projectNode) {
+                    stack.delete(normalisedId);
+                    aggregateFloorCache.set(normalisedId, []);
+                    return [];
+                }
+                const aggregate = [];
+                const floorsList = Array.isArray(projectNode?.floors) ? projectNode.floors : [];
+                floorsList.forEach((floor) => {
+                    const wrapped = wrapFloorForOwner(floor, normalisedId);
+                    if (wrapped) {
+                        aggregate.push(wrapped);
+                    }
+                });
+                const childSet = mapChildrenByProjectId.get(normalisedId);
+                if (childSet) {
+                    childSet.forEach((childId) => {
+                        const descendantFloors = collectProjectFloors(childId, stack);
+                        if (descendantFloors.length) {
+                            aggregate.push(...descendantFloors);
+                        }
+                    });
+                }
+                stack.delete(normalisedId);
+                aggregateFloorCache.set(normalisedId, aggregate);
+                return aggregate;
+            };
 
             const regionById = new Map();
             regions.forEach((region) => {
@@ -355,8 +594,6 @@
             listEl.hidden = true;
             emptyEl.hidden = true;
             let activeRegionId = null;
-
-            const sanitiseId = (value) => String(value ?? '').trim();
 
             const normaliseLabel = (value) => {
                 const str = String(value ?? '').trim().toLowerCase();
@@ -399,13 +636,60 @@
                 const children = Array.isArray(region?.children) ? region.children : [];
                 const entriesMap = new Map();
                 const linkedFloors = [];
+                const seenFloorKeys = new Set();
+                const seenFloorObjects = new WeakSet();
                 let availableCount = 0;
 
-                children.forEach((childId) => {
-                    const floor = floorById.get(sanitiseId(childId));
-                    if (!floor) {
+                const addFloorToSummary = (floor, fallbackKey) => {
+                    if (!floor || typeof floor !== 'object') {
                         return;
                     }
+
+                    const fallback = sanitiseId(fallbackKey);
+                    const candidateKeys = [
+                        floor?.id,
+                        floor?.floorId,
+                        floor?.uuid,
+                        floor?.slug,
+                        floor?.shortcode,
+                        floor?.identifier,
+                        floor?.externalId,
+                        floor?.externalID,
+                        floor?.locationId,
+                        floor?.location?.id,
+                        floor?.meta?.id,
+                        floor?.meta?.floorId,
+                        floor?.meta?.uuid,
+                        floor?.meta?.slug,
+                        floor?.meta?.shortcode,
+                        floor?.meta?.identifier,
+                    ]
+                        .map((candidate) => sanitiseId(candidate))
+                        .filter(Boolean);
+
+                    if (fallback && !fallback.toLowerCase().startsWith('map:')) {
+                        candidateKeys.push(fallback);
+                    }
+
+                    const uniqueCandidates = Array.from(new Set(candidateKeys));
+
+                    if (uniqueCandidates.length) {
+                        const dedupeVariants = uniqueCandidates.map((candidate) =>
+                            candidate.includes(':') ? candidate : `location:${candidate}`,
+                        );
+                        if (dedupeVariants.some((variant) => seenFloorKeys.has(variant))) {
+                            return;
+                        }
+                        dedupeVariants.forEach((variant) => seenFloorKeys.add(variant));
+                    } else if (seenFloorObjects.has(floor)) {
+                        return;
+                    }
+
+                    if (seenFloorObjects.has(floor)) {
+                        return;
+                    }
+                    seenFloorObjects.add(floor);
+
                     linkedFloors.push(floor);
 
                     const statusIdRaw = sanitiseId(floor.statusId ?? floor.status ?? '');
@@ -444,6 +728,48 @@
                         entry.isSold = true;
                     }
                     entriesMap.set(key, entry);
+                };
+
+                children.forEach((childValue) => {
+                    const parsed = parseRegionChildKey(childValue);
+                    if (!parsed) {
+                        return;
+                    }
+                    if (parsed.type === 'map' && parsed.id) {
+                        const descendantFloors = collectProjectFloors(parsed.id);
+                        descendantFloors.forEach((floor) => addFloorToSummary(floor, parsed.key));
+                        return;
+                    }
+                    if (parsed.type !== 'location') {
+                        return;
+                    }
+
+                    const candidateKeys = [];
+                    if (parsed.key) {
+                        candidateKeys.push(parsed.key);
+                    }
+                    if (parsed.id) {
+                        candidateKeys.push(parsed.id);
+                        if (!parsed.id.includes(':')) {
+                            candidateKeys.push(`location:${parsed.id}`);
+                        }
+                    }
+
+                    let floor = null;
+                    for (const candidate of candidateKeys) {
+                        const lookupKey = sanitiseId(candidate);
+                        if (!lookupKey) {
+                            continue;
+                        }
+                        floor = floorById.get(lookupKey);
+                        if (floor) {
+                            break;
+                        }
+                    }
+                    if (!floor) {
+                        return;
+                    }
+                    addFloorToSummary(floor, parsed.key ?? parsed.id);
                 });
 
                 const entries = Array.from(entriesMap.values()).sort((a, b) => b.count - a.count);

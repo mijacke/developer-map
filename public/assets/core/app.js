@@ -2075,8 +2075,6 @@ export async function initDeveloperMap(options) {
                             targetType: 'floor',
                             statusId: sanitiseStatusId(result.item.statusId || result.item.statusKey || ''),
                             status: String(result.item.status ?? result.item.statusLabel ?? '').trim(),
-                            imageSelection: getEntityImageSelection(result.item),
-                            imagePreview: result.item.image ?? result.item.imageUrl ?? null,
                         },
                     });
                     return;
@@ -2106,8 +2104,6 @@ export async function initDeveloperMap(options) {
                         targetType: 'floor',
                         statusId: sanitiseStatusId(result.item.statusId || result.item.statusKey || ''),
                         status: String(result.item.status ?? result.item.statusLabel ?? '').trim(),
-                        imageSelection: getEntityImageSelection(result.item),
-                        imagePreview: result.item.image ?? result.item.imageUrl ?? null,
                     },
                 });
                 return;
@@ -2135,8 +2131,6 @@ export async function initDeveloperMap(options) {
                     type: normalizedType,
                     payload: null,
                     parentId,
-                    imageSelection: null,
-                    imagePreview: null,
                     targetType: 'floor',
                 },
             });
@@ -3078,27 +3072,6 @@ export async function initDeveloperMap(options) {
         result.item.rent = fields.rent;
         result.item.price = fields.price;
 
-        // Handle image upload
-        const imageSelection = modalState.imageSelection ?? null;
-        const previousImageId = result.item.image_id ?? null;
-        const imageData = imageSelection?.url ?? modalState.imagePreview ?? null;
-        if (imageData) {
-            result.item.image = imageData;
-            result.item.imageUrl = imageData;
-            if (imageSelection?.id) {
-                result.item.image_id = imageSelection.id;
-            }
-            if (imageSelection?.alt) {
-                result.item.imageAlt = imageSelection.alt;
-            }
-        }
-        if (
-            imageSelection?.id &&
-            String(imageSelection.id) !== String(previousImageId ?? '')
-        ) {
-            persistEntityImage(result.type, result.item.id, imageSelection);
-        }
-
         let newActiveProjectId = currentParentId ?? state.activeProjectId;
         const targetParentId = fields.parentId;
 
@@ -3180,7 +3153,6 @@ export async function initDeveloperMap(options) {
             }
 
             const newFloorId = generateId('floor');
-            const floorImage = imageSelection?.url ?? modalState.imagePreview ?? '';
             parentProject.floors.push({
                 id: newFloorId,
                 name: fields.name,
@@ -3196,16 +3168,13 @@ export async function initDeveloperMap(options) {
                 designation: fields.designation,
                 rent: fields.rent,
                 price: fields.price,
-                image: floorImage,
-                imageUrl: floorImage,
-                image_id: imageSelection?.id ?? null,
-                imageAlt: imageSelection?.alt || fields.name,
+                image: '',
+                imageUrl: '',
+                image_id: null,
+                imageAlt: '',
                 statusId: sanitiseStatusId(fields.statusId || data.statuses.find((s) => String(s.label ?? '').trim() === String(fields.status ?? '').trim())?.id),
                 regions: [],
             });
-            if (imageSelection?.id) {
-                persistEntityImage('floor', newFloorId, imageSelection);
-            }
 
             saveProjects(data.projects);
             setState({ modal: null, activeProjectId: String(parentProject.id) });

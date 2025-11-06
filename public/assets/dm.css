@@ -531,6 +531,40 @@
     display: flex;
     flex-direction: column;
     gap: clamp(18px, 2.8vw, 28px);
+    overflow: visible;
+}
+
+/* Dedicated horizontal scroll region for map list */
+.dm-board__scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 4px;
+}
+
+.dm-board__scroll::-webkit-scrollbar {
+    height: 10px;
+}
+
+.dm-board__scroll::-webkit-scrollbar-track {
+    background: rgba(22, 22, 29, 0.04);
+    border-radius: 10px;
+    margin: 4px 0;
+}
+
+.dm-board__scroll::-webkit-scrollbar-thumb {
+    background: rgba(46, 31, 126, 0.3);
+    border-radius: 10px;
+    transition: background 0.2s ease;
+}
+
+.dm-board__scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(46, 31, 126, 0.5);
+}
+
+.dm-board__scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(46, 31, 126, 0.3) rgba(22, 22, 29, 0.04);
 }
 
 /* === board.css === */
@@ -1007,34 +1041,36 @@
 
 /* Container pre deti */
 .dm-board__children {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
+    display: none;
+    pointer-events: none;
+    visibility: hidden;
     margin-bottom: 0;
     margin-top: -20px; /* Zruší margin-bottom od parent riadku */
 }
 
-.dm-board__row--parent.is-expanded + .dm-board__children {
-    grid-template-rows: 1fr;
+/* Expanded state - funguje pre všetky úrovne hierarchie */
+.is-expanded + .dm-board__children {
+    display: block;
+    pointer-events: auto;
+    visibility: visible;
     margin-bottom: 20px;
-    overflow: visible;
 }
 
 .dm-board__children-inner {
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     gap: 20px;
     padding-top: 0;
     opacity: 0;
-    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding-top 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(-12px);
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dm-board__row--parent.is-expanded + .dm-board__children .dm-board__children-inner {
+/* Expanded inner state - funguje pre všetky úrovne hierarchie */
+.is-expanded + .dm-board__children .dm-board__children-inner {
     opacity: 1;
     padding-top: 20px;
-    overflow: visible;
+    transform: translateY(0);
 }
 
 /* Styling pre child riadky - bez posúvania obsahu */
@@ -3014,6 +3050,10 @@ body:not(.wp-admin) .dm-modal-overlay {
     grid-template-columns: var(--dm-modal-media-width, 332px) 1fr;
     gap: 36px;
     align-items: flex-start;
+}
+
+.dm-modal__form-layout--no-media {
+    grid-template-columns: 1fr;
 }
 
 .dm-modal__form-fields {
@@ -5492,6 +5532,7 @@ body:not(.wp-admin) .dm-editor-overlay {
 
 .dm-localities-table__row {
     transition: background 0.15s ease;
+    --dm-row-indent: 0px;
 }
 
 .dm-localities-table__row:hover {
@@ -5515,9 +5556,13 @@ body:not(.wp-admin) .dm-editor-overlay {
     vertical-align: middle;
 }
 
+.dm-localities-table__row .dm-localities-table__td {
+    padding-left: calc(16px + var(--dm-row-indent));
+}
+
 .dm-localities-table__td--sticky {
     position: sticky;
-    left: 0;
+    left: var(--dm-row-indent, 0px);
     z-index: 9;
     background: var(--dm-surface);
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);

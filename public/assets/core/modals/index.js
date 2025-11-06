@@ -278,16 +278,6 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
     }
 
     const nameValue = editLocation?.name ?? '';
-    const imageSelection = modalState?.imageSelection ?? null;
-    const selectedPreview = imageSelection?.url ?? modalState?.imagePreview ?? null;
-    let imageUrl = selectedPreview || (editLocation?.image ?? editLocation?.imageUrl ?? null);
-    if (!imageUrl && isEdit) {
-        imageUrl = '';
-    }
-
-    const uploadLabel = isEdit ? 'Zmeniť obrázok' : 'Nahrať obrázok';
-    const selectionId = imageSelection?.id ?? editLocation?.image_id ?? '';
-    const selectionAlt = imageSelection?.alt ?? editLocation?.imageAlt ?? (nameValue || '');
 
     // Parent project select
     const parentValue = modalState?.parentId ?? (editParent ? String(editParent.id) : '');
@@ -373,26 +363,7 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                 </header>
                 <div class="dm-modal__body">
                     <form class="dm-modal__form">
-                        <div class="dm-modal__form-layout">
-                            <div class="dm-upload-card">
-                                ${imageUrl ? `
-                                    <div class="dm-upload-card__preview">
-                                        <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(nameValue || 'Obrázok lokality')}" />
-                                    </div>
-                                ` : `
-                                    <div class="dm-upload-card__dropzone">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-                                            <path d="M7 10V9C7 6.23858 9.23858 4 12 4C14.7614 4 17 6.23858 17 9V10C19.2091 10 21 11.7909 21 14C21 15.4806 20.1956 16.8084 19 17.5M7 10C4.79086 10 3 11.7909 3 14C3 15.4806 3.8044 16.8084 5 17.5M7 10C7.43285 10 7.84965 10.0688 8.24006 10.1959M12 12V21M12 12L15 15M12 12L9 15" stroke="#5a3bff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
-                                        </svg>
-                                    </div>
-                                `}
-                                <button type="button" class="dm-upload-card__footer" data-dm-media-trigger>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-icon lucide-upload"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
-                                    <p>${uploadLabel}</p>
-                                </button>
-                                <input type="hidden" data-dm-media-id value="${selectionId ? escapeHtml(String(selectionId)) : ''}">
-                                <input type="hidden" data-dm-media-alt value="${escapeHtml(selectionAlt)}">
-                            </div>
+                        <div class="dm-modal__form-layout dm-modal__form-layout--no-media">
                             <div class="dm-modal__form-fields">
                                 <div class="dm-form__grid">
                                     <div class="dm-form__column">
@@ -1158,7 +1129,9 @@ function renderDrawModal(state, data) {
         const renderMapRow = (row) => {
             const { mapKey, rowId, depth, aggregate, hasChildren, descendantRowIds, descendantKeys, project } = row;
             const checked = selectedChildKeys.has(mapKey) ? ' checked' : '';
-            const indent = depth * 18;
+            const indentStep = 24;
+            const rowIndent = depth * indentStep;
+            const nameIndent = depth > 0 ? 12 : 0;
             const name = project?.name ?? project?.label ?? `Mapa ${mapKey.split(':')[1] ?? ''}`;
             const metaParts = [`Mapy: ${aggregate.mapCount}`, `Lokality: ${aggregate.floorCount}`];
             if (aggregate.availableCount > 0) {
@@ -1166,7 +1139,7 @@ function renderDrawModal(state, data) {
             }
             const metaText = metaParts.join(' • ');
             const statusBadges = aggregate.statuses.length
-                ? aggregate.statuses.slice(0, 3)
+                ? aggregate.statuses
                       .map((entry) => {
                           const variant = slugifyStatus(entry.label);
                           const inlineColor = entry.color ? ` style=\"--dm-status-color:${escapeHtml(entry.color)}\"` : '';
@@ -1194,7 +1167,7 @@ function renderDrawModal(state, data) {
                 : '';
             const hiddenClass = depth > 0 ? ' dm-localities-table__row--hidden' : '';
             return `
-                <tr class="dm-localities-table__row dm-localities-table__row--map${hiddenClass}" data-dm-row-id="${escapeHtml(rowId)}" data-dm-node="${escapeHtml(mapKey)}" data-dm-type="map" data-dm-depth="${escapeHtml(String(depth))}"${descendantRowsAttr}${parentAttr}${ancestorsAttr}>
+                <tr class="dm-localities-table__row dm-localities-table__row--map${hiddenClass}" data-dm-row-id="${escapeHtml(rowId)}" data-dm-node="${escapeHtml(mapKey)}" data-dm-type="map" data-dm-depth="${escapeHtml(String(depth))}" style="--dm-row-indent:${escapeHtml(String(rowIndent))}px"${descendantRowsAttr}${parentAttr}${ancestorsAttr}>
                     <td class="dm-localities-table__td dm-localities-table__td--sticky">
                         <label class="dm-localities-checkbox dm-localities-checkbox--map">
                             <input type="checkbox" data-dm-region-child value="${escapeHtml(mapKey)}"${checked} data-dm-child-type="map"${allDescendantKeysAttr}>
@@ -1205,7 +1178,7 @@ function renderDrawModal(state, data) {
                         <span class="dm-localities-table__type-badge dm-localities-table__type-badge--map">Mapa</span>
                     </td>
                     <td class="dm-localities-table__td">
-                        <div class="dm-localities-table__name-group" style="--dm-indent:${indent}px">
+                        <div class="dm-localities-table__name-group" style="--dm-indent:${escapeHtml(String(nameIndent))}px">
                             ${toggleMarkup}
                             <div class="dm-localities-table__name-content">
                                 <span class="dm-localities-table__name">${escapeHtml(name)}</span>
@@ -1235,12 +1208,14 @@ function renderDrawModal(state, data) {
                 metaBits.push(prefixSuffix);
             }
             const metaText = metaBits.join(' • ');
-            const indent = depth * 18;
+            const indentStep = 24;
+            const rowIndent = depth * indentStep;
+            const nameIndent = depth > 0 ? 12 : 0;
             const parentAttr = parentKey ? ` data-dm-parent="${escapeHtml(parentKey)}"` : '';
             const ancestorsAttr = ancestors.length ? ` data-dm-ancestors="${escapeHtml(ancestors.join(' '))}"` : '';
             const hiddenClass = depth > 0 ? ' dm-localities-table__row--hidden' : '';
             return `
-                <tr class="dm-localities-table__row dm-localities-table__row--location${hiddenClass}" data-dm-row-id="${escapeHtml(rowId)}" data-dm-node="${escapeHtml(key)}" data-dm-type="location" data-dm-depth="${escapeHtml(String(depth))}"${parentAttr}${ancestorsAttr}>
+                <tr class="dm-localities-table__row dm-localities-table__row--location${hiddenClass}" data-dm-row-id="${escapeHtml(rowId)}" data-dm-node="${escapeHtml(key)}" data-dm-type="location" data-dm-depth="${escapeHtml(String(depth))}" style="--dm-row-indent:${escapeHtml(String(rowIndent))}px"${parentAttr}${ancestorsAttr}>
                     <td class="dm-localities-table__td dm-localities-table__td--sticky">
                         <label class="dm-localities-checkbox">
                             <input type="checkbox" data-dm-region-child value="${escapeHtml(key)}"${checked}>
@@ -1251,7 +1226,7 @@ function renderDrawModal(state, data) {
                         <span class="dm-localities-table__type-badge dm-localities-table__type-badge--location">Lokalita</span>
                     </td>
                     <td class="dm-localities-table__td">
-                        <div class="dm-localities-table__name-group" style="--dm-indent:${indent}px">
+                        <div class="dm-localities-table__name-group" style="--dm-indent:${escapeHtml(String(nameIndent))}px">
                             <span class="dm-localities-table__toggle dm-localities-table__toggle--spacer" aria-hidden="true"></span>
                             <div class="dm-localities-table__name-content">
                                 <span class="dm-localities-table__name">${escapeHtml(floor?.name ?? key)}</span>
