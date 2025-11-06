@@ -883,20 +883,20 @@
                 return { entries, linkedFloors, availableCount };
             };
 
-            const baseFillColor = '#3445eb';
-            const positiveFillColor = '#2b864c';
+            const baseFillColor = '#3f4cff';
+            const positiveFillColor = '#1f8b4e';
             const reservedFillColor = '#f97316';
-            const negativeFillColor = '#dc3545';
-            const neutralFillColor = '#94a3b8';
-            const idleAlpha = 0.32;
-            const hoverAlpha = 0.54;
-            const selectedAlpha = 0.68;
-            const idleStrokeAlpha = 0.45;
-            const hoverStrokeAlpha = 0.65;
-            const selectedStrokeAlpha = 0.82;
-            const idleOpacity = 0.42;
-            const hoverOpacity = 0.64;
-            const selectedOpacity = 0.78;
+            const negativeFillColor = '#c53030';
+            const neutralFillColor = '#62718d';
+            const idleAlpha = 0.45;
+            const hoverAlpha = 0.68;
+            const selectedAlpha = 0.82;
+            const idleStrokeAlpha = 0.6;
+            const hoverStrokeAlpha = 0.8;
+            const selectedStrokeAlpha = 0.95;
+            const idleOpacity = 0.55;
+            const hoverOpacity = 0.75;
+            const selectedOpacity = 0.9;
             const headlinePreparingColor = '#64748b';
             const headlineDefaultColor = '#1c134f';
 
@@ -929,6 +929,9 @@
                     headline: 'Pripravujeme',
                     headlineColor: headlinePreparingColor,
                     fillColor: neutralFillColor,
+                    alphaBoost: 0,
+                    strokeBoost: 0,
+                    opacityBoost: 0,
                 };
 
                 if (!summary || !Array.isArray(summary.entries) || summary.entries.length === 0) {
@@ -943,21 +946,53 @@
                 if (availableEntry) {
                     const color = sanitiseColorValue(availableEntry.color, positiveFillColor);
                     const headline = availableEntry.label || 'Dostupné';
-                    return { state: 'available', headline, headlineColor: color, fillColor: color };
+                    return {
+                        state: 'available',
+                        headline,
+                        headlineColor: color,
+                        fillColor: color,
+                        alphaBoost: 0.08,
+                        strokeBoost: 0.08,
+                        opacityBoost: 0.08,
+                    };
                 }
                 if (reservedEntry) {
                     const color = sanitiseColorValue(reservedEntry.color, reservedFillColor);
                     const headline = reservedEntry.label || 'Rezervované';
-                    return { state: 'reserved', headline, headlineColor: color, fillColor: color };
+                    return {
+                        state: 'reserved',
+                        headline,
+                        headlineColor: color,
+                        fillColor: color,
+                        alphaBoost: 0.06,
+                        strokeBoost: 0.06,
+                        opacityBoost: 0.06,
+                    };
                 }
                 if (soldEntry) {
                     const color = sanitiseColorValue(soldEntry.color, negativeFillColor);
                     const headline = soldEntry.label || 'Predané';
-                    return { state: 'sold', headline, headlineColor: color, fillColor: color };
+                    return {
+                        state: 'sold',
+                        headline,
+                        headlineColor: color,
+                        fillColor: color,
+                        alphaBoost: 0.06,
+                        strokeBoost: 0.06,
+                        opacityBoost: 0.06,
+                    };
                 }
                 if (primaryEntry && primaryEntry.label) {
                     const color = sanitiseColorValue(primaryEntry.color, neutralFillColor);
-                    return { state: 'custom', headline: primaryEntry.label, headlineColor: color, fillColor: color };
+                    return {
+                        state: 'custom',
+                        headline: primaryEntry.label,
+                        headlineColor: color,
+                        fillColor: color,
+                        alphaBoost: 0.14,
+                        strokeBoost: 0.12,
+                        opacityBoost: 0.12,
+                    };
                 }
                 return emptyState;
             };
@@ -966,14 +1001,23 @@
                 if (!polygon) {
                     return;
                 }
-                const { state, fillColor = baseFillColor } = resolveRegionState(summary);
+                const {
+                    state,
+                    fillColor = baseFillColor,
+                    alphaBoost = 0,
+                    strokeBoost = 0,
+                    opacityBoost = 0,
+                } = resolveRegionState(summary);
                 const color = fillColor || baseFillColor;
 
                 const isSelected = polygon.dataset.dmSelected === 'true';
                 const isHover = polygon.dataset.dmHover === 'true';
-                const alpha = isSelected ? selectedAlpha : isHover ? hoverAlpha : idleAlpha;
-                const strokeAlpha = isSelected ? selectedStrokeAlpha : isHover ? hoverStrokeAlpha : idleStrokeAlpha;
-                const opacity = isSelected ? selectedOpacity : isHover ? hoverOpacity : idleOpacity;
+                const alphaBase = isSelected ? selectedAlpha : isHover ? hoverAlpha : idleAlpha;
+                const strokeBase = isSelected ? selectedStrokeAlpha : isHover ? hoverStrokeAlpha : idleStrokeAlpha;
+                const opacityBase = isSelected ? selectedOpacity : isHover ? hoverOpacity : idleOpacity;
+                const alpha = clamp(alphaBase + alphaBoost, 0, 1);
+                const strokeAlpha = clamp(strokeBase + strokeBoost, 0, 1);
+                const opacity = clamp(opacityBase + opacityBoost, 0, 1);
 
                 polygon.style.fill = toRgba(color, alpha);
                 polygon.style.stroke = toRgba(color, strokeAlpha);
