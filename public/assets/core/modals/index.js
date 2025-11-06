@@ -120,15 +120,26 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
 
     const uploadLabel = isEdit ? 'Zmeniť obrázok' : 'Nahrať obrázok';
 
-    const resolvedName = editItem?.name ?? '';
+    // Use formData from modalState if available (after image selection), otherwise use editItem
+    const formData = modalState?.formData ?? {};
+    const resolvedName = formData.name ?? editItem?.name ?? '';
     const selectionId = imageSelection?.id ?? editItem?.image_id ?? '';
     const selectionAlt = imageSelection?.alt ?? editItem?.imageAlt ?? (resolvedName || '');
+    
+    // Debug logging
+    console.log('[renderFormModal] formData:', formData);
+    console.log('[renderFormModal] resolvedName:', resolvedName);
+    console.log('[renderFormModal] editItem:', editItem);
 
     const targetContext = modalState?.targetType ?? editType ?? 'project';
     const canChangeParent = !isEdit || targetContext === 'floor';
     const parentSelectAttrs = canChangeParent ? '' : ' disabled aria-disabled="true"';
 
     const resolvedParentValue = (() => {
+        // Prioritize formData if available
+        if (formData.parentId !== undefined) {
+            return formData.parentId === null || formData.parentId === '' ? '' : String(formData.parentId);
+        }
         const hasParentProp = modalState && Object.prototype.hasOwnProperty.call(modalState, 'parentId');
         if (hasParentProp) {
             const stateParent = modalState.parentId;
@@ -158,7 +169,7 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
     const noneSelected = resolvedParentValue === 'none' ? ' selected' : '';
 
     const typeOptionsSource = Array.isArray(data.types) ? data.types : [];
-    const resolvedType = editItem?.type ?? '';
+    const resolvedType = formData.type ?? editItem?.type ?? '';
     const resolvedTypeInList = resolvedType
         ? typeOptionsSource.some((option) => option.label === resolvedType)
         : false;
@@ -167,6 +178,9 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
     const typePlaceholderLabel = typeOptionsSource.length
         ? 'Vyberte typ'
         : 'Najprv pridajte typ v nastaveniach';
+    
+    console.log('[renderFormModal] resolvedType:', resolvedType);
+    console.log('[renderFormModal] selectTypeValue:', selectTypeValue);
     const typeOptions = typeOptionsSource
         .map((option) => {
             const value = option.label;
@@ -191,7 +205,7 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
                 </header>
                 <div class="dm-modal__body">
                     <form class="dm-modal__form">
-                        <div class="dm-modal__form-layout">
+                        <div class="dm-modal__form-layout dm-modal__form-layout--compact">
                             <div class="dm-upload-card">
                                 ${imageUrl ? `
                                     <div class="dm-upload-card__preview">
@@ -237,8 +251,6 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
                                             <label class="dm-field__label">Názov<span class="dm-field__required">*</span></label>
                                         </div>
                                     </div>
-                                    <div class="dm-form__column">
-                                    </div>
                                 </div>
                                 <div class="dm-modal__actions">
                                     <button type="button" class="dm-button dm-button--dark" data-dm-modal-save>
@@ -277,10 +289,12 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
         }
     }
 
-    const nameValue = editLocation?.name ?? '';
+    // Use formData from modalState if available (after image selection), otherwise use editLocation
+    const formData = modalState?.formData ?? {};
+    const nameValue = formData.name ?? editLocation?.name ?? '';
 
     // Parent project select
-    const parentValue = modalState?.parentId ?? (editParent ? String(editParent.id) : '');
+    const parentValue = formData.parentId ?? modalState?.parentId ?? (editParent ? String(editParent.id) : '');
     const parentOptions = projects
         .map((project) => {
             const value = String(project.id);
@@ -292,7 +306,7 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
 
     // Type select
     const typeOptionsSource = Array.isArray(data.types) ? data.types : [];
-    const resolvedType = editLocation?.type ?? '';
+    const resolvedType = formData.type ?? editLocation?.type ?? '';
     const resolvedTypeInList = resolvedType ? typeOptionsSource.some((option) => option.label === resolvedType) : false;
     const selectTypeValue = resolvedTypeInList ? resolvedType : '';
     const typePlaceholderSelected = selectTypeValue ? '' : ' selected';
@@ -307,8 +321,8 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
 
     // Status select
     const statusOptionsSource = Array.isArray(data.statuses) ? data.statuses : [];
-    const statusIdFromState = modalState?.statusId ?? null;
-    const statusLabelFromState = modalState?.status ?? '';
+    const statusIdFromState = formData.statusId ?? modalState?.statusId ?? null;
+    const statusLabelFromState = formData.status ?? modalState?.status ?? '';
     const locationStatusId = editLocation?.statusId ?? null;
     const locationStatusLabel = editLocation?.status ?? editLocation?.statusLabel ?? '';
     const matchedStatus = (() => {
@@ -337,15 +351,27 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
         })
         .join('');
 
-    // Field values - always set, even if empty (like in renderFormModal)
-    const urlValue = editLocation?.url ?? '';
-    const detailUrlValue = editLocation?.detailUrl ?? '';
-    const areaValue = editLocation?.area ?? '';
-    const suffixValue = editLocation?.suffix ?? '';
-    const prefixValue = editLocation?.prefix ?? '';
-    const designationValue = editLocation?.designation ?? editLocation?.label ?? '';
-    const priceValue = editLocation?.price ?? editLocation?.rent ?? '';
-    const rentValue = editLocation?.rent ?? editLocation?.price ?? '';
+    // Field values - prioritize formData, then editLocation
+    const urlValue = formData.url ?? editLocation?.url ?? '';
+    const detailUrlValue = formData.detailUrl ?? editLocation?.detailUrl ?? '';
+    const areaValue = formData.area ?? editLocation?.area ?? '';
+    const suffixValue = formData.suffix ?? editLocation?.suffix ?? '';
+    const prefixValue = formData.prefix ?? editLocation?.prefix ?? '';
+    const designationValue = formData.designation ?? editLocation?.designation ?? editLocation?.label ?? '';
+    const priceValue = formData.price ?? editLocation?.price ?? editLocation?.rent ?? '';
+    const rentValue = formData.rent ?? editLocation?.rent ?? editLocation?.price ?? '';
+
+    // Image selection logic
+    const imageSelection = modalState?.imageSelection ?? null;
+    const selectedPreview = imageSelection?.url ?? modalState?.imagePreview ?? null;
+    let imageUrl = selectedPreview || (editLocation?.image ?? editLocation?.imageUrl ?? null);
+    if (!imageUrl && isEdit) {
+        imageUrl = '';
+    }
+
+    const uploadLabel = isEdit ? 'Zmeniť obrázok' : 'Nahrať obrázok';
+    const selectionId = imageSelection?.id ?? editLocation?.image_id ?? '';
+    const selectionAlt = imageSelection?.alt ?? editLocation?.imageAlt ?? (nameValue || '');
 
     return `
         <div class="dm-modal-overlay">
@@ -363,7 +389,26 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                 </header>
                 <div class="dm-modal__body">
                     <form class="dm-modal__form">
-                        <div class="dm-modal__form-layout dm-modal__form-layout--no-media">
+                        <div class="dm-modal__form-layout">
+                            <div class="dm-upload-card">
+                                ${imageUrl ? `
+                                    <div class="dm-upload-card__preview">
+                                        <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(nameValue || 'Obrázok lokality')}" />
+                                    </div>
+                                ` : `
+                                    <div class="dm-upload-card__dropzone">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+                                            <path d="M7 10V9C7 6.23858 9.23858 4 12 4C14.7614 4 17 6.23858 17 9V10C19.2091 10 21 11.7909 21 14C21 15.4806 20.1956 16.8084 19 17.5M7 10C4.79086 10 3 11.7909 3 14C3 15.4806 3.8044 16.8084 5 17.5M7 10C7.43285 10 7.84965 10.0688 8.24006 10.1959M12 12V21M12 12L15 15M12 12L9 15" stroke="#5a3bff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        </svg>
+                                    </div>
+                                `}
+                                <button type="button" class="dm-upload-card__footer" data-dm-media-trigger>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-icon lucide-upload"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+                                    <p>${uploadLabel}</p>
+                                </button>
+                                <input type="hidden" data-dm-media-id value="${selectionId ? escapeHtml(String(selectionId)) : ''}">
+                                <input type="hidden" data-dm-media-alt value="${escapeHtml(selectionAlt)}">
+                            </div>
                             <div class="dm-modal__form-fields">
                                 <div class="dm-form__grid">
                                     <div class="dm-form__column">
@@ -1382,21 +1427,6 @@ function renderDrawModal(state, data) {
                                     <button type="button" class="dm-field__info" aria-label="URL adresa zóny" data-tooltip="URL adresa zóny"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
                                     <input type="url" autocomplete="off" class="dm-field__input" data-dm-region-url placeholder=" " value="${escapeHtml(activeRegion?.url ?? '')}">
                                     <label class="dm-field__label">URL</label>
-                                </div>
-                                <div class="dm-field" style="margin-top: 1.5rem;">
-                                    <button type="button" class="dm-field__info" aria-label="Šírka čiary ohraničenia v pixeloch (1-10)" data-tooltip="Šírka čiary ohraničenia v pixeloch (1-10)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
-                                    <input type="number" step="1" min="1" max="10" autocomplete="off" class="dm-field__input" data-dm-region-stroke-width placeholder=" " value="${escapeHtml(activeRegion?.strokeWidth ?? '')}">
-                                    <label class="dm-field__label">Hrúbka ohraničenia</label>
-                                </div>
-                                <div class="dm-field" style="margin-top: 1.5rem;">
-                                    <button type="button" class="dm-field__info" aria-label="Priehľadnosť čiary ohraničenia (0-100%)" data-tooltip="Priehľadnosť čiary ohraničenia (0-100%)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
-                                    <input type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" data-dm-region-stroke-opacity placeholder=" " value="${escapeHtml(activeRegion?.strokeOpacity ?? '')}">
-                                    <label class="dm-field__label">Prehľadnosť ohraničenia</label>
-                                </div>
-                                <div class="dm-field" style="margin-top: 1.5rem;">
-                                    <button type="button" class="dm-field__info" aria-label="Priehľadnosť výplne zóny (0-100%)" data-tooltip="Priehľadnosť výplne zóny (0-100%)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info-icon lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
-                                    <input type="number" step="1" min="0" max="100" autocomplete="off" class="dm-field__input" data-dm-region-fill-opacity placeholder=" " value="${escapeHtml(activeRegion?.fillOpacity ?? '')}">
-                                    <label class="dm-field__label">Prehľadnosť pozadia</label>
                                 </div>
                             </div>
                         </div>

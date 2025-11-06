@@ -2104,6 +2104,8 @@ export async function initDeveloperMap(options) {
                         targetType: 'floor',
                         statusId: sanitiseStatusId(result.item.statusId || result.item.statusKey || ''),
                         status: String(result.item.status ?? result.item.statusLabel ?? '').trim(),
+                        imageSelection: getEntityImageSelection(result.item),
+                        imagePreview: result.item.image ?? result.item.imageUrl ?? null,
                     },
                 });
                 return;
@@ -2132,6 +2134,8 @@ export async function initDeveloperMap(options) {
                     payload: null,
                     parentId,
                     targetType: 'floor',
+                    imagePreview: null,
+                    imageSelection: null,
                 },
             });
             return;
@@ -2764,6 +2768,37 @@ export async function initDeveloperMap(options) {
                 url,
                 alt: details.alt || details.title || '',
             };
+            
+            // Capture current form values before re-rendering
+            const currentFormData = {};
+            if (state.modal) {
+                if (state.modal.type === 'add-location' || state.modal.type === 'edit-location') {
+                    const locationFields = collectLocationFields();
+                    if (locationFields) {
+                        currentFormData.name = locationFields.name;
+                        currentFormData.type = locationFields.type;
+                        currentFormData.status = locationFields.status;
+                        currentFormData.statusId = locationFields.statusId;
+                        currentFormData.parentId = locationFields.parentId;
+                        currentFormData.url = locationFields.url;
+                        currentFormData.detailUrl = locationFields.detailUrl;
+                        currentFormData.area = locationFields.area;
+                        currentFormData.suffix = locationFields.suffix;
+                        currentFormData.prefix = locationFields.prefix;
+                        currentFormData.designation = locationFields.designation;
+                        currentFormData.price = locationFields.price;
+                        currentFormData.rent = locationFields.rent;
+                    }
+                } else {
+                    const mapFields = collectModalFields();
+                    if (mapFields) {
+                        currentFormData.name = mapFields.name;
+                        currentFormData.type = mapFields.type;
+                        currentFormData.parentId = mapFields.parentId;
+                    }
+                }
+            }
+            
             setState((prev) => {
                 if (!prev.modal) {
                     return {};
@@ -2773,6 +2808,7 @@ export async function initDeveloperMap(options) {
                         ...prev.modal,
                         imageSelection: nextSelection,
                         imagePreview: nextSelection.url,
+                        formData: currentFormData,
                     },
                 };
             });
@@ -3054,6 +3090,9 @@ export async function initDeveloperMap(options) {
         }
 
         const currentParentId = result.parent ? String(result.parent.id) : null;
+        const imageSelection = modalState.imageSelection ?? null;
+        const imageData = imageSelection?.url ?? modalState.imagePreview ?? null;
+        const previousImageId = result.item.image_id ?? null;
         
         // Update location fields
         result.item.name = fields.name;
@@ -3071,6 +3110,24 @@ export async function initDeveloperMap(options) {
         result.item.designation = fields.designation;
         result.item.rent = fields.rent;
         result.item.price = fields.price;
+        
+        // Update image if provided
+        if (imageData) {
+            result.item.image = imageData;
+            result.item.imageUrl = imageData;
+            if (imageSelection?.id) {
+                result.item.image_id = imageSelection.id;
+            }
+            if (imageSelection?.alt) {
+                result.item.imageAlt = imageSelection.alt;
+            }
+        }
+        if (
+            imageSelection?.id &&
+            String(imageSelection.id) !== String(previousImageId ?? '')
+        ) {
+            persistEntityImage('floor', result.item.id, imageSelection);
+        }
 
         let newActiveProjectId = currentParentId ?? state.activeProjectId;
         const targetParentId = fields.parentId;
@@ -3152,8 +3209,9 @@ export async function initDeveloperMap(options) {
                 parentProject.floors = [];
             }
 
+            const imageData = imageSelection?.url ?? modalState.imagePreview ?? null;
             const newFloorId = generateId('floor');
-            parentProject.floors.push({
+            const newFloor = {
                 id: newFloorId,
                 name: fields.name,
                 type: fields.type,
@@ -3168,13 +3226,19 @@ export async function initDeveloperMap(options) {
                 designation: fields.designation,
                 rent: fields.rent,
                 price: fields.price,
-                image: '',
-                imageUrl: '',
-                image_id: null,
-                imageAlt: '',
+                image: imageData || '',
+                imageUrl: imageData || '',
+                image_id: imageSelection?.id ?? null,
+                imageAlt: imageSelection?.alt || fields.name,
                 statusId: sanitiseStatusId(fields.statusId || data.statuses.find((s) => String(s.label ?? '').trim() === String(fields.status ?? '').trim())?.id),
                 regions: [],
-            });
+            };
+            
+            parentProject.floors.push(newFloor);
+            
+            if (imageSelection?.id) {
+                persistEntityImage('floor', newFloorId, imageSelection);
+            }
 
             saveProjects(data.projects);
             setState({ modal: null, activeProjectId: String(parentProject.id) });
@@ -4153,9 +4217,6 @@ export async function initDeveloperMap(options) {
         const removeRegionButton = drawRoot.querySelector('[data-dm-remove-region]');
         const regionNameInput = drawRoot.querySelector('[data-dm-region-name]');
         const regionUrlInput = drawRoot.querySelector('[data-dm-region-url]');
-        const regionStrokeWidthInput = drawRoot.querySelector('[data-dm-region-stroke-width]');
-        const regionStrokeOpacityInput = drawRoot.querySelector('[data-dm-region-stroke-opacity]');
-        const regionFillOpacityInput = drawRoot.querySelector('[data-dm-region-fill-opacity]');
         const regionDetailUrlInput = drawRoot.querySelector('[data-dm-region-detail-url]');
         const regionChildrenFieldset = drawRoot.querySelector('[data-dm-region-children]');
         const localitiesSummaryCount = drawRoot.querySelector('[data-dm-localities-summary] strong');
@@ -4846,30 +4907,6 @@ export async function initDeveloperMap(options) {
                 regionUrlInput.value = regionUrl;
                 updateFieldFilledState(regionUrlInput);
             }
-            if (regionStrokeWidthInput) {
-                const strokeWidthValue = normaliseNumericField(
-                    region?.strokeWidth ?? region?.meta?.strokeWidth,
-                    { min: 1, max: 10, precision: 2 },
-                );
-                regionStrokeWidthInput.value = strokeWidthValue === null ? '' : String(strokeWidthValue);
-                updateFieldFilledState(regionStrokeWidthInput);
-            }
-            if (regionStrokeOpacityInput) {
-                const strokeOpacityValue = normaliseNumericField(
-                    region?.strokeOpacity ?? region?.meta?.strokeOpacity,
-                    { min: 0, max: 100, precision: 2 },
-                );
-                regionStrokeOpacityInput.value = strokeOpacityValue === null ? '' : String(strokeOpacityValue);
-                updateFieldFilledState(regionStrokeOpacityInput);
-            }
-            if (regionFillOpacityInput) {
-                const fillOpacityValue = normaliseNumericField(
-                    region?.fillOpacity ?? region?.meta?.fillOpacity,
-                    { min: 0, max: 100, precision: 2 },
-                );
-                regionFillOpacityInput.value = fillOpacityValue === null ? '' : String(fillOpacityValue);
-                updateFieldFilledState(regionFillOpacityInput);
-            }
             if (regionChildrenFieldset) {
                 const selected = new Set(
                     Array.isArray(region?.children) ? region.children.map((child) => String(child)) : [],
@@ -4989,54 +5026,6 @@ export async function initDeveloperMap(options) {
                     event.target.value = sanitised;
                 }
                 updateFieldFilledState(regionUrlInput);
-            });
-        }
-
-        function handleNumericUpdate(event, { key, min, max }) {
-            const region = getActiveRegion();
-            if (!region) {
-                return null;
-            }
-            if (!region.meta || typeof region.meta !== 'object') {
-                region.meta = {};
-            }
-            const normalised = normaliseNumericField(event.target.value, {
-                min,
-                max,
-                precision: 2,
-            });
-            if (normalised === null) {
-                delete region.meta[key];
-                delete region[key];
-            } else {
-                region.meta[key] = normalised;
-                region[key] = normalised;
-            }
-            const nextValue = normalised === null ? '' : String(normalised);
-            if (event.target.value !== nextValue) {
-                event.target.value = nextValue;
-            }
-            return normalised;
-        }
-
-        if (regionStrokeWidthInput) {
-            regionStrokeWidthInput.addEventListener('input', (event) => {
-                handleNumericUpdate(event, { key: 'strokeWidth', min: 1, max: 10 });
-                updateFieldFilledState(regionStrokeWidthInput);
-            });
-        }
-
-        if (regionStrokeOpacityInput) {
-            regionStrokeOpacityInput.addEventListener('input', (event) => {
-                handleNumericUpdate(event, { key: 'strokeOpacity', min: 0, max: 100 });
-                updateFieldFilledState(regionStrokeOpacityInput);
-            });
-        }
-
-        if (regionFillOpacityInput) {
-            regionFillOpacityInput.addEventListener('input', (event) => {
-                handleNumericUpdate(event, { key: 'fillOpacity', min: 0, max: 100 });
-                updateFieldFilledState(regionFillOpacityInput);
             });
         }
 

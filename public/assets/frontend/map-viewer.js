@@ -28,7 +28,7 @@
             .dm-map-viewer__regions { pointer-events: none; }
             .dm-map-viewer__region { fill: rgba(52, 69, 235, 0.12); stroke: none; pointer-events: auto; transition: fill 0.18s ease, opacity 0.18s ease; opacity: 0.4; outline: none; }
             .dm-map-viewer__region:hover { opacity: 0.72; }
-            .dm-map-viewer__region.is-active { opacity: 0.82; }
+            .dm-map-viewer__region.is-active { opacity: 0.72; }
             .dm-map-viewer__region:focus { outline: none; }
             .dm-map-viewer__region:focus-visible { outline: none; }
             .dm-map-viewer__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -890,13 +890,13 @@
             const neutralFillColor = '#62718d';
             const idleAlpha = 0.45;
             const hoverAlpha = 0.68;
-            const selectedAlpha = 0.82;
+            const selectedAlpha = 0.68; // Same as hover - not too strong
             const idleStrokeAlpha = 0.6;
             const hoverStrokeAlpha = 0.8;
-            const selectedStrokeAlpha = 0.95;
+            const selectedStrokeAlpha = 0.8; // Same as hover
             const idleOpacity = 0.55;
             const hoverOpacity = 0.75;
-            const selectedOpacity = 0.9;
+            const selectedOpacity = 0.75; // Same as hover
             const headlinePreparingColor = '#64748b';
             const headlineDefaultColor = '#1c134f';
 

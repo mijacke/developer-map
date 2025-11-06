@@ -2871,6 +2871,65 @@ body:not(.wp-admin) .dm-modal-overlay {
     scrollbar-color: color-mix(in srgb, var(--dm-map-modal-content-color) 18%, transparent) transparent;
 }
 
+.dm-modal--map {
+    width: min(100%, 860px);
+    max-width: 860px;
+}
+
+.dm-modal--map .dm-modal__header {
+    padding: 28px 40px 0;
+}
+
+.dm-modal--map .dm-modal__body {
+    padding: 24px 40px 36px;
+    gap: 24px;
+}
+
+.dm-modal--map .dm-modal__form {
+    gap: 20px;
+    --dm-modal-media-width: clamp(240px, 34vw, 300px);
+    --dm-modal-field-width: min(340px, 100%);
+}
+
+.dm-modal--map .dm-modal__form-layout {
+    gap: 24px;
+}
+
+.dm-modal--map .dm-upload-card {
+    padding: 20px;
+    gap: 16px;
+}
+
+.dm-modal--map .dm-upload-card__dropzone,
+.dm-modal--map .dm-upload-card__preview {
+    height: 190px;
+}
+
+.dm-modal--map .dm-modal__form-fields > .dm-modal__actions {
+    margin-top: 12px;
+}
+
+@media (max-width: 960px) {
+    .dm-modal--map {
+        width: min(100%, 720px);
+        max-width: 720px;
+    }
+}
+
+@media (max-width: 900px) {
+    .dm-modal--map .dm-modal__form-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .dm-modal--map .dm-upload-card {
+        width: 100%;
+    }
+
+    .dm-modal--map .dm-modal__actions {
+        justify-content: center;
+    }
+}
+
 .dm-modal--map::-webkit-scrollbar-thumb,
 .dm-modal--location::-webkit-scrollbar-thumb {
     background: color-mix(in srgb, var(--dm-map-modal-content-color) 18%, transparent);
@@ -3050,6 +3109,11 @@ body:not(.wp-admin) .dm-modal-overlay {
     grid-template-columns: var(--dm-modal-media-width, 332px) 1fr;
     gap: 36px;
     align-items: flex-start;
+}
+
+.dm-modal__form-layout--compact {
+    grid-template-columns: minmax(0, var(--dm-modal-media-width, 280px)) minmax(0, 1fr);
+    gap: 24px;
 }
 
 .dm-modal__form-layout--no-media {
