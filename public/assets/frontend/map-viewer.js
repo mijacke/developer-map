@@ -568,6 +568,108 @@
                 return aggregate;
             };
 
+            const projectRegionEntryCache = new Map();
+            const collectProjectRegionEntries = (projectId, stack = new Set()) => {
+                const normalisedId = sanitiseId(projectId);
+                if (!normalisedId) {
+                    return [];
+                }
+                if (projectRegionEntryCache.has(normalisedId)) {
+                    return projectRegionEntryCache.get(normalisedId);
+                }
+                if (stack.has(normalisedId)) {
+                    return [];
+                }
+                stack.add(normalisedId);
+                const projectNode = projectRegistry.get(normalisedId);
+                if (!projectNode) {
+                    stack.delete(normalisedId);
+                    projectRegionEntryCache.set(normalisedId, []);
+                    return [];
+                }
+
+                const entries = [];
+                const regionsList = Array.isArray(projectNode?.regions) ? projectNode.regions : [];
+                regionsList.forEach((region, index) => {
+                    if (!region || typeof region !== 'object') {
+                        return;
+                    }
+
+                    const children = Array.isArray(region.children) ? region.children : [];
+                    let hasLocationChild = false;
+                    children.forEach((childValue) => {
+                        const parsedChild = parseRegionChildKey(childValue);
+                        if (!parsedChild) {
+                            return;
+                        }
+                        if (parsedChild.type === 'map' && parsedChild.id) {
+                            const descendant = collectProjectRegionEntries(parsedChild.id, stack);
+                            if (descendant.length) {
+                                descendant.forEach((item) => entries.push(item));
+                            }
+                        }
+                        if (parsedChild.type === 'location') {
+                            hasLocationChild = true;
+                        }
+                    });
+
+                    const statusIdCandidate = sanitiseId(
+                        region.statusId ??
+                            region.status ??
+                            region.paletteStatus ??
+                            region.meta?.status ??
+                            region.meta?.statusId ??
+                            region.meta?.paletteStatus ??
+                            '',
+                    );
+                    const labelCandidateRaw =
+                        region.statusLabel ??
+                        region.label ??
+                        region.name ??
+                        region.meta?.statusLabel ??
+                        region.meta?.label ??
+                        '';
+                    const labelCandidate = String(labelCandidateRaw ?? '').trim();
+                    const colorCandidate =
+                        region.statusColor ??
+                        region.color ??
+                        region.meta?.statusColor ??
+                        region.meta?.color ??
+                        '';
+
+                    const hasStatusInfo = Boolean(
+                        statusIdCandidate ||
+                            (typeof region.status === 'string' && region.status.trim() !== '') ||
+                            labelCandidate,
+                    );
+
+                    if (!hasStatusInfo) {
+                        return;
+                    }
+
+                    const pseudoIdBase = region.id ? String(region.id) : `index-${index}`;
+                    const pseudoFloor = {
+                        id: `region:${normalisedId}:${pseudoIdBase}`,
+                        statusId: statusIdCandidate || region.status || region.statusLabel || '',
+                        status: region.status ?? '',
+                        statusLabel: labelCandidate || statusIdCandidate || region.label || '',
+                        statusColor: colorCandidate,
+                        __dmOwnerMapId: normalisedId,
+                    };
+
+                    // If region has explicit location children, prefer child data when present.
+                    if (!hasLocationChild) {
+                        entries.push(pseudoFloor);
+                    } else if (!children.length) {
+                        entries.push(pseudoFloor);
+                    }
+                });
+
+                stack.delete(normalisedId);
+                projectRegionEntryCache.set(normalisedId, entries);
+                return entries;
+            };
+
             const regionById = new Map();
             regions.forEach((region) => {
                 if (!region || region.id === undefined || region.id === null) {
@@ -737,7 +839,12 @@
                     }
                     if (parsed.type === 'map' && parsed.id) {
                         const descendantFloors = collectProjectFloors(parsed.id);
-                        descendantFloors.forEach((floor) => addFloorToSummary(floor, parsed.key));
+                        if (descendantFloors.length) {
+                            descendantFloors.forEach((floor) => addFloorToSummary(floor, parsed.key));
+                        } else {
+                            const derivedRegionEntries = collectProjectRegionEntries(parsed.id);
+                            derivedRegionEntries.forEach((pseudoFloor) => addFloorToSummary(pseudoFloor, parsed.key));
+                        }
                         return;
                     }
                     if (parsed.type !== 'location') {
