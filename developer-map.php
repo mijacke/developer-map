@@ -392,6 +392,9 @@ function dm_render_fuudobre_map_shortcode($atts = []): string
     $atts = shortcode_atts(
         [
             'map_key' => '',
+            'show_table' => '0',
+            'table_mode' => 'current',
+            'include_parent' => '0',
         ],
         $atts,
         'fuudobre_map'
@@ -401,6 +404,19 @@ function dm_render_fuudobre_map_shortcode($atts = []): string
 
     if ('' === $map_key) {
         return '<p class="dm-map-viewer__error">Prosím, zadajte atribút <code>map_key</code>.</p>';
+    }
+
+    $normalise_bool = static function ($value): bool {
+        $normalized = strtolower(trim((string) $value));
+        return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
+    };
+
+    $show_table = $normalise_bool($atts['show_table']);
+    $include_parent = $normalise_bool($atts['include_parent']);
+
+    $table_mode = strtolower(trim((string) $atts['table_mode']));
+    if (!in_array($table_mode, ['current', 'hierarchy'], true)) {
+        $table_mode = 'current';
     }
 
     dm_register_frontend_map_assets();
@@ -418,10 +434,24 @@ function dm_render_fuudobre_map_shortcode($atts = []): string
         $localized = true;
     }
 
-    $html = sprintf(
-        '<div class="dm-map-viewer__root" data-dm-map-key="%s"></div>',
-        esc_attr($map_key)
-    );
+    $attributes = [
+        'class="dm-map-viewer__root"',
+        sprintf('data-dm-map-key="%s"', esc_attr($map_key)),
+    ];
+
+    if ($show_table) {
+        $attributes[] = 'data-dm-table="1"';
+    }
+
+    if ($table_mode) {
+        $attributes[] = sprintf('data-dm-table-mode="%s"', esc_attr($table_mode));
+    }
+
+    if ($include_parent) {
+        $attributes[] = 'data-dm-include-parent="1"';
+    }
+
+    $html = sprintf('<div %s></div>', implode(' ', $attributes));
 
     return $html;
 }

@@ -5228,6 +5228,55 @@ body:not(.wp-admin) .dm-editor-overlay {
     max-height: calc(100vh - 300px);
 }
 
+.dm-editor__fieldset--table {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dm-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    color: #1c134f;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.dm-toggle input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1px solid rgba(77, 70, 229, 0.35);
+    accent-color: #4d38ff;
+    cursor: pointer;
+}
+
+.dm-toggle__hint {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.dm-toggle--nested {
+    font-weight: 500;
+}
+
+.dm-toggle[hidden],
+[data-dm-table-scope-wrapper][hidden],
+[data-dm-table-parent-wrapper][hidden] {
+    display: none !important;
+}
+
+.dm-field--compact {
+    max-width: 320px;
+}
+
 /* Number inputs in editor - remove spinners */
 .dm-editor__panel-content input[type="number"] {
     -moz-appearance: textfield;
@@ -6214,4 +6263,3 @@ body:not(.wp-admin) .dm-editor-overlay {
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
 }
-

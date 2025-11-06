@@ -207,15 +207,6 @@ export class WPAdminLayoutManager {
             this.offsets.right = rightOffset;
             
             this.applyOffsets();
-            
-            console.log('[WPAdminLayout] Layout updated:', {
-                left: leftOffset,
-                top: topOffset,
-                right: rightOffset,
-                targets: this.targets.length,
-                isFolded: measurements.isFolded,
-                isAutoFold: measurements.isAutoFold
-            });
         }
     }
     
@@ -425,8 +416,6 @@ export class WPAdminLayoutManager {
         });
         
         this.targets = [];
-        
-        console.log('[WPAdminLayout] Destroyed');
     }
     
     /**

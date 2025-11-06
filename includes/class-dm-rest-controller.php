@@ -274,6 +274,43 @@ final class DM_Rest_Controller
     }
 
     /**
+     * Resolve ordered ancestor chain for the provided project.
+     *
+     * @param array $project
+     * @param array<string, array> $projectsById
+     * @return array<int, array>
+     */
+    private static function resolve_project_ancestors(array $project, array $projectsById): array
+    {
+        $ancestors = [];
+        $visited = [];
+        $current = $project;
+
+        while (true) {
+            $parentId = '';
+
+            if (isset($current['parentId'])) {
+                $parentId = strtolower(trim((string) $current['parentId']));
+            }
+
+            if ($parentId === '' && isset($current['parent']) && is_array($current['parent']) && isset($current['parent']['id'])) {
+                $parentId = strtolower(trim((string) $current['parent']['id']));
+            }
+
+            if ($parentId === '' || isset($visited[$parentId]) || !isset($projectsById[$parentId])) {
+                break;
+            }
+
+            $parent = $projectsById[$parentId];
+            array_unshift($ancestors, $parent);
+            $visited[$parentId] = true;
+            $current = $parent;
+        }
+
+        return $ancestors;
+    }
+
+    /**
      * Recursive helper that walks map children and gathers projects.
      *
      * @param array $project
@@ -517,9 +554,11 @@ final class DM_Rest_Controller
 
         if ($matchedProject !== null) {
             $linkedProjects = self::resolve_linked_projects($matchedProject, $projectsById, $projectsByKey);
+             $ancestors = self::resolve_project_ancestors($matchedProject, $projectsById);
             return new WP_REST_Response([
                 'project' => $matchedProject,
                 'linkedProjects' => array_values($linkedProjects),
+                'ancestors' => array_values($ancestors),
             ]);
         }
 
@@ -537,9 +576,11 @@ final class DM_Rest_Controller
                 if ($floorKey !== '' && $floorKey === $requested_key) {
                     $childPayload = self::build_floor_project_payload($project, $floor);
                     $linkedProjects = self::resolve_linked_projects($childPayload, $projectsById, $projectsByKey);
+                    $ancestors = self::resolve_project_ancestors($childPayload, $projectsById);
                     return new WP_REST_Response([
                         'project' => $childPayload,
                         'linkedProjects' => array_values($linkedProjects),
+                        'ancestors' => array_values($ancestors),
                     ]);
                 }
             }
@@ -873,6 +914,9 @@ final class DM_Rest_Controller
             'shortcode' => $project['shortcode'] ?? self::resolve_project_shortcode($project),
             'publicKey' => $project['publicKey'] ?? ($project['shortcode'] ?? ''),
         ];
+        if (!empty($project['id'])) {
+            $payload['parentId'] = (string) $project['id'];
+        }
 
         return self::hydrate_project_palette($payload);
     }

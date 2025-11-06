@@ -125,11 +125,6 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
     const resolvedName = formData.name ?? editItem?.name ?? '';
     const selectionId = imageSelection?.id ?? editItem?.image_id ?? '';
     const selectionAlt = imageSelection?.alt ?? editItem?.imageAlt ?? (resolvedName || '');
-    
-    // Debug logging
-    console.log('[renderFormModal] formData:', formData);
-    console.log('[renderFormModal] resolvedName:', resolvedName);
-    console.log('[renderFormModal] editItem:', editItem);
 
     const targetContext = modalState?.targetType ?? editType ?? 'project';
     const canChangeParent = !isEdit || targetContext === 'floor';
@@ -179,8 +174,6 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
         ? 'Vyberte typ'
         : 'Najprv pridajte typ v nastaveniach';
     
-    console.log('[renderFormModal] resolvedType:', resolvedType);
-    console.log('[renderFormModal] selectTypeValue:', selectTypeValue);
     const typeOptions = typeOptionsSource
         .map((option) => {
             const value = option.label;
@@ -321,6 +314,30 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
 
     // Status select
     const statusOptionsSource = Array.isArray(data.statuses) ? data.statuses : [];
+    
+    // Find active project for table settings
+    const activeProject = (() => {
+        // If editing, use parent project
+        if (editParent) {
+            return editParent;
+        }
+        // If parentValue is set, find that project
+        if (parentValue) {
+            return projects.find((p) => String(p.id) === parentValue) ?? null;
+        }
+        // Otherwise use first project
+        return projects[0] ?? null;
+    })();
+    
+    const tableSettings = (() => {
+        const frontend = activeProject && typeof activeProject.frontend === 'object' ? activeProject.frontend : null;
+        const table = frontend && typeof frontend.locationTable === 'object' ? frontend.locationTable : null;
+        return {
+            enabled: Boolean(table?.enabled),
+            scope: table?.scope === 'hierarchy' ? 'hierarchy' : 'current',
+            includeParent: Boolean(table?.includeParent),
+        };
+    })();
     const statusIdFromState = formData.statusId ?? modalState?.statusId ?? null;
     const statusLabelFromState = formData.status ?? modalState?.status ?? '';
     const locationStatusId = editLocation?.statusId ?? null;
@@ -761,6 +778,15 @@ function renderDrawModal(state, data) {
             : [];
 
     const statusOptionsSource = Array.isArray(data.statuses) ? data.statuses : [];
+    const tableSettings = (() => {
+        const frontend = activeProject && typeof activeProject.frontend === 'object' ? activeProject.frontend : null;
+        const table = frontend && typeof frontend.locationTable === 'object' ? frontend.locationTable : null;
+        return {
+            enabled: Boolean(table?.enabled),
+            scope: table?.scope === 'hierarchy' ? 'hierarchy' : 'current',
+            includeParent: Boolean(table?.includeParent),
+        };
+    })();
 
     const activeRegionId = state.modal?.regionId ?? (regions[0]?.id ? String(regions[0].id) : null);
     const activeRegion = activeRegionId
@@ -1428,6 +1454,35 @@ function renderDrawModal(state, data) {
                                     <input type="url" autocomplete="off" class="dm-field__input" data-dm-region-url placeholder=" " value="${escapeHtml(activeRegion?.url ?? '')}">
                                     <label class="dm-field__label">URL</label>
                                 </div>
+                                ${contextType === 'project'
+                                    ? (() => {
+                                          const settings = tableSettings ?? {
+                                              enabled: false,
+                                              scope: 'current',
+                                              includeParent: false,
+                                          };
+                                          return `
+                                        <div class="dm-editor__fieldset dm-editor__fieldset--table">
+                                            <label class="dm-toggle">
+                                                <input type="checkbox" data-dm-table-enabled${settings.enabled ? ' checked' : ''}>
+                                                <span>Zobrazovať tabuľku lokalít pod každou mapou v hierarchii</span>
+                                            </label>
+                                            <p class="dm-toggle__hint">Zobrazí rovnaké stĺpce ako v dashboarde priamo pod mapou.</p>
+                                            <div class="dm-field dm-field--compact" data-dm-table-scope-wrapper${settings.enabled ? '' : ' hidden'}>
+                                                <select class="dm-field__input" data-dm-table-scope${settings.enabled ? '' : ' disabled'}>
+                                                    <option value="current"${settings.scope === 'current' ? ' selected' : ''}>Len aktuálna mapa</option>
+                                                    <option value="hierarchy"${settings.scope === 'hierarchy' ? ' selected' : ''}>Celá hierarchia</option>
+                                                </select>
+                                                <label class="dm-field__label">Rozsah tabuľky</label>
+                                            </div>
+                                            <label class="dm-toggle dm-toggle--nested" data-dm-table-parent-wrapper${settings.enabled ? '' : ' hidden'}>
+                                                <input type="checkbox" data-dm-table-include-parent${settings.includeParent ? ' checked' : ''}${settings.enabled ? '' : ' disabled'}>
+                                                <span>Zobraziť aj lokality nadradenej mapy</span>
+                                            </label>
+                                        </div>
+                                        `;
+                                      })()
+                                    : ''}
                             </div>
                         </div>
                         

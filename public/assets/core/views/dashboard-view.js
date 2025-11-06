@@ -225,15 +225,6 @@ export function renderDashboardView(state, data) {
     const floors = project?.floors ?? [];
     const statuses = data.statuses ?? [];
     const projectImageUrl = project?.image ?? project?.imageUrl ?? '';
-    
-    // Debug: log project image
-    console.log('[Dashboard IMAGE] Project:', project);
-    console.log('[Dashboard IMAGE] Project image URL:', projectImageUrl);
-    console.log('[Dashboard IMAGE] Has image?', !!projectImageUrl);
-    
-    // Debug: log statuses
-    console.log('[Dashboard] Statuses:', statuses);
-    console.log('[Dashboard] First floor statusId:', floors[0]?.statusId);
 
     const statusFilter = String(state.dashboardStatusFilter ?? '').trim();
     const searchTerm = String(state.dashboardSearchTerm ?? '');
@@ -302,7 +293,7 @@ export function renderDashboardView(state, data) {
                         <div class="dm-dashboard__empty-state" role="group" aria-label="Žiadne lokality">
                             <span class="dm-dashboard__empty-icon" aria-hidden="true">${TOOLBAR_ICONS.plus}</span>
                             <h3>Žiadne lokality</h3>
-                            <p>V tomto projekte zatiaľ nie sú žiadne lokality. Pridajte prvú, aby sa zobrazila v prehľade.</p>
+                            <p>V tomto projekte zatiaľ nie sú žiadne lokality.</p>
                             <button type="button" class="dm-dashboard__add dm-dashboard__add--ghost dm-dashboard__empty-action" data-dm-modal="add-location">
                                 <span class="dm-dashboard__add-icon" aria-hidden="true">${TOOLBAR_ICONS.plus}</span>
                                 Pridať prvú lokalitu
@@ -368,7 +359,7 @@ export function renderDashboardView(state, data) {
                             </select>
                             <label class="dm-field__label" for="dm-dashboard-price">Cena</label>
                         </div>
-                        <button class="dm-dashboard__add" data-dm-modal="add-location">
+                        <button type="button" class="dm-dashboard__add" data-dm-modal="add-location">
                             <span class="dm-dashboard__add-icon" aria-hidden="true">${TOOLBAR_ICONS.plus}</span>
                             Pridať lokalitu
                         </button>

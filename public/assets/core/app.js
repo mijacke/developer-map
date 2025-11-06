@@ -318,6 +318,85 @@ export async function initDeveloperMap(options) {
         });
     }
 
+    function cleanupOrphanImages(projects) {
+        if (!storageCache.images || typeof storageCache.images !== 'object') {
+            return false;
+        }
+        if (!Array.isArray(projects)) {
+            return false;
+        }
+
+        // Vytvor set všetkých existujúcich ID projektov a lokalít
+        const validProjectIds = new Set();
+        const validFloorIds = new Set();
+
+        projects.forEach((project) => {
+            if (project && project.id) {
+                validProjectIds.add(String(project.id));
+            }
+            if (Array.isArray(project?.floors)) {
+                project.floors.forEach((floor) => {
+                    if (floor && floor.id) {
+                        validFloorIds.add(String(floor.id));
+                    }
+                });
+            }
+        });
+
+        // Nájdi a vymaž orphan obrázky
+        let cleaned = false;
+        const imageKeys = Object.keys(storageCache.images);
+
+        imageKeys.forEach((key) => {
+            if (!key || typeof key !== 'string') {
+                return;
+            }
+
+            const parts = key.split('__');
+            if (parts.length < 2) {
+                // Neplatný kľúč, vymaž ho
+                delete storageCache.images[key];
+                cleaned = true;
+                return;
+            }
+
+            const [type, ...rest] = parts;
+            const targetId = rest.join('__');
+
+            if (!targetId) {
+                // Neplatný kľúč, vymaž ho
+                delete storageCache.images[key];
+                cleaned = true;
+                return;
+            }
+
+            if (type === 'project') {
+                if (!validProjectIds.has(targetId)) {
+                    // Projekt už neexistuje, vymaž obrázok
+                    delete storageCache.images[key];
+                    cleaned = true;
+                }
+            } else if (type === 'floor') {
+                if (!validFloorIds.has(targetId)) {
+                    // Lokalita už neexistuje, vymaž obrázok
+                    delete storageCache.images[key];
+                    cleaned = true;
+                }
+            } else {
+                // Neznámy typ, vymaž ho
+                delete storageCache.images[key];
+                cleaned = true;
+            }
+        });
+
+        if (cleaned) {
+            // Ulož vyčistené obrázky do databázy
+            persistValue('dm-images', storageCache.images);
+        }
+
+        return cleaned;
+    }
+
     function getEntityImageSelection(entity) {
         if (!entity || typeof entity !== 'object') {
             return null;
@@ -809,7 +888,6 @@ export async function initDeveloperMap(options) {
         }).filter(Boolean).join('\n');
 
         styleElement.textContent = cssRules;
-        console.log('[Developer Map] Applied status styles:', statuses.length, 'statuses');
     }
 
     // Load expanded projects from storage cache
@@ -1025,7 +1103,6 @@ export async function initDeveloperMap(options) {
         // Create default colors on first installation
         data.colors = ensureColorsHaveNames(getDefaultColors());
         saveColors(data.colors);
-        console.log('[Developer Map] Created default colors');
     }
     data.colors = ensureColorsHaveNames(data.colors);
     applyColors(data.colors);
@@ -1038,21 +1115,12 @@ export async function initDeveloperMap(options) {
         : normaliseAvailableFonts(getAvailableFonts());
 
     availableFonts = setAvailableFonts(availableFonts, { persist: true });
-    if (!hadStoredFonts) {
-        console.log('[Developer Map] Created default font list');
-    }
 
     const savedFont = loadSelectedFont();
     let selectedFont = normaliseSelectedFont(savedFont || { id: 'inter' }, availableFonts);
-    let createdDefaultFont = false;
 
     if (!savedFont || !selectedFont) {
         selectedFont = normaliseSelectedFont({ id: 'inter' }, availableFonts);
-        createdDefaultFont = true;
-    }
-
-    if (createdDefaultFont) {
-        console.log('[Developer Map] Created default font selection');
     }
 
     saveSelectedFont(selectedFont);
@@ -1066,7 +1134,6 @@ export async function initDeveloperMap(options) {
         // Create default types on first installation
         data.types = getDefaultTypes();
         saveTypes(data.types);
-        console.log('[Developer Map] Created default types');
     }
     normaliseTypes();
 
@@ -1462,6 +1529,52 @@ export async function initDeveloperMap(options) {
         return mutated;
     }
 
+    function ensureProjectFrontendSettings(projects) {
+        if (!Array.isArray(projects)) {
+            return false;
+        }
+        let mutated = false;
+        projects.forEach((project) => {
+            if (!project || typeof project !== 'object') {
+                return;
+            }
+            if (!project.frontend || typeof project.frontend !== 'object') {
+                project.frontend = {};
+                mutated = true;
+            }
+            const tableSettings = project.frontend.locationTable;
+            if (!tableSettings || typeof tableSettings !== 'object') {
+                project.frontend.locationTable = {
+                    enabled: false,
+                    scope: 'current',
+                    includeParent: false,
+                };
+                mutated = true;
+                return;
+            }
+            if (!Object.prototype.hasOwnProperty.call(tableSettings, 'enabled')) {
+                tableSettings.enabled = false;
+                mutated = true;
+            } else {
+                tableSettings.enabled = Boolean(tableSettings.enabled);
+            }
+            if (
+                !tableSettings.scope ||
+                (tableSettings.scope !== 'current' && tableSettings.scope !== 'hierarchy')
+            ) {
+                tableSettings.scope = 'current';
+                mutated = true;
+            }
+            if (!Object.prototype.hasOwnProperty.call(tableSettings, 'includeParent')) {
+                tableSettings.includeParent = false;
+                mutated = true;
+            } else {
+                tableSettings.includeParent = Boolean(tableSettings.includeParent);
+            }
+        });
+        return mutated;
+    }
+
     function ensureFloorStatusReferences() {
         if (!Array.isArray(data.projects) || data.projects.length === 0) {
             return false;
@@ -1588,7 +1701,6 @@ export async function initDeveloperMap(options) {
         // Create default statuses on first installation
         data.statuses = getDefaultStatuses();
         saveStatuses(data.statuses);
-        console.log('[Developer Map] Created default statuses');
     }
     normaliseStatuses();
     applyStatusStyles(data.statuses);
@@ -1600,7 +1712,6 @@ export async function initDeveloperMap(options) {
         // Check if projects have images (for backward compatibility)
         const hasImages = savedProjects.some((p) => p?.image || p?.imageUrl || p?.imageurl);
         if (!hasImages) {
-            console.info('[Developer Map] Saved projects missing images, refreshing from initial data');
             removePersistedValue('dm-projects');
             if (ensureProjectRegions(data.projects)) {
                 projectsDirty = true;
@@ -1613,11 +1724,9 @@ export async function initDeveloperMap(options) {
             data.projects = savedProjects;
             const repairedSchema = repairProjectSchema(data.projects);
             if (repairedSchema) {
-                console.info('[Developer Map] Repairing stored project schema for compatibility');
                 projectsDirty = true;
             }
             if (ensureProjectRegions(data.projects)) {
-                console.info('[Developer Map] Migrated legacy geometry to regions schema');
                 projectsDirty = true;
             }
             if (ensureProjectPublicKeys(data.projects)) {
@@ -1625,20 +1734,17 @@ export async function initDeveloperMap(options) {
             }
             // Clean demo images from storage
             if (cleanDemoImages(data.projects)) {
-                console.info('[Developer Map] Cleaned demo images from projects');
                 projectsDirty = true;
             }
             // Migrate hash IDs to sequential IDs
             const migratedIds = migrateHashIdsToSequential();
             if (migratedIds) {
-                console.info('[Developer Map] Migrated hash IDs to sequential IDs');
                 projectsDirty = true;
                 // Save migrated types, statuses, and colors
                 saveTypes(data.types);
                 saveStatuses(data.statuses);
                 saveColors(data.colors);
             }
-            console.info('[Developer Map] Loaded projects from storage', savedProjects.length, 'projects');
         }
     } else {
         if (ensureProjectRegions(data.projects)) {
@@ -1653,6 +1759,9 @@ export async function initDeveloperMap(options) {
     if (ensureProjectShortcodes(data.projects)) {
         projectsDirty = true;
     }
+    if (ensureProjectFrontendSettings(data.projects)) {
+        projectsDirty = true;
+    }
 
     const repairedProjects = ensureFloorStatusReferences();
     if (repairedProjects) {
@@ -1662,6 +1771,9 @@ export async function initDeveloperMap(options) {
         saveProjects(data.projects);
     }
     applyStoredImages(data.projects);
+    
+    // Vyčisti orphan obrázky (obrázky pre neexistujúce projekty/lokality)
+    cleanupOrphanImages(data.projects);
 
     // Clear expanded projects on page load (fresh start)
     removePersistedValue('dm-expanded-projects');
@@ -2664,6 +2776,19 @@ export async function initDeveloperMap(options) {
             });
         });
 
+        // Cleanup orphan images button
+        const cleanupOrphanImagesButton = root.querySelector('[data-dm-cleanup-orphan-images]');
+        if (cleanupOrphanImagesButton) {
+            cleanupOrphanImagesButton.addEventListener('click', () => {
+                const cleaned = cleanupOrphanImages(data.projects);
+                if (cleaned) {
+                    alert('Orphan obrázky boli úspešne vyčistené z databázy!');
+                } else {
+                    alert('Žiadne orphan obrázky neboli nájdené.');
+                }
+            });
+        }
+
         // Confirm delete button
         const confirmDeleteButton = root.querySelector('[data-dm-confirm-delete]');
         if (confirmDeleteButton) {
@@ -3547,13 +3672,76 @@ export async function initDeveloperMap(options) {
             const projectIndex = data.projects.findIndex((p) => p.id === result.item.id);
             if (projectIndex !== -1) {
                 const removedId = String(result.item.id);
-                data.projects.splice(projectIndex, 1);
-
-                data.projects.forEach((project) => {
-                    if (String(project?.parentId ?? '') === removedId) {
-                        project.parentId = null;
+                const projectToDelete = data.projects[projectIndex];
+                
+                // Najprv vymaž všetky obrázky pre tento projekt a jeho lokality
+                if (storageCache.images && typeof storageCache.images === 'object') {
+                    // Vymaž obrázok projektu
+                    const projectImageKey = `project__${removedId}`;
+                    if (storageCache.images[projectImageKey]) {
+                        delete storageCache.images[projectImageKey];
                     }
-                });
+                    
+                    // Vymaž obrázky všetkých lokalít
+                    if (Array.isArray(projectToDelete.floors)) {
+                        projectToDelete.floors.forEach((floor) => {
+                            const floorImageKey = `floor__${floor.id}`;
+                            if (storageCache.images[floorImageKey]) {
+                                delete storageCache.images[floorImageKey];
+                            }
+                        });
+                    }
+                    
+                    // Ulož aktualizované obrázky
+                    persistValue('dm-images', storageCache.images);
+                }
+                
+                // Rekurzívne vymaž všetky podradené projekty (mapy) a ich lokality
+                const deleteProjectRecursively = (projectId) => {
+                    // Nájdi všetky podradené projekty
+                    const childProjects = data.projects.filter((p) => 
+                        String(p?.parentId ?? '') === String(projectId)
+                    );
+                    
+                    // Rekurzívne vymaž každý podradený projekt
+                    childProjects.forEach((childProject) => {
+                        // Vymaž obrázky podradených projektov
+                        if (storageCache.images && typeof storageCache.images === 'object') {
+                            const childProjectImageKey = `project__${childProject.id}`;
+                            if (storageCache.images[childProjectImageKey]) {
+                                delete storageCache.images[childProjectImageKey];
+                            }
+                            
+                            // Vymaž obrázky lokalít podradených projektov
+                            if (Array.isArray(childProject.floors)) {
+                                childProject.floors.forEach((floor) => {
+                                    const floorImageKey = `floor__${floor.id}`;
+                                    if (storageCache.images[floorImageKey]) {
+                                        delete storageCache.images[floorImageKey];
+                                    }
+                                });
+                            }
+                        }
+                        
+                        // Najprv vymaž všetky podradené projekty tohto projektu
+                        deleteProjectRecursively(childProject.id);
+                        
+                        // Potom vymaž tento projekt
+                        const childIndex = data.projects.findIndex((p) => p.id === childProject.id);
+                        if (childIndex !== -1) {
+                            data.projects.splice(childIndex, 1);
+                        }
+                    });
+                };
+                
+                // Vymaž všetky podradené projekty
+                deleteProjectRecursively(removedId);
+                
+                // Vymaž samotný projekt z poľa (znovu nájdi index, pretože sa mohol zmeniť)
+                const finalIndex = data.projects.findIndex((p) => p.id === result.item.id);
+                if (finalIndex !== -1) {
+                    data.projects.splice(finalIndex, 1);
+                }
                 
                 // Ak bol vymazaný aktívny projekt, nastav nový aktívny projekt
                 let newActiveProjectId = state.activeProjectId;
@@ -3561,13 +3749,28 @@ export async function initDeveloperMap(options) {
                     newActiveProjectId = data.projects[0]?.id ?? null;
                 }
                 
+                // Ulož projekty do databázy
                 saveProjects(data.projects);
                 setState({ modal: null, activeProjectId: newActiveProjectId, view: APP_VIEWS.MAPS, mapSection: MAP_SECTIONS.LIST });
             }
         } else if (result.type === 'floor' && result.parent) {
-            // Vymazanie poschodia z projektu
+            // Vymazanie lokality z projektu
             if (Array.isArray(result.parent.floors)) {
+                const floorToDelete = result.item;
+                
+                // Vymaž obrázok lokality
+                if (storageCache.images && typeof storageCache.images === 'object') {
+                    const floorImageKey = `floor__${floorToDelete.id}`;
+                    if (storageCache.images[floorImageKey]) {
+                        delete storageCache.images[floorImageKey];
+                        persistValue('dm-images', storageCache.images);
+                    }
+                }
+                
+                // Vymaž lokalitu z projektu
                 result.parent.floors = result.parent.floors.filter((floor) => floor.id !== result.item.id);
+                
+                // Ulož projekty do databázy
                 saveProjects(data.projects);
                 setState({ modal: null });
             }
@@ -4220,6 +4423,11 @@ export async function initDeveloperMap(options) {
         const regionDetailUrlInput = drawRoot.querySelector('[data-dm-region-detail-url]');
         const regionChildrenFieldset = drawRoot.querySelector('[data-dm-region-children]');
         const localitiesSummaryCount = drawRoot.querySelector('[data-dm-localities-summary] strong');
+        const tableEnabledToggle = drawRoot.querySelector('[data-dm-table-enabled]');
+        const tableScopeWrapper = drawRoot.querySelector('[data-dm-table-scope-wrapper]');
+        const tableScopeField = drawRoot.querySelector('[data-dm-table-scope]');
+        const includeParentWrapper = drawRoot.querySelector('[data-dm-table-parent-wrapper]');
+        const includeParentToggle = drawRoot.querySelector('[data-dm-table-include-parent]');
 
         const updateLocalitiesSummary = () => {
             if (!localitiesSummaryCount || !regionChildrenFieldset) {
@@ -4298,6 +4506,76 @@ export async function initDeveloperMap(options) {
                 ownerIdAttr || ownerTypeAttr,
             );
             return;
+        }
+
+        const isProjectOwner = ownerTypeAttr === 'project';
+        const ensureLocationTableSettings = (entity) => {
+            if (!entity || typeof entity !== 'object') {
+                return null;
+            }
+            if (!entity.frontend || typeof entity.frontend !== 'object') {
+                entity.frontend = {};
+            }
+            if (!entity.frontend.locationTable || typeof entity.frontend.locationTable !== 'object') {
+                entity.frontend.locationTable = {
+                    enabled: false,
+                    scope: 'current',
+                    includeParent: false,
+                };
+            }
+            const settings = entity.frontend.locationTable;
+            settings.enabled = Boolean(settings.enabled);
+            settings.includeParent = Boolean(settings.includeParent);
+            if (settings.scope !== 'hierarchy') {
+                settings.scope = 'current';
+            }
+            return settings;
+        };
+
+        const tableSettings = isProjectOwner ? ensureLocationTableSettings(targetEntity) : null;
+
+        const syncTableControls = () => {
+            if (!tableSettings) {
+                return;
+            }
+            const enabled = Boolean(tableSettings.enabled);
+            if (tableScopeWrapper) {
+                tableScopeWrapper.hidden = !enabled;
+            }
+            if (tableScopeField) {
+                tableScopeField.disabled = !enabled;
+                tableScopeField.value = tableSettings.scope === 'hierarchy' ? 'hierarchy' : 'current';
+            }
+            if (includeParentWrapper) {
+                includeParentWrapper.hidden = !enabled;
+            }
+            if (includeParentToggle) {
+                includeParentToggle.disabled = !enabled;
+                includeParentToggle.checked = Boolean(tableSettings.includeParent);
+            }
+            if (tableEnabledToggle) {
+                tableEnabledToggle.checked = enabled;
+            }
+        };
+
+        if (tableSettings) {
+            syncTableControls();
+            if (tableEnabledToggle) {
+                tableEnabledToggle.addEventListener('change', () => {
+                    tableSettings.enabled = tableEnabledToggle.checked;
+                    syncTableControls();
+                });
+            }
+            if (tableScopeField) {
+                tableScopeField.addEventListener('change', () => {
+                    tableSettings.scope = tableScopeField.value === 'hierarchy' ? 'hierarchy' : 'current';
+                });
+            }
+            if (includeParentToggle) {
+                includeParentToggle.addEventListener('change', () => {
+                    tableSettings.includeParent = includeParentToggle.checked;
+                });
+            }
         }
 
         function setViewBoxSize(width, height, options = {}) {
@@ -4775,11 +5053,6 @@ export async function initDeveloperMap(options) {
         if (imageEl) {
             const syncFromImage = () => {
                 if (imageEl.naturalWidth > 0 && imageEl.naturalHeight > 0) {
-                    console.log('[syncFromImage]', {
-                        naturalWidth: imageEl.naturalWidth,
-                        naturalHeight: imageEl.naturalHeight,
-                        currentViewBox: { width: viewBoxWidth, height: viewBoxHeight }
-                    });
                     setViewBoxSize(imageEl.naturalWidth, imageEl.naturalHeight, { preservePoints: true });
                     if (savedSnapshot) {
                         savedSnapshot.viewBoxWidth = viewBoxWidth;
@@ -5191,20 +5464,9 @@ export async function initDeveloperMap(options) {
             const region = getActiveRegion();
             const isClosed = polygonClosed && hasPolygon;
             
-            // Debug logging
-            console.log('[updateShapes]', {
-                pointsCount: points.length,
-                hasPolygon,
-                polygonClosed,
-                isClosed,
-                regionClosed: region ? getRegionClosed(region) : null
-            });
-            
             if (isClosed) {
                 const hatchId = overlay.getAttribute('data-dm-hatch-id');
                 const fillValue = hatchId ? `url(#${hatchId})` : 'rgba(72, 198, 116, 0.18)';
-                console.log('[updateShapes] Setting fill:', fillValue, 'hatchId:', hatchId);
-                console.log('[updateShapes] Fill element:', fill, 'classList:', fill.classList.toString());
                 fill.setAttribute('points', pointString);
                 fill.setAttribute('fill', fillValue);
                 fill.setAttribute('stroke', 'none');
@@ -5213,7 +5475,6 @@ export async function initDeveloperMap(options) {
                 fill.style.stroke = 'none';
                 fill.classList.add('is-active');
             } else {
-                console.log('[updateShapes] Clearing fill');
                 fill.setAttribute('points', '');
                 fill.setAttribute('fill', 'none');
                 fill.style.fill = 'none';

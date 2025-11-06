@@ -68,17 +68,12 @@ async function boot() {
     // Use import map workaround: append version to all module URLs
     const appUrl = new URL(`./core/app.js?ver=${ver}`, base).href;
     
-    console.log('[DM] Loading app from:', appUrl);
-    console.log('[DM] Runtime config:', runtimeConfig);
-    
     const mod  = await import(/* @vite-ignore */ appUrl);
 
     const init = mod.initDeveloperMap || mod.default;
     if (typeof init !== 'function') throw new Error('initDeveloperMap missing');
 
-    console.log('[DM] App loaded successfully, initializing...');
     await init({ root, runtimeConfig, storageClient });
-    console.log('[DM] App initialized successfully');
   } catch (err) {
     console.error('[DM] app import/init failed:', err);
     fallback(root, 'app.js sa nenačítal – pozri konzolu');
