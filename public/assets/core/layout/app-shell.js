@@ -3,6 +3,7 @@ import { renderHeader } from './header.js';
 import { renderMapsView } from '../views/maps-view.js';
 import { renderDashboardView } from '../views/dashboard-view.js';
 import { renderSettingsView } from '../views/settings-view.js';
+import { renderGuidesView } from '../views/guides-view.js';
 
 export function renderAppShell(state, data) {
     return `
@@ -12,6 +13,7 @@ export function renderAppShell(state, data) {
                 ${state.view === APP_VIEWS.MAPS ? renderMapsView(state, data) : ''}
                 ${state.view === APP_VIEWS.DASHBOARD ? renderDashboardView(state, data) : ''}
                 ${state.view === APP_VIEWS.SETTINGS ? renderSettingsView(state, data) : ''}
+                ${state.view === APP_VIEWS.GUIDES ? renderGuidesView(state, data) : ''}
             </div>
         </div>
     `;

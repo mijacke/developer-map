@@ -17,6 +17,7 @@ const NAV_ICONS = {
 
 export function renderHeader(state) {
     const settingsActive = state.view === APP_VIEWS.SETTINGS ? ' is-active' : '';
+    const guidesActive = state.view === APP_VIEWS.GUIDES ? ' is-active' : '';
     const html = `
         <header class="dm-topbar">
             <button type="button" class="dm-topbar__brand" data-dm-nav="maps" aria-label="Developer Map" title="Developer Map">
@@ -36,9 +37,9 @@ export function renderHeader(state) {
                     <span class="dm-topbar__link-icon" aria-hidden="true">${NAV_ICONS.settings}</span>
                     <span>Nastavenia</span>
                 </button>
-                <button type="button" class="dm-topbar__link" disabled>
+                <button type="button" class="dm-topbar__link${guidesActive}" data-dm-nav="guides">
                     <span class="dm-topbar__link-icon" aria-hidden="true">${NAV_ICONS.docs}</span>
-                    <span>Dokumentácia</span>
+                    <span>Návody</span>
                 </button>
             </nav>
         </header>

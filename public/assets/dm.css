@@ -6111,6 +6111,214 @@ body:not(.wp-admin) .dm-editor-overlay {
     }
 }
 
+/* Guides view */
+.dm-guides__header {
+    align-items: stretch;
+}
+
+.dm-guides__intro {
+    flex: 1 1 420px;
+    max-width: 720px;
+}
+
+.dm-guides__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(76, 56, 255, 0.1);
+    color: var(--dm-action);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 12px;
+}
+
+.dm-guides__intro h1 {
+    margin-top: 0;
+}
+
+.dm-guides__intro p {
+    color: var(--dm-text-muted);
+    margin-top: 12px;
+}
+
+.dm-guides__stats {
+    flex: 1 1 320px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+}
+
+.dm-guides__stat {
+    padding: 18px;
+    border-radius: 20px;
+    border: 1px solid rgba(22, 22, 29, 0.08);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 8px 30px rgba(22, 22, 29, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dm-guides__stat span {
+    font-size: 13px;
+    color: var(--dm-text-muted);
+}
+
+.dm-guides__stat strong {
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 700;
+    color: var(--dm-heading-color, #1C134F);
+}
+
+.dm-guides__content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: clamp(18px, 2vw, 24px);
+}
+
+.dm-guides__card {
+    background: var(--dm-surface);
+    border-radius: 28px;
+    border: 1px solid rgba(22, 22, 29, 0.08);
+    padding: clamp(20px, 2.4vw, 28px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 18px 48px rgba(22, 22, 29, 0.08);
+}
+
+.dm-guides__card h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.dm-guides__card h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+}
+
+.dm-guides__card ul,
+.dm-guides__card ol {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--dm-text-muted);
+}
+
+.dm-guides__card code {
+    font-size: 14px;
+    background: rgba(76, 56, 255, 0.08);
+    padding: 2px 6px;
+    border-radius: 8px;
+}
+
+.dm-guides__card--workflow,
+.dm-guides__card--support {
+    grid-column: span 2;
+}
+
+.dm-guides__note {
+    padding: 12px 16px;
+    border-radius: 16px;
+    background: rgba(76, 56, 255, 0.08);
+    color: var(--dm-action);
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.dm-guides__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.dm-guides__step {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(22, 22, 29, 0.08);
+}
+
+.dm-guides__step:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.dm-guides__step-index {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: var(--dm-action);
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dm-guides__subgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.dm-guides__pill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.dm-guides__pill {
+    border: 1px solid rgba(22, 22, 29, 0.08);
+    border-radius: 18px;
+    padding: 16px;
+    background: rgba(247, 247, 251, 0.9);
+}
+
+.dm-guides__pill strong {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--dm-heading-color, #1C134F);
+}
+
+.dm-guides__checks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+}
+
+.dm-guides__checks h3 {
+    margin-top: 0;
+}
+
+.dm-guides__checks ul {
+    padding-left: 18px;
+}
+
+@media (max-width: 1024px) {
+    .dm-guides__card--workflow,
+    .dm-guides__card--support {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .dm-guides__stats {
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+    }
+
+    .dm-guides__content {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Mobile optimizations */
 @media (max-width: 768px) {
     .dm-editor__header {

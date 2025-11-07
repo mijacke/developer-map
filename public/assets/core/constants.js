@@ -2,6 +2,7 @@ export const APP_VIEWS = {
     MAPS: 'maps',
     DASHBOARD: 'dashboard',
     SETTINGS: 'settings',
+    GUIDES: 'guides',
 };
 
 export const MAP_SECTIONS = {

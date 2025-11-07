@@ -2423,6 +2423,8 @@ export async function initDeveloperMap(options) {
                     setState({ view: APP_VIEWS.SETTINGS, settingsSection: SETTINGS_SECTIONS.OVERVIEW });
                 } else if (targetView === 'maps') {
                     setState({ view: APP_VIEWS.MAPS, mapSection: MAP_SECTIONS.LIST });
+                } else if (targetView === 'guides') {
+                    setState({ view: APP_VIEWS.GUIDES });
                 }
             });
         });
