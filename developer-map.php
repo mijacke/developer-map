@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Developer Map by FuuDobre
  * Description: Administrátorský dashboard pre vytváranie interaktívnych máp a lokalít a ich zobrazenie na vašom webe.
- * Version: 0.4.3
+ * Version: 0.4.4
  * Author: Mario
  */
 
@@ -77,7 +77,7 @@ function dm_handle_ajax_ping(): void
 }
 add_action('wp_ajax_dm_ping', 'dm_handle_ajax_ping');
 
-define('DM_PLUGIN_VERSION', '0.4.3');
+define('DM_PLUGIN_VERSION', '0.4.4');
 define('DM_DEV_PAGE_SLUG', 'devtest-9kq7wza3');
 define('DM_PLUGIN_STYLE_HANDLE', 'developer-map-style');
 define('DM_PLUGIN_SCRIPT_HANDLE', 'developer-map-script');
@@ -89,6 +89,49 @@ if (!defined('DM_SETTINGS_CAPABILITY')) {
 
 if (!defined('DM_ENABLE_SHORTCODE_COMPAT')) {
     define('DM_ENABLE_SHORTCODE_COMPAT', true);
+}
+
+/**
+ * Build a cache-busting version that bumps whenever any asset changes.
+ */
+function dm_get_assets_version(): string
+{
+    static $version = null;
+
+    if ($version !== null) {
+        return $version;
+    }
+
+    $base_path = plugin_dir_path(__FILE__) . 'public/assets/';
+    $latest_mtime = 0;
+
+    if (is_dir($base_path)) {
+        $flags = FilesystemIterator::SKIP_DOTS;
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($base_path, $flags)
+        );
+
+        foreach ($iterator as $file) {
+            if (!$file instanceof SplFileInfo || !$file->isFile()) {
+                continue;
+            }
+
+            $ext = strtolower($file->getExtension());
+            if (!in_array($ext, ['js', 'mjs', 'cjs', 'css', 'map', 'json', 'svg', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'woff', 'woff2'], true)) {
+                continue;
+            }
+
+            $mtime = $file->getMTime();
+            if ($mtime > $latest_mtime) {
+                $latest_mtime = $mtime;
+            }
+        }
+    }
+
+    $suffix = $latest_mtime ?: time();
+    $version = sprintf('%s-%s', DM_PLUGIN_VERSION, $suffix);
+
+    return $version;
 }
 
 /**
@@ -177,33 +220,7 @@ function dm_register_assets(): void
     }
 
     $base_url = plugin_dir_url(__FILE__) . 'public/assets/';
-    $base_path = plugin_dir_path(__FILE__) . 'public/assets/';
-
-    // Get latest modification time from ALL relevant files for proper cache-busting
-    $files_to_check = [
-        $base_path . 'dm.css',
-        $base_path . 'dm.js',
-        $base_path . 'core/app.js',
-        $base_path . 'core/constants.js',
-        $base_path . 'core/data.js',
-        $base_path . 'core/storage-client.js',
-        $base_path . 'core/storage-migration.js',
-        $base_path . 'core/layout/header.js',
-        $base_path . 'core/views/maps-view.js',
-        $base_path . 'core/views/settings-view.js',
-        $base_path . 'core/views/dashboard-view.js',
-        $base_path . 'styles/base.css',
-        $base_path . 'styles/board.css',
-        $base_path . 'styles/layout-shell.css',
-        $base_path . 'styles/settings.css',
-    ];
-
-    $version = DM_PLUGIN_VERSION; // Start with plugin version
-    foreach ($files_to_check as $file) {
-        if (file_exists($file)) {
-            $version = max($version, filemtime($file));
-        }
-    }
+    $version = dm_get_assets_version();
 
     wp_register_style(
         DM_PLUGIN_STYLE_HANDLE,
@@ -376,11 +393,12 @@ function dm_register_frontend_map_assets(): void
     }
 
     $base_url = plugin_dir_url(__FILE__) . 'public/assets/frontend/';
+    $version = dm_get_assets_version();
     wp_register_script(
         'developer-map-frontend',
         $base_url . 'map-viewer.js',
         [],
-        DM_PLUGIN_VERSION,
+        $version,
         true
     );
 

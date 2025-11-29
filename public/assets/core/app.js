@@ -4,31 +4,34 @@ const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfi
 async function loadModules() {
     const ver = getVersion();
     const base = import.meta.url.substring(0, import.meta.url.lastIndexOf('/'));
-    
-    const [constants, data, layout, modals, storage, wpAdmin] = await Promise.all([
+
+    const [constants, data, layout, modals, storage, wpAdmin, header] = await Promise.all([
         import(`${base}/constants.js?ver=${ver}`),
         import(`${base}/data.js?ver=${ver}`),
         import(`${base}/layout/app-shell.js?ver=${ver}`),
         import(`${base}/modals/index.js?ver=${ver}`),
         import(`${base}/storage-client.js?ver=${ver}`),
-        import(`${base}/wp-admin-layout.js?ver=${ver}`)
+        import(`${base}/wp-admin-layout.js?ver=${ver}`),
+        import(`${base}/layout/header.js?ver=${ver}`)
     ]);
-    
+
     return {
         APP_VIEWS: constants.APP_VIEWS,
         MAP_SECTIONS: constants.MAP_SECTIONS,
         SETTINGS_SECTIONS: constants.SETTINGS_SECTIONS,
         DRAW_VIEWBOX: constants.DRAW_VIEWBOX,
         createInitialData: data.createInitialData,
-    getDefaultTypes: data.getDefaultTypes,
-    getDefaultStatuses: data.getDefaultStatuses,
-    getDefaultColors: data.getDefaultColors,
-    getAvailableFonts: data.getAvailableFonts,
+        getDefaultTypes: data.getDefaultTypes,
+        getDefaultStatuses: data.getDefaultStatuses,
+        getDefaultColors: data.getDefaultColors,
+        getAvailableFonts: data.getAvailableFonts,
         renderAppShell: layout.renderAppShell,
+        renderHeader: header.renderHeader,
         renderModal: modals.renderModal,
         renderLocalitiesPopup: modals.renderLocalitiesPopup,
         createStorageClient: storage.createStorageClient,
-        WPAdminLayoutManager: wpAdmin.WPAdminLayoutManager
+        WPAdminLayoutManager: wpAdmin.WPAdminLayoutManager,
+        assetsBase: base
     };
 }
 
@@ -43,13 +46,13 @@ async function loadModules() {
  */
 export async function initDeveloperMap(options) {
     const { root, runtimeConfig, storageClient: providedStorage } = options;
-    
+
     // Load all modules with cache-busting
     const modules = await loadModules();
-    const { 
+    const {
         APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX,
         createInitialData, getDefaultTypes, getDefaultStatuses, getDefaultColors, getAvailableFonts,
-        renderAppShell, renderModal, renderLocalitiesPopup, createStorageClient, WPAdminLayoutManager
+        renderAppShell, renderHeader, renderModal, renderLocalitiesPopup, createStorageClient, WPAdminLayoutManager, assetsBase
     } = modules;
 
     if (!root || !(root instanceof HTMLElement)) {
@@ -142,7 +145,7 @@ export async function initDeveloperMap(options) {
             'demo-pointer',
             'Screenshot-2025-10-18'
         ];
-        
+
         projects.forEach((project) => {
             if (project.image && typeof project.image === 'string') {
                 const hasDemo = demoPatterns.some(pattern => project.image.includes(pattern));
@@ -163,18 +166,18 @@ export async function initDeveloperMap(options) {
                 });
             }
         });
-        
+
         return changed;
     }
 
     function migrateHashIdsToSequential() {
         let changed = false;
-        
+
         // Migrate types
         if (Array.isArray(data.types)) {
             const typeIdMap = new Map();
             let typeCounter = 1;
-            
+
             data.types.forEach((type, index) => {
                 if (type && type.id) {
                     const oldId = String(type.id);
@@ -193,7 +196,7 @@ export async function initDeveloperMap(options) {
                     }
                 }
             });
-            
+
             // Update type references in projects/floors
             if (changed && data.projects) {
                 data.projects.forEach(project => {
@@ -210,12 +213,12 @@ export async function initDeveloperMap(options) {
                 });
             }
         }
-        
+
         // Migrate statuses
         if (Array.isArray(data.statuses)) {
             const statusIdMap = new Map();
             let statusCounter = 1;
-            
+
             data.statuses.forEach((status, index) => {
                 if (status && status.id) {
                     const oldId = String(status.id);
@@ -234,7 +237,7 @@ export async function initDeveloperMap(options) {
                     }
                 }
             });
-            
+
             // Update status references in floors
             if (changed && data.projects) {
                 data.projects.forEach(project => {
@@ -251,11 +254,11 @@ export async function initDeveloperMap(options) {
                 });
             }
         }
-        
+
         // Migrate colors
         if (Array.isArray(data.colors)) {
             let colorCounter = 1;
-            
+
             data.colors.forEach((color, index) => {
                 if (color && color.id) {
                     const oldId = String(color.id);
@@ -273,7 +276,7 @@ export async function initDeveloperMap(options) {
                 }
             });
         }
-        
+
         return changed;
     }
 
@@ -586,7 +589,7 @@ export async function initDeveloperMap(options) {
     // Apply colors to CSS custom properties
     function applyColors(colors) {
         if (!colors || !Array.isArray(colors)) return;
-        
+
         const colorMap = {
             'Farba tlačidiel': '--dm-button-color',
         };
@@ -793,17 +796,17 @@ export async function initDeveloperMap(options) {
     // Apply selected font to CSS
     function applySelectedFont(fontData) {
         if (!fontData || !fontData.value) return;
-        
+
         // Apply font to root element - this will cascade to all children
         const fontFamily = fontData.value;
-        
+
         let fontStyleElement = document.getElementById('dm-font-styles');
         if (!fontStyleElement) {
             fontStyleElement = document.createElement('style');
             fontStyleElement.id = 'dm-font-styles';
             document.head.appendChild(fontStyleElement);
         }
-        
+
         // Use CSS custom property to make font changes easier
         fontStyleElement.textContent = `
             #dm-root.dm-root {
@@ -867,16 +870,16 @@ export async function initDeveloperMap(options) {
         // Generate CSS for each status
         const cssRules = statuses.map((status) => {
             if (!status || !status.label || !status.color) return '';
-            
+
             const className = slugifyStatus(status.label);
             const color = status.color;
             const rgb = hexToRgb(color);
-            
+
             if (!rgb) return '';
 
             // Generate background with alpha transparency and text color
             const bgColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`;
-            
+
             // Use the status color for text
             const textColor = color;
 
@@ -1035,12 +1038,12 @@ export async function initDeveloperMap(options) {
         }
         let changed = false;
         data.types = data.types.map((type) => {
-                if (type && typeof type === 'object') {
-                    let nextId = type.id;
-                    if (nextId === null || nextId === undefined) {
-                        nextId = generateId('type');
-                        changed = true;
-                    } else {
+            if (type && typeof type === 'object') {
+                let nextId = type.id;
+                if (nextId === null || nextId === undefined) {
+                    nextId = generateId('type');
+                    changed = true;
+                } else {
                     const strId = String(nextId).trim();
                     if (!strId) {
                         nextId = generateId('type');
@@ -1290,11 +1293,11 @@ export async function initDeveloperMap(options) {
 
         const children = Array.isArray(region.children)
             ? region.children
-                  .map((childId) => {
-                      const str = String(childId ?? '').trim();
-                      return str ? str : null;
-                  })
-                  .filter(Boolean)
+                .map((childId) => {
+                    const str = String(childId ?? '').trim();
+                    return str ? str : null;
+                })
+                .filter(Boolean)
             : [];
 
         const next = {
@@ -1390,12 +1393,12 @@ export async function initDeveloperMap(options) {
                     meta:
                         entity.meta && typeof entity.meta === 'object'
                             ? (() => {
-                                  const metaCopy = { ...entity.meta };
-                                  if (Object.prototype.hasOwnProperty.call(metaCopy, 'hatchClass')) {
-                                      delete metaCopy.hatchClass;
-                                  }
-                                  return metaCopy;
-                              })()
+                                const metaCopy = { ...entity.meta };
+                                if (Object.prototype.hasOwnProperty.call(metaCopy, 'hatchClass')) {
+                                    delete metaCopy.hatchClass;
+                                }
+                                return metaCopy;
+                            })()
                             : undefined,
                 },
                 fallbackLabel,
@@ -1658,8 +1661,8 @@ export async function initDeveloperMap(options) {
                         const statusLabel =
                             resolvedStatusId && validIds.has(resolvedStatusId)
                                 ? data.statuses.find(
-                                      (status) => sanitiseStatusId(status?.id) === resolvedStatusId,
-                                  )?.label ?? region.statusLabel ?? ''
+                                    (status) => sanitiseStatusId(status?.id) === resolvedStatusId,
+                                )?.label ?? region.statusLabel ?? ''
                                 : region.statusLabel ?? '';
 
                         const normalisedGeometry = normaliseRegionGeometryPoints(
@@ -1771,7 +1774,7 @@ export async function initDeveloperMap(options) {
         saveProjects(data.projects);
     }
     applyStoredImages(data.projects);
-    
+
     // Vyčisti orphan obrázky (obrázky pre neexistujúce projekty/lokality)
     cleanupOrphanImages(data.projects);
 
@@ -1824,7 +1827,7 @@ export async function initDeveloperMap(options) {
 
     function generateId(prefix) {
         const safePrefix = prefix || 'entity';
-        
+
         // Get the appropriate collection based on prefix
         let collection = [];
         switch (safePrefix) {
@@ -1846,7 +1849,7 @@ export async function initDeveloperMap(options) {
                 break;
             case 'region':
                 // Get all regions from all floors in all projects
-                collection = (data.projects || []).flatMap(p => 
+                collection = (data.projects || []).flatMap(p =>
                     (p.floors || []).flatMap(f => f.regions || [])
                 );
                 break;
@@ -1855,11 +1858,11 @@ export async function initDeveloperMap(options) {
                 const randomPart = Math.random().toString(36).slice(2, 8);
                 return `${safePrefix}-${randomPart}`;
         }
-        
+
         // Find the highest numeric ID in the collection
         let maxNumber = 0;
         const pattern = new RegExp(`^${safePrefix}-(\\d+)$`);
-        
+
         collection.forEach(item => {
             if (item && item.id) {
                 const match = String(item.id).match(pattern);
@@ -1871,7 +1874,7 @@ export async function initDeveloperMap(options) {
                 }
             }
         });
-        
+
         // Return next sequential ID
         return `${safePrefix}-${maxNumber + 1}`;
     }
@@ -1918,14 +1921,14 @@ export async function initDeveloperMap(options) {
         const form = root.querySelector('.dm-modal__form');
         const typeForm = root.querySelector('[data-dm-type-form]');
         const statusForm = root.querySelector('[data-dm-status-form]');
-        
+
         // Handle status form
         if (statusForm) {
             const statusId = statusForm.getAttribute('data-dm-status-id') || '';
             const nameInput = statusForm.querySelector('[data-dm-status-name]');
             const colorInput = statusForm.querySelector('[data-dm-status-color]');
             const hexInput = statusForm.querySelector('[data-dm-status-hex]');
-            
+
             return {
                 elements: {
                     statusIdInput: { value: statusId },
@@ -1935,14 +1938,14 @@ export async function initDeveloperMap(options) {
                 },
             };
         }
-        
+
         // Handle type form
         if (typeForm) {
             const typeId = typeForm.getAttribute('data-dm-type-id') || '';
             const nameInput = typeForm.querySelector('[data-dm-type-name]');
             const colorInput = typeForm.querySelector('[data-dm-type-color]');
             const hexInput = typeForm.querySelector('[data-dm-type-hex]');
-            
+
             return {
                 elements: {
                     typeIdInput: { value: typeId },
@@ -1952,7 +1955,7 @@ export async function initDeveloperMap(options) {
                 },
             };
         }
-        
+
         // Handle map form
         if (!form) {
             return null;
@@ -2002,7 +2005,7 @@ export async function initDeveloperMap(options) {
         const statusSelect = form.querySelector('select[data-dm-field="location-status"]');
         const parentSelect = form.querySelector('select[data-dm-field="parent"]');
         const urlInput = form.querySelector('input[data-dm-field="url"]');
-    const detailUrlInput = form.querySelector('input[data-dm-field="detail-url"]');
+        const detailUrlInput = form.querySelector('input[data-dm-field="detail-url"]');
         const areaInput = form.querySelector('input[data-dm-field="area"]');
         const suffixInput = form.querySelector('input[data-dm-field="suffix"]');
         const prefixInput = form.querySelector('input[data-dm-field="prefix"]');
@@ -2044,7 +2047,7 @@ export async function initDeveloperMap(options) {
             return '';
         })();
         const urlValue = urlInput ? urlInput.value.trim() : '';
-    const detailUrlValue = detailUrlInput ? detailUrlInput.value.trim() : '';
+        const detailUrlValue = detailUrlInput ? detailUrlInput.value.trim() : '';
         const areaValue = areaInput ? areaInput.value.trim() : '';
         const suffixValue = suffixInput ? suffixInput.value.trim() : 'm²';
         const prefixValue = prefixInput ? prefixInput.value.trim() : '';
@@ -2141,10 +2144,10 @@ export async function initDeveloperMap(options) {
     function setState(patch) {
         const focusState = captureFocusState();
         const next = typeof patch === 'function' ? patch(state) : patch;
-        
+
         // WP Admin Layout Manager sa už nedestroyuje - zostáva aktívny pre všetky modály
         // Manager sa automaticky refresh-uje v render() cez ensureWPAdminLayout()
-        
+
         Object.assign(state, next);
         render();
         restoreFocusState(focusState);
@@ -2382,14 +2385,15 @@ export async function initDeveloperMap(options) {
     }
 
     function render() {
-        root.innerHTML = [renderAppShell(state, data), renderModal(state, data)].join('');
+        root.innerHTML = [renderAppShell(state, data, { renderHeader, assetsBase }), renderModal(state, data)].join('');
         applyStatusStyles(data.statuses);
         attachEventHandlers();
+        adjustSearchWidth();
         enhanceSelects();
         initFloatingFieldState();
         enhanceDrawModal();
         restoreExpandedProjects();
-        
+
         // Inicializuj/Refresh WP Admin Layout po každom renderi
         // requestAnimationFrame zabezpečí, že DOM je ready pred aplikovaním offsetov
         requestAnimationFrame(() => {
@@ -2404,13 +2408,33 @@ export async function initDeveloperMap(options) {
         expandedIds.forEach((projectId) => {
             const parentRow = root.querySelector(`[data-dm-parent-id="${projectId}"]`);
             const toggleButton = root.querySelector(`[data-dm-toggle="${projectId}"]`);
-            
+
             if (parentRow && toggleButton) {
                 parentRow.classList.add('is-expanded');
                 toggleButton.setAttribute('aria-expanded', 'true');
                 toggleButton.setAttribute('aria-label', 'Zabaliť poschodia');
             }
         });
+    }
+
+    function adjustSearchWidth() {
+        const searchInput = root.querySelector('[data-dm-role="search"]');
+        if (!searchInput) return;
+
+        const searchContainer = searchInput.parentElement;
+        if (!searchContainer) return;
+
+        // Reset inline styles so CSS media queries always take over
+        searchContainer.style.maxWidth = '';
+        searchContainer.style.minWidth = '';
+        searchContainer.style.flexGrow = '';
+        searchContainer.style.width = '';
+
+        // For <= 620px force full width like buttons
+        if (window.innerWidth <= 620) {
+            searchContainer.style.width = '100%';
+            searchContainer.style.flexGrow = '1';
+        }
     }
 
     function attachEventHandlers() {
@@ -2739,14 +2763,14 @@ export async function initDeveloperMap(options) {
         colorInputs.forEach((input) => {
             const colorId = input.getAttribute('data-dm-color-input');
             const textInput = root.querySelector(`[data-dm-color-text="${colorId}"]`);
-            
+
             if (textInput) {
                 input.addEventListener('input', (event) => {
                     textInput.value = event.target.value;
                     updateFieldFilledState(textInput);
                     updateFieldFilledState(input);
                 });
-                
+
                 textInput.addEventListener('input', (event) => {
                     const value = event.target.value.trim();
                     if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
@@ -2763,11 +2787,11 @@ export async function initDeveloperMap(options) {
             button.addEventListener('click', () => {
                 const colorId = button.getAttribute('data-dm-save-color');
                 const colorInput = root.querySelector(`[data-dm-color-input="${colorId}"]`);
-                
+
                 if (colorInput) {
                     const newValue = colorInput.value;
                     const colorIndex = data.colors.findIndex((c) => c.id === colorId);
-                    
+
                     if (colorIndex !== -1) {
                         data.colors[colorIndex].value = newValue;
                         saveColors(data.colors);
@@ -2801,12 +2825,12 @@ export async function initDeveloperMap(options) {
         const elementsWithTitle = root.querySelectorAll('[title]');
         elementsWithTitle.forEach((element) => {
             const originalTitle = element.getAttribute('title');
-            
+
             element.addEventListener('mouseenter', () => {
                 element.setAttribute('data-dm-title', originalTitle);
                 element.removeAttribute('title');
             });
-            
+
             element.addEventListener('mouseleave', () => {
                 const storedTitle = element.getAttribute('data-dm-title');
                 if (storedTitle) {
@@ -2895,7 +2919,7 @@ export async function initDeveloperMap(options) {
                 url,
                 alt: details.alt || details.title || '',
             };
-            
+
             // Capture current form values before re-rendering
             const currentFormData = {};
             if (state.modal) {
@@ -2925,7 +2949,7 @@ export async function initDeveloperMap(options) {
                     }
                 }
             }
-            
+
             setState((prev) => {
                 if (!prev.modal) {
                     return {};
@@ -3220,7 +3244,7 @@ export async function initDeveloperMap(options) {
         const imageSelection = modalState.imageSelection ?? null;
         const imageData = imageSelection?.url ?? modalState.imagePreview ?? null;
         const previousImageId = result.item.image_id ?? null;
-        
+
         // Update location fields
         result.item.name = fields.name;
         result.item.type = fields.type;
@@ -3237,7 +3261,7 @@ export async function initDeveloperMap(options) {
         result.item.designation = fields.designation;
         result.item.rent = fields.rent;
         result.item.price = fields.price;
-        
+
         // Update image if provided
         if (imageData) {
             result.item.image = imageData;
@@ -3360,9 +3384,9 @@ export async function initDeveloperMap(options) {
                 statusId: sanitiseStatusId(fields.statusId || data.statuses.find((s) => String(s.label ?? '').trim() === String(fields.status ?? '').trim())?.id),
                 regions: [],
             };
-            
+
             parentProject.floors.push(newFloor);
-            
+
             if (imageSelection?.id) {
                 persistEntityImage('floor', newFloorId, imageSelection);
             }
@@ -3675,7 +3699,7 @@ export async function initDeveloperMap(options) {
             if (projectIndex !== -1) {
                 const removedId = String(result.item.id);
                 const projectToDelete = data.projects[projectIndex];
-                
+
                 // Najprv vymaž všetky obrázky pre tento projekt a jeho lokality
                 if (storageCache.images && typeof storageCache.images === 'object') {
                     // Vymaž obrázok projektu
@@ -3683,7 +3707,7 @@ export async function initDeveloperMap(options) {
                     if (storageCache.images[projectImageKey]) {
                         delete storageCache.images[projectImageKey];
                     }
-                    
+
                     // Vymaž obrázky všetkých lokalít
                     if (Array.isArray(projectToDelete.floors)) {
                         projectToDelete.floors.forEach((floor) => {
@@ -3693,18 +3717,18 @@ export async function initDeveloperMap(options) {
                             }
                         });
                     }
-                    
+
                     // Ulož aktualizované obrázky
                     persistValue('dm-images', storageCache.images);
                 }
-                
+
                 // Rekurzívne vymaž všetky podradené projekty (mapy) a ich lokality
                 const deleteProjectRecursively = (projectId) => {
                     // Nájdi všetky podradené projekty
-                    const childProjects = data.projects.filter((p) => 
+                    const childProjects = data.projects.filter((p) =>
                         String(p?.parentId ?? '') === String(projectId)
                     );
-                    
+
                     // Rekurzívne vymaž každý podradený projekt
                     childProjects.forEach((childProject) => {
                         // Vymaž obrázky podradených projektov
@@ -3713,7 +3737,7 @@ export async function initDeveloperMap(options) {
                             if (storageCache.images[childProjectImageKey]) {
                                 delete storageCache.images[childProjectImageKey];
                             }
-                            
+
                             // Vymaž obrázky lokalít podradených projektov
                             if (Array.isArray(childProject.floors)) {
                                 childProject.floors.forEach((floor) => {
@@ -3724,10 +3748,10 @@ export async function initDeveloperMap(options) {
                                 });
                             }
                         }
-                        
+
                         // Najprv vymaž všetky podradené projekty tohto projektu
                         deleteProjectRecursively(childProject.id);
-                        
+
                         // Potom vymaž tento projekt
                         const childIndex = data.projects.findIndex((p) => p.id === childProject.id);
                         if (childIndex !== -1) {
@@ -3735,22 +3759,22 @@ export async function initDeveloperMap(options) {
                         }
                     });
                 };
-                
+
                 // Vymaž všetky podradené projekty
                 deleteProjectRecursively(removedId);
-                
+
                 // Vymaž samotný projekt z poľa (znovu nájdi index, pretože sa mohol zmeniť)
                 const finalIndex = data.projects.findIndex((p) => p.id === result.item.id);
                 if (finalIndex !== -1) {
                     data.projects.splice(finalIndex, 1);
                 }
-                
+
                 // Ak bol vymazaný aktívny projekt, nastav nový aktívny projekt
                 let newActiveProjectId = state.activeProjectId;
                 if (state.activeProjectId === result.item.id) {
                     newActiveProjectId = data.projects[0]?.id ?? null;
                 }
-                
+
                 // Ulož projekty do databázy
                 saveProjects(data.projects);
                 setState({ modal: null, activeProjectId: newActiveProjectId, view: APP_VIEWS.MAPS, mapSection: MAP_SECTIONS.LIST });
@@ -3759,7 +3783,7 @@ export async function initDeveloperMap(options) {
             // Vymazanie lokality z projektu
             if (Array.isArray(result.parent.floors)) {
                 const floorToDelete = result.item;
-                
+
                 // Vymaž obrázok lokality
                 if (storageCache.images && typeof storageCache.images === 'object') {
                     const floorImageKey = `floor__${floorToDelete.id}`;
@@ -3768,10 +3792,10 @@ export async function initDeveloperMap(options) {
                         persistValue('dm-images', storageCache.images);
                     }
                 }
-                
+
                 // Vymaž lokalitu z projektu
                 result.parent.floors = result.parent.floors.filter((floor) => floor.id !== result.item.id);
-                
+
                 // Ulož projekty do databázy
                 saveProjects(data.projects);
                 setState({ modal: null });
@@ -4233,29 +4257,29 @@ export async function initDeveloperMap(options) {
         if (!drawRoot) {
             return;
         }
-        
+
         // Bind tab switching in inspector panel
         bindEditorTabs();
-        
+
         // Initialize WordPress admin layout manager
         initWPAdminLayout();
-        
+
         // Initialize floating labels for editor fields
         const editorContext = root.querySelector('.dm-editor');
         if (editorContext) {
             initFloatingFieldState(editorContext);
         }
-        
+
         initDrawSurface(drawRoot);
     }
-    
+
     function initWPAdminLayout() {
         // Destroy existing manager if any
         if (wpAdminLayoutManager) {
             wpAdminLayoutManager.destroy();
             wpAdminLayoutManager = null;
         }
-        
+
         // Initialize new manager pre editor aj modály
         try {
             wpAdminLayoutManager = new WPAdminLayoutManager(['.dm-editor-overlay', '.dm-modal-overlay']);
@@ -4265,7 +4289,7 @@ export async function initDeveloperMap(options) {
             wpAdminLayoutManager = null;
         }
     }
-    
+
     function ensureWPAdminLayout() {
         // Ak manager ešte neexistuje, inicializuj ho
         if (!wpAdminLayoutManager) {
@@ -4274,7 +4298,7 @@ export async function initDeveloperMap(options) {
             // Ak už existuje, len refresh targets (nové modály)
             wpAdminLayoutManager.forceUpdate();
         }
-        
+
         // Extra forceUpdate po malom delay pre istotu (nové modály môžu potrebovať čas na render)
         setTimeout(() => {
             if (wpAdminLayoutManager) {
@@ -4282,22 +4306,22 @@ export async function initDeveloperMap(options) {
             }
         }, 50);
     }
-    
+
     function refreshWPAdminLayout() {
         // Force update pre dynamicky pridané/odstránené modály
         if (wpAdminLayoutManager) {
             wpAdminLayoutManager.forceUpdate();
         }
     }
-    
+
     function bindEditorTabs() {
         const tabs = root.querySelectorAll('.dm-editor__tab[data-dm-tab]');
         const panels = root.querySelectorAll('.dm-editor__tab-panel[data-dm-tab-panel]');
-        
+
         tabs.forEach((tab) => {
             tab.addEventListener('click', () => {
                 const targetPanel = tab.getAttribute('data-dm-tab');
-                
+
                 // Update tabs
                 tabs.forEach((t) => {
                     t.classList.remove('dm-editor__tab--active');
@@ -4305,7 +4329,7 @@ export async function initDeveloperMap(options) {
                 });
                 tab.classList.add('dm-editor__tab--active');
                 tab.setAttribute('aria-selected', 'true');
-                
+
                 // Update panels
                 panels.forEach((p) => {
                     const panelId = p.getAttribute('data-dm-tab-panel');
@@ -4415,7 +4439,7 @@ export async function initDeveloperMap(options) {
         const stage = drawRoot.querySelector('.dm-draw__stage');
         const canvas = drawRoot.querySelector('.dm-draw__canvas');
         const resetButton = root.querySelector('[data-dm-reset-draw]');
-    const revertButton = root.querySelector('[data-dm-revert-draw]');
+        const revertButton = root.querySelector('[data-dm-revert-draw]');
         const saveButton = root.querySelector('[data-dm-save-draw]');
         const regionList = drawRoot.querySelector('[data-dm-region-list]');
         const addRegionButton = drawRoot.querySelector('[data-dm-add-region]');
@@ -4804,11 +4828,11 @@ export async function initDeveloperMap(options) {
             );
             const children = Array.isArray(source.children)
                 ? source.children
-                      .map((childId) => {
-                          const str = String(childId ?? '').trim();
-                          return str ? str : null;
-                      })
-                      .filter(Boolean)
+                    .map((childId) => {
+                        const str = String(childId ?? '').trim();
+                        return str ? str : null;
+                    })
+                    .filter(Boolean)
                 : [];
             const meta = source.meta && typeof source.meta === 'object' ? { ...source.meta } : {};
             if (meta && Object.prototype.hasOwnProperty.call(meta, 'hatchClass')) {
@@ -4997,7 +5021,7 @@ export async function initDeveloperMap(options) {
             if (isFullscreen) {
                 exitFullscreen();
             }
-            
+
             window.removeEventListener('resize', handleResize);
             mutationObserver.disconnect();
             stage.removeEventListener('wheel', preventWheelZoom);
@@ -5142,10 +5166,10 @@ export async function initDeveloperMap(options) {
                 nameEl.className = 'dm-editor__zone-name';
                 nameEl.textContent = region.label ?? region.name ?? `Zóna ${index + 1}`;
                 trigger.append(nameEl);
-                
+
                 // Always count from the region.children array (updated by checkbox listeners)
                 // Filter out empty/invalid values and count both maps and locations
-                const validChildren = Array.isArray(region.children) 
+                const validChildren = Array.isArray(region.children)
                     ? region.children.filter((child) => {
                         const val = String(child ?? '').trim();
                         if (!val || val === 'undefined' || val === 'null') {
@@ -5156,7 +5180,7 @@ export async function initDeveloperMap(options) {
                     })
                     : [];
                 const childCount = validChildren.length;
-                
+
                 const metaEl = document.createElement('span');
                 metaEl.className = 'dm-editor__zone-meta';
                 metaEl.textContent = childCount > 0 ? `Prepojených: ${childCount}` : 'Bez prepojení';
@@ -5331,14 +5355,14 @@ export async function initDeveloperMap(options) {
                 };
 
                 const childType = input.dataset.dmChildType ?? 'location';
-                
+
                 // Pridaj alebo odober primárnu hodnotu ako prvé
                 if (input.checked) {
                     current.add(value);
                 } else {
                     current.delete(value);
                 }
-                
+
                 // Potom aplikuj na potomkov ak je to mapa
                 if (childType === 'map') {
                     const descendantKeys = String(input.dataset.dmMapDescendants ?? '')
@@ -5461,11 +5485,11 @@ export async function initDeveloperMap(options) {
             const pointString = pointsToString(points);
             const closedString = pointsToClosedString(points);
             const hasPolygon = points.length >= 3;
-            
+
             // Update fill with hatching pattern if polygon is closed
             const region = getActiveRegion();
             const isClosed = polygonClosed && hasPolygon;
-            
+
             if (isClosed) {
                 const hatchId = overlay.getAttribute('data-dm-hatch-id');
                 const fillValue = hatchId ? `url(#${hatchId})` : 'rgba(72, 198, 116, 0.18)';
@@ -5482,10 +5506,10 @@ export async function initDeveloperMap(options) {
                 fill.style.fill = 'none';
                 fill.classList.remove('is-active', 'is-dragging');
             }
-            
+
             outline.setAttribute('points', hasPolygon ? closedString : pointString);
             baseline.setAttribute('points', points.length >= 2 ? pointString : '');
-            
+
             // Update handle positions
             points.forEach((point, index) => {
                 const handleGroup = handlesLayer.querySelector(`[data-handle-group="${index}"]`);
@@ -5619,22 +5643,22 @@ export async function initDeveloperMap(options) {
             const target = event.currentTarget;
             const index = Number(target.getAttribute('data-index'));
             if (!Number.isFinite(index)) return;
-            
+
             // Delete vertex
             points.splice(index, 1);
             if (cursorAnchorIndex >= points.length) {
                 cursorAnchorIndex = Math.max(0, points.length - 1);
             }
-            
+
             // Update polygonClosed state
             const region = getActiveRegion();
             polygonClosed = points.length >= 3 && region && getRegionClosed(region);
-            
+
             // Update closed state in region meta
             if (region) {
                 setRegionClosed(region, polygonClosed);
             }
-            
+
             buildHandles();
             redraw();
         }
@@ -5668,16 +5692,16 @@ export async function initDeveloperMap(options) {
                     if (cursorAnchorIndex >= points.length) {
                         cursorAnchorIndex = Math.max(0, points.length - 1);
                     }
-                    
+
                     // Update polygonClosed state
                     const region = getActiveRegion();
                     polygonClosed = points.length >= 3 && region && getRegionClosed(region);
-                    
+
                     // Update closed state in region meta
                     if (region) {
                         setRegionClosed(region, polygonClosed);
                     }
-                    
+
                     buildHandles();
                     redraw();
                     break;
@@ -5698,7 +5722,7 @@ export async function initDeveloperMap(options) {
             activeHandle = target;
             cursorAnchorIndex = activeIndex;
             preventClick = false;
-            
+
             // Highlight both hit area and visual node
             activeHandle.classList.add('is-active');
             const handleGroup = activeHandle.parentElement;
@@ -5706,7 +5730,7 @@ export async function initDeveloperMap(options) {
             if (nodeCircle) {
                 nodeCircle.classList.add('is-active');
             }
-            
+
             activeHandle.setPointerCapture(event.pointerId);
             event.preventDefault();
             window.addEventListener('pointermove', handleDrag);
@@ -5729,11 +5753,11 @@ export async function initDeveloperMap(options) {
             }
             const { x, y } = toViewBoxCoordinates(event);
             points[activeIndex] = clampPoint({ x, y });
-            
+
             if (activeHandle) {
                 activeHandle.releasePointerCapture(event.pointerId);
                 activeHandle.classList.remove('is-active');
-                
+
                 // Remove highlight from visual node
                 const handleGroup = activeHandle.parentElement;
                 const nodeCircle = handleGroup?.querySelector('.dm-draw__handle-node');
@@ -5741,7 +5765,7 @@ export async function initDeveloperMap(options) {
                     nodeCircle.classList.remove('is-active');
                 }
             }
-            
+
             activeHandle = null;
             activeIndex = -1;
             window.removeEventListener('pointermove', handleDrag);
@@ -5756,12 +5780,12 @@ export async function initDeveloperMap(options) {
             if (event.button !== 0) {
                 return;
             }
-            
+
             // Prevent adding point if clicking on handle or during drag
             if (event.target !== overlay || preventClick) {
                 return;
             }
-            
+
             const { x, y } = toViewBoxCoordinates(event);
             const point = clampPoint({ x, y });
             insertPoint(point);
@@ -5770,7 +5794,7 @@ export async function initDeveloperMap(options) {
         function insertPoint(point) {
             points.push(point);
             cursorAnchorIndex = points.length - 1;
-            
+
             // Update polygonClosed state when we have 3+ points
             const region = getActiveRegion();
             if (points.length >= 3) {
@@ -5785,7 +5809,7 @@ export async function initDeveloperMap(options) {
                     setRegionClosed(region, false);
                 }
             }
-            
+
             buildHandles();
             redraw();
         }
@@ -5894,15 +5918,15 @@ export async function initDeveloperMap(options) {
                             const statusLabel = getStatusLabel(statusId) || region.statusLabel || '';
                             let geometryPoints = Array.isArray(region.geometry?.points)
                                 ? region.geometry.points
-                                      .map((point) => {
-                                          const x = Number(point?.[0]);
-                                          const y = Number(point?.[1]);
-                                          if (!Number.isFinite(x) || !Number.isFinite(y)) {
-                                              return null;
-                                          }
-                                          return [Number(x.toFixed(4)), Number(y.toFixed(4))];
-                                      })
-                                      .filter(Boolean)
+                                    .map((point) => {
+                                        const x = Number(point?.[0]);
+                                        const y = Number(point?.[1]);
+                                        if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                                            return null;
+                                        }
+                                        return [Number(x.toFixed(4)), Number(y.toFixed(4))];
+                                    })
+                                    .filter(Boolean)
                                 : [];
                             if (geometryPoints.length < 3) {
                                 const previousRegion = previousRegionsMap.get(String(region.id ?? ''));
@@ -5974,11 +5998,11 @@ export async function initDeveloperMap(options) {
                             }
                             const children = Array.isArray(region.children)
                                 ? region.children
-                                      .map((child) => {
-                                          const value = String(child ?? '').trim();
-                                          return value || null;
-                                      })
-                                      .filter(Boolean)
+                                    .map((child) => {
+                                        const value = String(child ?? '').trim();
+                                        return value || null;
+                                    })
+                                    .filter(Boolean)
                                 : [];
                             const payload = {
                                 id: String(region.id ?? generateId('region')),
@@ -6044,67 +6068,67 @@ export async function initDeveloperMap(options) {
         let fullscreenPortal = null;
         let fullscreenBackdrop = null;
         let originalParent = null;
-        
+
         function enterFullscreen() {
             if (isFullscreen) return;
-            
+
             fullscreenScrollTop = window.pageYOffset || document.documentElement.scrollTop;
             isFullscreen = true;
-            
+
             // Create backdrop
             fullscreenBackdrop = document.createElement('div');
             fullscreenBackdrop.className = 'dm-draw-fullscreen-backdrop';
             fullscreenBackdrop.addEventListener('click', exitFullscreen);
             document.body.appendChild(fullscreenBackdrop);
-            
+
             // Store original parent
             originalParent = stage.parentElement;
-            
+
             // Move stage to body (portal pattern - no cloning)
             document.body.classList.add('dm-draw-fullscreen-active');
             stage.classList.add('dm-draw__stage--fullscreen');
             document.body.appendChild(stage);
-            
+
             fullscreenToggle.setAttribute('aria-pressed', 'true');
             fullscreenToggle.setAttribute('aria-label', 'Ukončiť režim celej obrazovky');
-            
+
             // Reposition cursor after layout change
             requestAnimationFrame(() => {
                 positionCursor();
             });
         }
-        
+
         function exitFullscreen() {
             if (!isFullscreen) return;
-            
+
             isFullscreen = false;
-            
+
             // Remove backdrop
             if (fullscreenBackdrop) {
                 fullscreenBackdrop.removeEventListener('click', exitFullscreen);
                 fullscreenBackdrop.remove();
                 fullscreenBackdrop = null;
             }
-            
+
             // Move stage back to original parent
             document.body.classList.remove('dm-draw-fullscreen-active');
             stage.classList.remove('dm-draw__stage--fullscreen');
-            
+
             if (originalParent) {
                 originalParent.appendChild(stage);
             }
-            
+
             fullscreenToggle.setAttribute('aria-pressed', 'false');
             fullscreenToggle.setAttribute('aria-label', 'Zobraziť na celú obrazovku');
-            
+
             window.scrollTo(0, fullscreenScrollTop);
-            
+
             // Reposition cursor after layout change
             requestAnimationFrame(() => {
                 positionCursor();
             });
         }
-        
+
         // Fullscreen toggle
         if (fullscreenToggle) {
             fullscreenToggle.addEventListener('click', () => {
@@ -6118,15 +6142,15 @@ export async function initDeveloperMap(options) {
 
         // Polygon drag functionality
         let polygonDragSession = null;
-        
+
         function startPolygonDrag(event) {
             if (!polygonClosed || points.length < 3) {
                 return;
             }
-            
+
             event.preventDefault();
             event.stopPropagation();
-            
+
             const startCoords = toViewBoxCoordinates(event);
             polygonDragSession = {
                 startX: startCoords.x,
@@ -6134,40 +6158,40 @@ export async function initDeveloperMap(options) {
                 originalPoints: points.map(p => ({ x: p.x, y: p.y })),
                 pointerId: event.pointerId,
             };
-            
+
             fill.classList.add('is-dragging');
             fill.setPointerCapture(event.pointerId);
-            
+
             preventClick = true;
-            
+
             window.addEventListener('pointermove', handlePolygonDrag);
             window.addEventListener('pointerup', endPolygonDrag, { once: true });
         }
-        
+
         function handlePolygonDrag(event) {
             if (!polygonDragSession) {
                 return;
             }
-            
+
             const currentCoords = toViewBoxCoordinates(event);
             const deltaX = currentCoords.x - polygonDragSession.startX;
             const deltaY = currentCoords.y - polygonDragSession.startY;
-            
+
             // Move all points, clamping to bounds
-            points = polygonDragSession.originalPoints.map(p => 
+            points = polygonDragSession.originalPoints.map(p =>
                 clampPoint({ x: p.x + deltaX, y: p.y + deltaY })
             );
-            
+
             scheduleRedraw();
         }
-        
+
         function endPolygonDrag(event) {
             if (!polygonDragSession) {
                 return;
             }
-            
+
             fill.classList.remove('is-dragging');
-            
+
             if (fill.releasePointerCapture) {
                 try {
                     fill.releasePointerCapture(polygonDragSession.pointerId);
@@ -6175,17 +6199,17 @@ export async function initDeveloperMap(options) {
                     // Ignore if capture was already released
                 }
             }
-            
+
             window.removeEventListener('pointermove', handlePolygonDrag);
             polygonDragSession = null;
-            
+
             setTimeout(() => {
                 preventClick = false;
             }, 100);
-            
+
             redraw();
         }
-        
+
         // Attach polygon drag listeners
         fill.addEventListener('pointerdown', startPolygonDrag, { passive: false });
 
@@ -6196,7 +6220,7 @@ export async function initDeveloperMap(options) {
         overlay.addEventListener('contextmenu', (event) => {
             event.preventDefault();
         });
-        
+
         overlay.addEventListener('pointerdown', handleOverlayPointerDown, { passive: false });
 
         buildHandles();
@@ -6213,23 +6237,23 @@ export async function initDeveloperMap(options) {
     root.addEventListener('click', (event) => {
         const trigger = event.target.closest('[data-dm-region-trigger]');
         if (!trigger) return;
-        
+
         // Only handle if we're in a draw modal
         if (!state.modal || state.modal.type !== 'draw-coordinates') return;
-        
+
         // Verify the click is within the region list
         const clickedList = event.target.closest('[data-dm-region-list]');
         if (!clickedList) return;
-        
+
         const regionId = trigger.getAttribute('data-dm-region-trigger');
-        
+
         // Find the current drawRoot to get activeRegionId
         const drawRoot = root.querySelector('[data-dm-draw-root]');
         if (!drawRoot) return;
-        
+
         const currentActiveRegion = drawRoot.dataset.dmActiveRegion ?? '';
         if (!regionId || regionId === String(currentActiveRegion)) return;
-        
+
         // Update UI immediately to show active state - use new editor classes
         const regionList = clickedList;
         const allItems = regionList.querySelectorAll('.dm-editor__zone-item, .dm-draw__region-item');
@@ -6241,7 +6265,7 @@ export async function initDeveloperMap(options) {
                 item.classList.remove('is-active', 'dm-editor__zone-item--active');
             }
         });
-        
+
         // Dispatch custom event to initDrawSurface to set active region
         // This maintains separation of concerns - UI state is updated here,
         // but the actual region switching logic is handled by initDrawSurface
@@ -6254,20 +6278,20 @@ export async function initDeveloperMap(options) {
     root.addEventListener('click', (event) => {
         const tabButton = event.target.closest('[data-dm-tab]');
         if (!tabButton) return;
-        
+
         // Only handle if we're in draw editor
         if (!state.modal || state.modal.type !== 'draw-coordinates') return;
-        
+
         const targetTab = tabButton.getAttribute('data-dm-tab');
         if (!targetTab) return;
-        
+
         // Find all tabs and panels in the inspector
         const inspectorPanel = tabButton.closest('.dm-editor__panel--right');
         if (!inspectorPanel) return;
-        
+
         const allTabs = inspectorPanel.querySelectorAll('[data-dm-tab]');
         const allPanels = inspectorPanel.querySelectorAll('[data-dm-tab-panel]');
-        
+
         // Update tab buttons
         allTabs.forEach(tab => {
             const tabName = tab.getAttribute('data-dm-tab');
@@ -6279,7 +6303,7 @@ export async function initDeveloperMap(options) {
                 tab.setAttribute('aria-selected', 'false');
             }
         });
-        
+
         // Update tab panels
         allPanels.forEach(panel => {
             const panelName = panel.getAttribute('data-dm-tab-panel');
