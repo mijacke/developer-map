@@ -1,6 +1,6 @@
 /* Developer Map - Compiled CSS */
 /* Generated: 2025-10-31 08:58:33 */
-/* Version: 5.0.14 */
+/* Version: 5.0.15 */
 
 /* === base.css === */
 #dm-root.dm-root {
@@ -2409,6 +2409,11 @@
         minmax(126px, 1.14fr);
 }
 
+.dm-dashboard__table--inventory-public th,
+.dm-dashboard__table--inventory-public td {
+    text-align: center;
+}
+
 .dm-dashboard__table--inventory th {
     font-size: 11px;
     line-height: 1.2;
@@ -3979,7 +3984,7 @@ body:not(.wp-admin) .dm-modal-overlay {
 
 .dm-select__icon {
     position: absolute;
-    right: 52px;
+    right: 40px;
     top: 50%;
     width: 16px;
     height: 10px;

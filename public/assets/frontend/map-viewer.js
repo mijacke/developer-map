@@ -414,14 +414,14 @@
             .dm-dashboard--public .dm-dashboard__table thead tr { background: transparent; border-radius: 0; padding: 0 0 12px; border: none !important; }
             .dm-dashboard--public .dm-dashboard__table th,
             .dm-dashboard--public .dm-dashboard__table td { border: none !important; box-shadow: none !important; background: transparent; }
-            .dm-dashboard--public .dm-dashboard__table th { text-align: left; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.7rem; line-height: 1.2; color: rgba(45, 45, 78, 0.6); white-space: normal; }
+            .dm-dashboard--public .dm-dashboard__table th { text-align: center; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.7rem; line-height: 1.2; color: rgba(45, 45, 78, 0.6); white-space: normal; }
             .dm-dashboard--public .dm-dashboard__table tbody { display: flex; flex-direction: column; gap: 4px; }
             .dm-dashboard--public .dm-dashboard__table tbody tr { padding: 18px 14px; margin: 0 -14px; border-bottom: 1px solid rgba(28, 19, 79, 0.06); border-radius: 14px; background: transparent; background-clip: padding-box; }
             .dm-dashboard--public .dm-dashboard__table tbody tr.is-clickable { cursor: pointer; transition: background-color 0.16s ease, box-shadow 0.16s ease; }
             .dm-dashboard--public .dm-dashboard__table tbody tr.is-clickable:hover,
             .dm-dashboard--public .dm-dashboard__table tbody tr.is-clickable:focus-visible { background: #e4e6eb; box-shadow: inset 0 0 0 1px rgba(28, 19, 79, 0.06); outline: none; }
             .dm-dashboard--public .dm-dashboard__table tbody tr:last-child { border-bottom: none; }
-            .dm-dashboard--public .dm-dashboard__table td { text-align: left; font-size: 0.82rem; line-height: 1.25; color: #1C134F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .dm-dashboard--public .dm-dashboard__table td { text-align: center; font-size: 0.82rem; line-height: 1.25; color: #1C134F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .dm-dashboard--public .dm-dashboard__table td[data-label="Dom/Byt"],
             .dm-dashboard--public .dm-dashboard__table td[data-label="Typ"],
             .dm-dashboard--public .dm-dashboard__table td[data-label="Park."] { font-size: 0.76rem; }
