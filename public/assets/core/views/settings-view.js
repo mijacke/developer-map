@@ -267,13 +267,13 @@ function renderFormPlaceholder(title) {
                 </div>
                 <div class="dm-field">
                     <input required type="text" value="1" autocomplete="off" class="dm-field__input" />
-                    <label class="dm-field__label">Názov<span class="dm-field__required">*</span></label>
+                    <label class="dm-field__label">Byt<span class="dm-field__required">*</span></label>
                     <small>max 100 znakov</small>
                 </div>
                 <div class="dm-field">
-                    <input required type="text" value="l1" autocomplete="off" class="dm-field__input" />
-                    <label class="dm-field__label">Označenie<span class="dm-field__required">*</span></label>
-                    <small>max 5 znakov</small>
+                    <input type="text" value="51,26" autocomplete="off" class="dm-field__input" />
+                    <label class="dm-field__label">Výmera</label>
+                    <small>m²</small>
                 </div>
                 <div class="dm-field">
                     <input required type="url" autocomplete="off" class="dm-field__input" />

@@ -306,8 +306,8 @@
             .dm-map-viewer__card { border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 18px; padding: 24px; background: #ffffff; box-shadow: 0 18px 38px rgba(15, 23, 42, 0.06); display: grid; gap: 24px; }
             .dm-map-viewer__header h3 { margin: 0; font-size: 1.4rem; color: #1c134f; }
             .dm-map-viewer__header p { margin: 8px 0 0; color: #475569; line-height: 1.5; }
-            .dm-map-viewer__surface { position: relative; border-radius: 20px; overflow: hidden; background: #0f172a; }
-            .dm-map-viewer__image { width: 100%; height: auto; display: block; }
+            .dm-map-viewer__surface { position: relative; z-index: 1; border-radius: 20px; overflow: visible; background: transparent; }
+            .dm-map-viewer__image { width: 100%; height: auto; display: block; border-radius: 20px; }
             .dm-map-viewer__overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
             .dm-map-viewer__regions { pointer-events: none; }
             .dm-map-viewer__region { fill: rgba(52, 69, 235, 0.12); stroke: none; pointer-events: auto; transition: fill 0.18s ease, opacity 0.18s ease; opacity: 0.4; outline: none; }
@@ -322,18 +322,27 @@
             .dm-map-viewer__error { padding: 16px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
             .dm-map-viewer__loading { padding: 16px; border-radius: 12px; background: rgba(30, 64, 175, 0.08); color: #1d4ed8; }
             .dm-map-viewer__empty { margin: 0; padding: 16px; border-radius: 12px; background: rgba(15, 118, 110, 0.08); color: #0f766e; }
-            .dm-map-viewer__popover { position: absolute; z-index: 10; display: none; pointer-events: auto; }
+            .dm-map-viewer__popover { position: absolute; z-index: 9999; display: none; pointer-events: auto; }
             .dm-map-viewer__popover.is-visible { display: block; }
-            .dm-map-viewer__popover-card { background: #ffffff; border-radius: 16px; padding: 18px 20px; box-shadow: 0 18px 42px rgba(15, 23, 42, 0.22); min-width: 220px; max-width: 280px; border: 1px solid rgba(15, 23, 42, 0.08); display: flex; flex-direction: column; gap: 12px; }
+            .dm-map-viewer__popover-card { background: #ffffff; border-radius: 16px; padding: 18px 20px; box-shadow: 0 18px 42px rgba(15, 23, 42, 0.22); min-width: 220px; max-width: 300px; border: 1px solid rgba(15, 23, 42, 0.08); display: flex; flex-direction: column; gap: 12px; }
             .dm-map-viewer__popover-summary { font-weight: 600; font-size: 0.95rem; color: #1c134f; text-align: center; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
             .dm-map-viewer__popover-summary strong { color: #16a34a; font-size: 1.05rem; margin-right: 6px; }
+            .dm-map-viewer__popover-apartment { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid rgba(15, 23, 42, 0.08); padding-top: 12px; }
+            .dm-map-viewer__popover-title { margin: 0; color: #1c134f; font-size: 1.05rem; line-height: 1.25; font-weight: 700; text-align: center; }
+            .dm-map-viewer__popover-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 0; }
+            .dm-map-viewer__popover-meta div { min-width: 0; }
+            .dm-map-viewer__popover-meta dt { margin: 0 0 2px; color: rgba(45, 45, 78, 0.58); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+            .dm-map-viewer__popover-meta dd { margin: 0; color: #1c134f; font-size: 0.86rem; font-weight: 700; overflow-wrap: anywhere; }
+            .dm-map-viewer__popover-statuses { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+            .dm-map-viewer__popover-status { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 9px; border: 1px solid var(--dm-popover-status-border, rgba(15, 23, 42, 0.12)); background: var(--dm-popover-status-bg, rgba(15, 23, 42, 0.06)); color: var(--dm-popover-status-color, #1c134f); font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+            .dm-map-viewer__popover-status-count { font-variant-numeric: tabular-nums; }
             .dm-map-viewer__popover-label { display: inline-flex; align-items: center; justify-content: center; padding: 4px 10px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; background: var(--dm-popover-label-bg, rgba(99, 102, 241, 0.12)); color: var(--dm-popover-label-color, #1c134f); border: 1px solid var(--dm-popover-label-border, transparent); }
             .dm-map-viewer__popover-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; color: #334155; }
             .dm-map-viewer__popover-list li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
             .dm-map-viewer__popover-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dm-status-color, #6366f1); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15); }
             .dm-map-viewer__popover-empty { font-size: 0.85rem; color: #64748b; text-align: center; }
-            .dm-map-viewer__popover-cta { border: none; border-radius: 10px; padding: 10px 18px; background: #4d38ff; color: #ffffff; font-weight: 600; font-size: 0.9rem; cursor: pointer; align-self: center; min-width: 140px; text-align: center; transition: transform 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 12px 24px rgba(77, 56, 255, 0.18); }
-            .dm-map-viewer__popover-cta:hover { transform: translateY(-1px); box-shadow: 0 16px 32px rgba(77, 56, 255, 0.26); }
+            .dm-map-viewer__popover-cta { border: 1px solid #276183; border-radius: 10px; padding: 10px 18px; background: #276183; color: #ffffff; font-weight: 600; font-size: 0.9rem; cursor: pointer; align-self: center; min-width: 140px; text-align: center; transition: background-color 0.15s ease, color 0.15s ease; box-shadow: none; }
+            .dm-map-viewer__popover-cta:hover { background: #ffffff; color: #276183; border-color: #276183; box-shadow: none; }
             .dm-map-viewer__popover-cta:active { transform: translateY(0); }
             .dm-map-viewer__tables { margin-top: 32px; display: flex; flex-direction: column; gap: 40px; }
             .dm-dashboard--public {
@@ -388,6 +397,7 @@
             .dm-dashboard--public .dm-dashboard__select-option.is-disabled:focus { background: transparent; color: inherit; transform: none; box-shadow: none; }
             .dm-dashboard--public .dm-dashboard__select-native { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
             .dm-dashboard--public .dm-dashboard__table-wrapper { background: #ffffff; border-radius: 24px; border: 1px solid #d2d2dc; padding: clamp(18px, 3vw, 24px); box-shadow: 0 10px 28px rgba(22, 22, 29, 0.06); }
+            .dm-dashboard--public .dm-dashboard__table-wrapper--inventory { overflow-x: auto; overflow-y: visible; }
             .dm-dashboard--public .dm-dashboard__table {
                 display: flex;
                 flex-direction: column;
@@ -395,23 +405,31 @@
                 border-collapse: separate;
                 border-spacing: 0;
             }
+            .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 920px; }
             .dm-dashboard--public .dm-dashboard__table thead { display: block; }
             .dm-dashboard--public .dm-dashboard__table thead tr,
-            .dm-dashboard--public .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(90px, 0.9fr) minmax(140px, 1.2fr) minmax(90px, 0.9fr) minmax(90px, 0.8fr) minmax(110px, 1fr) minmax(110px, 1fr) minmax(120px, 1fr); gap: 14px; align-items: center; }
+            .dm-dashboard--public .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(50px, 0.5fr) minmax(33px, 0.33fr) minmax(72px, 0.78fr) minmax(70px, 0.76fr) minmax(48px, 0.52fr) minmax(78px, 0.8fr) minmax(40px, 0.38fr) minmax(92px, 0.96fr) minmax(84px, 0.86fr) minmax(90px, 0.92fr) minmax(126px, 1.14fr); gap: 10px; align-items: center; }
             .dm-dashboard--public .dm-dashboard__table thead tr { background: transparent; border-radius: 0; padding: 0 0 12px; border-bottom: 1px solid rgba(28, 19, 79, 0.08); }
             .dm-dashboard--public .dm-dashboard__table th,
             .dm-dashboard--public .dm-dashboard__table td { border: none !important; box-shadow: none !important; background: transparent; }
-            .dm-dashboard--public .dm-dashboard__table th { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; color: rgba(45, 45, 78, 0.6); }
-            .dm-dashboard--public .dm-dashboard__table tbody { display: flex; flex-direction: column; gap: 0; }
-            .dm-dashboard--public .dm-dashboard__table tbody tr { padding: 18px 0; border-bottom: 1px solid rgba(28, 19, 79, 0.06); background: transparent; }
+            .dm-dashboard--public .dm-dashboard__table th { text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.7rem; line-height: 1.2; color: rgba(45, 45, 78, 0.6); white-space: normal; }
+            .dm-dashboard--public .dm-dashboard__table tbody { display: flex; flex-direction: column; gap: 4px; }
+            .dm-dashboard--public .dm-dashboard__table tbody tr { padding: 18px 14px; margin: 0 -14px; border-bottom: 1px solid rgba(28, 19, 79, 0.06); border-radius: 14px; background: transparent; background-clip: padding-box; }
+            .dm-dashboard--public .dm-dashboard__table tbody tr.is-clickable { cursor: pointer; transition: background-color 0.16s ease, box-shadow 0.16s ease; }
+            .dm-dashboard--public .dm-dashboard__table tbody tr.is-clickable:hover,
+            .dm-dashboard--public .dm-dashboard__table tbody tr.is-clickable:focus-visible { background: #e4e6eb; box-shadow: inset 0 0 0 1px rgba(28, 19, 79, 0.06); outline: none; }
             .dm-dashboard--public .dm-dashboard__table tbody tr:last-child { border-bottom: none; }
-            .dm-dashboard--public .dm-dashboard__table td { font-size: 0.95rem; color: #1C134F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .dm-dashboard--public .dm-dashboard__table td { font-size: 0.82rem; line-height: 1.25; color: #1C134F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Byt"],
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Typ"],
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Park."] { font-size: 0.76rem; }
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Byt"] { overflow: visible; text-overflow: clip; }
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Stav"] { overflow: visible; }
             .dm-dashboard--public .dm-dashboard__link { color: #1C134F; font-weight: 600; text-decoration: none; }
             .dm-dashboard--public .dm-dashboard__link:hover,
             .dm-dashboard--public .dm-dashboard__link:focus { color: #4d38ff; text-decoration: underline; }
             .dm-dashboard--public .dm-dashboard__text { font-weight: 600; color: #1C134F; }
-            .dm-dashboard--public .dm-dashboard__parent-tag { display: inline-flex; align-items: center; gap: 4px; margin-left: 10px; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: rgba(77, 56, 255, 0.08); color: #4d38ff; border: 1px solid rgba(77, 56, 255, 0.2); }
-            .dm-dashboard--public .dm-status { display: inline-flex; padding: 6px 14px; border-radius: 999px; font-weight: 600; font-size: 0.85rem; background: rgba(124, 58, 237, 0.12); color: rgba(45, 45, 78, 0.85); }
+            .dm-dashboard--public .dm-status { display: inline-flex; padding: 6px 12px; border-radius: 999px; border: 1px solid transparent; font-weight: 600; font-size: 0.82rem; background: rgba(124, 58, 237, 0.12); color: rgba(45, 45, 78, 0.85); white-space: nowrap; max-width: none; }
             .dm-dashboard--public .dm-status--volne { background: #dcfce7; color: #15803d; }
             .dm-dashboard--public .dm-status--obsadene,
             .dm-dashboard--public .dm-status--predane { background: #fee2e2; color: #b91c1c; }
@@ -423,14 +441,26 @@
             .dm-dashboard--public .dm-dashboard__legend-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(28, 19, 79, 0.12); background: rgba(28, 19, 79, 0.04); color: #1C134F; }
             .dm-dashboard--public .dm-dashboard__legend-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(28, 19, 79, 0.08); }
             .dm-dashboard--public .dm-dashboard__legend--public { justify-content: flex-start; }
+            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table--inventory { min-width: 0; }
             .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table thead { display: none; }
-            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table tbody tr { display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(28, 19, 79, 0.08); border-radius: 18px; padding: 18px 18px; background: #ffffff; }
+            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table tbody tr { display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(28, 19, 79, 0.08); border-radius: 18px; padding: 18px 18px; margin: 0; background: #ffffff; }
             .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table td { width: 100%; display: flex; justify-content: space-between; align-items: center; white-space: normal; background: transparent; }
             .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table td::before { content: attr(data-label); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(45, 45, 78, 0.6); margin-right: 12px; }
             .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__toolbar { grid-template-columns: 1fr; }
             @media (max-width: 900px) {
+                .dm-map-viewer__popover-card { min-width: 160px; max-width: min(210px, calc(100vw - 28px)); border-radius: 12px; padding: 10px 12px; gap: 7px; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2); }
+                .dm-map-viewer__popover-summary { font-size: 0.78rem; gap: 4px; }
+                .dm-map-viewer__popover-summary strong { font-size: 0.92rem; margin-right: 0; }
+                .dm-map-viewer__popover-apartment { gap: 6px; padding-top: 7px; }
+                .dm-map-viewer__popover-title { font-size: 0.86rem; }
+                .dm-map-viewer__popover-meta { gap: 5px 8px; }
+                .dm-map-viewer__popover-meta dt { font-size: 0.54rem; }
+                .dm-map-viewer__popover-meta dd { font-size: 0.72rem; }
+                .dm-map-viewer__popover-status { font-size: 0.64rem; padding: 4px 7px; }
+                .dm-map-viewer__popover-cta { min-width: 100px; padding: 7px 12px; border-radius: 8px; font-size: 0.74rem; }
+                .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 0; }
                 .dm-dashboard--public .dm-dashboard__table thead { display: none; }
-                .dm-dashboard--public .dm-dashboard__table tbody tr { display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(28, 19, 79, 0.08); border-radius: 18px; padding: 18px 18px; background: #ffffff; }
+                .dm-dashboard--public .dm-dashboard__table tbody tr { display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(28, 19, 79, 0.08); border-radius: 18px; padding: 18px 18px; margin: 0; background: #ffffff; }
                 .dm-dashboard--public .dm-dashboard__table td { width: 100%; display: flex; justify-content: space-between; align-items: center; white-space: normal; background: transparent; }
                 .dm-dashboard--public .dm-dashboard__table td::before { content: attr(data-label); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(45, 45, 78, 0.6); margin-right: 12px; }
             }
@@ -442,6 +472,24 @@
     }
 
     const STATUS_FALLBACK_COLOR = '#6366f1';
+
+    const sanitiseDisplayColor = (value, fallback = STATUS_FALLBACK_COLOR) => {
+        const raw = String(value ?? '').trim();
+        if (!raw) {
+            return fallback;
+        }
+        const lower = raw.toLowerCase();
+        if (/^#[0-9a-f]{3,8}$/i.test(lower)) {
+            return lower;
+        }
+        if (/^rgba?\(\s*[\d.]+%?\s*,\s*[\d.]+%?\s*,\s*[\d.]+%?(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i.test(raw)) {
+            return raw;
+        }
+        if (/^hsla?\(\s*[\d.]+(?:deg)?\s*,\s*[\d.]+%\s*,\s*[\d.]+%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i.test(raw)) {
+            return raw;
+        }
+        return fallback;
+    };
 
     function clamp(value, min, max) {
         if (!Number.isFinite(value)) {
@@ -579,10 +627,79 @@
         return `${raw} m²`;
     };
 
+    const parseDecimalValue = (value) => {
+        if (typeof value === 'number') {
+            return Number.isFinite(value) ? value : null;
+        }
+        const raw = String(value ?? '').trim();
+        if (!raw) {
+            return null;
+        }
+        const cleaned = raw
+            .replace(/\s+/g, '')
+            .replace(/m²|m2/gi, '')
+            .replace(',', '.')
+            .replace(/[^0-9.+-]/g, '');
+        const numeric = Number(cleaned);
+        return Number.isFinite(numeric) ? numeric : null;
+    };
+
+    const formatDecimalDisplay = (value) => {
+        const numeric = parseDecimalValue(value);
+        if (numeric === null) {
+            return '';
+        }
+        return String(Number(numeric.toFixed(2))).replace('.', ',');
+    };
+
+    const resolveTotalAreaValue = (floor) => {
+        const explicit = floor?.totalArea ?? floor?.meta?.totalArea;
+        if (String(explicit ?? '').trim()) {
+            return explicit;
+        }
+        const parts = [floor?.area, floor?.loggiaArea ?? floor?.loggia, floor?.terraceArea ?? floor?.terrace]
+            .map(parseDecimalValue)
+            .filter((value) => value !== null);
+        if (!parts.length) {
+            return '';
+        }
+        return formatDecimalDisplay(parts.reduce((sum, value) => sum + value, 0));
+    };
+
+    const resolveApartmentName = (floor) => (
+        floor?.name ?? floor?.designation ?? floor?.shortcode ?? floor?.label ?? '—'
+    );
+
+    const resolveRoomCount = (floor) => {
+        const raw =
+            floor?.roomCount ??
+            floor?.rooms ??
+            floor?.roomsCount ??
+            floor?.numberOfRooms ??
+            floor?.roomsNumber ??
+            floor?.meta?.roomCount ??
+            floor?.meta?.rooms ??
+            floor?.meta?.roomsCount ??
+            floor?.meta?.numberOfRooms ??
+            floor?.type ??
+            floor?.meta?.type ??
+            '';
+        const value = String(raw ?? '').trim();
+        if (!value) {
+            return '';
+        }
+        const apartmentTypeMatch = /^(\d+(?:[,.]\d+)?)\s*[iI]$/.exec(value);
+        return apartmentTypeMatch ? apartmentTypeMatch[1].replace('.', ',') : value;
+    };
+
     const formatPriceDisplay = (value) => {
         const display = normaliseCurrencyDisplay(value);
         return display && display !== '€' ? display : '—';
     };
+
+    const resolveSortablePrice = (floor) => (
+        floor?.totalPrice ?? floor?.meta?.totalPrice ?? floor?.price ?? floor?.meta?.price ?? ''
+    );
 
     const formatRentDisplay = (value) => {
         const display = normaliseCurrencyDisplay(value);
@@ -622,7 +739,10 @@
             return '';
         }
         const match = statuses.find(
-            (status) => normaliseText(status.label) === normaliseText(label) && status.id !== undefined,
+            (status) =>
+                (normaliseText(status.label) === normaliseText(label) ||
+                    normaliseText(status.key) === normaliseText(label)) &&
+                status.id !== undefined,
         );
         return match ? String(match.id) : '';
     };
@@ -635,11 +755,25 @@
                 color: STATUS_FALLBACK_COLOR,
             };
         }
-        const statusId = floor.statusId ?? floor.status ?? floor.statusKey ?? '';
-        const match = statuses?.find((status) => String(status.id ?? status.key ?? '') === String(statusId));
+        const statusId = floor.statusId ?? floor.statusKey ?? floor.status ?? '';
+        const normalisedStatus = normaliseText(statusId);
+        const match = statuses?.find((status) => {
+            const key = String(status.id ?? status.key ?? '');
+            return (
+                key === String(statusId) ||
+                normaliseText(status.label) === normalisedStatus ||
+                normaliseText(status.key) === normalisedStatus
+            );
+        });
         const label = match?.label ?? floor.statusLabel ?? floor.status ?? 'Neznáme';
         const variant = (match || floor.status || floor.statusLabel) ? slugifyStatus(label) : 'unknown';
-        const color = match?.color ?? floor.statusColor ?? STATUS_FALLBACK_COLOR;
+        const color =
+            match?.color ??
+            floor.statusColor ??
+            floor.color ??
+            floor.meta?.statusColor ??
+            floor.meta?.color ??
+            STATUS_FALLBACK_COLOR;
         return { label, variant, color };
     };
 
@@ -657,6 +791,7 @@
             normaliseText(floor?.designation),
             normaliseText(floor?.type),
             normaliseText(floor?.shortcode),
+            normaliseText(floor?.parkingSpaces),
         ].filter(Boolean);
         return candidates.some((candidate) => candidate.includes(needle));
     };
@@ -684,12 +819,12 @@
 
     const formatCountLabel = (count) => {
         if (count === 1) {
-            return 'lokalita';
+            return 'byt';
         }
         if (count >= 2 && count <= 4) {
-            return 'lokality';
+            return 'byty';
         }
-        return 'lokalít';
+        return 'bytov';
     };
 
     const parseBooleanFlag = (value) => {
@@ -739,6 +874,46 @@
         }
     };
 
+    const resolveFloorDetailUrl = (floor) => normaliseUrl(
+        floor?.detailUrl ??
+            floor?.detailURL ??
+            floor?.detail_url ??
+            floor?.url ??
+            floor?.href ??
+            floor?.link ??
+            floor?.externalUrl ??
+            floor?.external_url ??
+            floor?.meta?.detailUrl ??
+            floor?.meta?.detailURL ??
+            floor?.meta?.detail_url ??
+            floor?.meta?.url ??
+            floor?.meta?.href ??
+            floor?.meta?.link ??
+            floor?.meta?.externalUrl ??
+            floor?.meta?.external_url ??
+            '',
+    );
+
+    const resolveRegionDetailUrl = (region) => normaliseUrl(
+        region?.detailUrl ??
+            region?.detailURL ??
+            region?.detail_url ??
+            region?.url ??
+            region?.href ??
+            region?.link ??
+            region?.externalUrl ??
+            region?.external_url ??
+            region?.meta?.detailUrl ??
+            region?.meta?.detailURL ??
+            region?.meta?.detail_url ??
+            region?.meta?.url ??
+            region?.meta?.href ??
+            region?.meta?.link ??
+            region?.meta?.externalUrl ??
+            region?.meta?.external_url ??
+            '',
+    );
+
     const resolveTablePreferences = (container, project) => {
         const dataset = container?.dataset ?? {};
         const datasetEnabled = Object.prototype.hasOwnProperty.call(dataset, 'dmTable')
@@ -777,9 +952,7 @@
         const includeParent =
             datasetIncludeParent !== null
                 ? datasetIncludeParent
-                : projectSettings && Object.prototype.hasOwnProperty.call(projectSettings, 'includeParent')
-                    ? parseBooleanFlag(projectSettings.includeParent)
-                    : false;
+                : false;
 
         return {
             enabled,
@@ -788,24 +961,322 @@
         };
     };
 
-    const buildHierarchyMaps = (project, ancestors, scope) => {
-        const base = scope === 'hierarchy' && Array.isArray(ancestors) && ancestors.length
-            ? [...ancestors, project]
-            : [project];
-        const seen = new Set();
-        return base
-            .filter((entry) => entry && typeof entry === 'object')
-            .filter((entry) => {
-                const id = entry.id ? String(entry.id).toLowerCase() : '';
-                if (!id) {
-                    return true;
+    const getProjectIdentifier = (project) => {
+        const raw = project?.id ?? project?.projectId ?? project?.uuid ?? project?.shortcode ?? '';
+        const value = String(raw ?? '').trim();
+        return value ? value.toLowerCase() : '';
+    };
+
+    const getProjectDisplayName = (project) => (
+        project?.name ?? project?.title ?? project?.label ?? project?.publicKey ?? project?.shortcode ?? 'Mapa'
+    );
+
+    const getProjectReferenceKeys = (project) => {
+        const keys = new Set();
+        [
+            project?.id,
+            project?.projectId,
+            project?.uuid,
+            project?.shortcode,
+            project?.publicKey,
+            project?.key,
+            project?.slug,
+        ].forEach((value) => addReferenceKey(keys, value));
+        return Array.from(keys);
+    };
+
+    const getParentProjectIdentifier = (project) => {
+        const raw =
+            project?.parentId ??
+            project?.parent_id ??
+            project?.parentID ??
+            project?.parent?.id ??
+            project?.parent?.projectId ??
+            '';
+        const value = String(raw ?? '').trim();
+        return value ? value.toLowerCase() : '';
+    };
+
+    const parseTableChildKey = (value) => {
+        if (value && typeof value === 'object') {
+            const rawId = value.id ?? value.target ?? value.value ?? value.uuid;
+            const id = String(rawId ?? '').trim();
+            if (!id) {
+                return null;
+            }
+            const rawType = String(value.type ?? value.kind ?? value.nodeType ?? value.node_type ?? '').toLowerCase();
+            const type = rawType === 'map' || rawType === 'project' ? 'map' : 'location';
+            return {
+                type,
+                id: id.toLowerCase(),
+            };
+        }
+        const raw = String(value ?? '').trim();
+        if (!raw) {
+            return null;
+        }
+        const colonIndex = raw.indexOf(':');
+        if (colonIndex <= 0) {
+            return {
+                type: 'location',
+                id: raw.toLowerCase(),
+            };
+        }
+        const prefix = raw.slice(0, colonIndex).toLowerCase();
+        const id = raw.slice(colonIndex + 1).trim();
+        if (!id) {
+            return null;
+        }
+        return {
+            type: prefix === 'map' || prefix === 'project' ? 'map' : 'location',
+            id: id.toLowerCase(),
+        };
+    };
+
+    const addReferenceKey = (keys, value) => {
+        if (value === undefined || value === null) {
+            return;
+        }
+        const trimmed = String(value).trim().toLowerCase();
+        if (!trimmed) {
+            return;
+        }
+        keys.add(trimmed);
+        const colonIndex = trimmed.indexOf(':');
+        if (colonIndex > 0 && colonIndex < trimmed.length - 1) {
+            keys.add(trimmed.slice(colonIndex + 1));
+        }
+    };
+
+    const buildFloorReferenceKeys = (floor) => {
+        const keys = new Set();
+        [
+            floor?.id,
+            floor?.floorId,
+            floor?.floor_id,
+            floor?.uuid,
+            floor?.slug,
+            floor?.shortcode,
+            floor?.designation,
+            floor?.name,
+            floor?.label,
+            floor?.unit,
+            floor?.unitId,
+            floor?.unit_id,
+            floor?.apartment,
+            floor?.apartmentId,
+            floor?.apartment_id,
+            buildFloorKey(floor),
+        ].forEach((value) => addReferenceKey(keys, value));
+        return keys;
+    };
+
+    const regionMatchesFloor = (region, floorKeys) => {
+        if (!region || !floorKeys?.size) {
+            return false;
+        }
+        const children = Array.isArray(region.children) ? region.children : [];
+        if (children.some((child) => {
+            const parsed = parseTableChildKey(child);
+            return parsed?.type === 'location' && floorKeys.has(parsed.id);
+        })) {
+            return true;
+        }
+        const regionKeys = new Set();
+        [
+            region.id,
+            region.floorId,
+            region.floor_id,
+            region.locationId,
+            region.location_id,
+            region.unitId,
+            region.unit_id,
+            region.apartmentId,
+            region.apartment_id,
+            region.slug,
+            region.shortcode,
+            region.name,
+            region.label,
+            region.title,
+        ].forEach((value) => addReferenceKey(regionKeys, value));
+        return Array.from(regionKeys).some((key) => floorKeys.has(key));
+    };
+
+    const findRegionUrlForFloor = (projectNode, floor) => {
+        const floorKeys = buildFloorReferenceKeys(floor);
+        if (!floorKeys.size) {
+            return '';
+        }
+        const regionLists = [
+            Array.isArray(projectNode?.regions) ? projectNode.regions : [],
+            Array.isArray(floor?.regions) ? floor.regions : [],
+        ];
+        for (const regions of regionLists) {
+            for (const region of regions) {
+                const regionUrl = resolveRegionDetailUrl(region);
+                if (!regionUrl || !regionMatchesFloor(region, floorKeys)) {
+                    continue;
                 }
-                if (seen.has(id)) {
-                    return false;
+                return regionUrl;
+            }
+        }
+        return '';
+    };
+
+    const buildTableProjectContext = (project, linkedProjects) => {
+        const registry = new Map();
+        const lookup = new Map();
+        const registerProject = (candidate) => {
+            if (!candidate || typeof candidate !== 'object') {
+                return;
+            }
+            const id = getProjectIdentifier(candidate);
+            if (!id || registry.has(id)) {
+                return;
+            }
+            registry.set(id, candidate);
+            getProjectReferenceKeys(candidate).forEach((key) => {
+                if (!lookup.has(key)) {
+                    lookup.set(key, candidate);
                 }
-                seen.add(id);
-                return true;
             });
+        };
+        registerProject(project);
+        (Array.isArray(linkedProjects) ? linkedProjects : []).forEach(registerProject);
+
+        const resolveProjectId = (rawId) => {
+            const id = String(rawId ?? '').trim().toLowerCase();
+            if (!id) {
+                return '';
+            }
+            if (registry.has(id)) {
+                return id;
+            }
+            const matchedProject = lookup.get(id);
+            return matchedProject ? getProjectIdentifier(matchedProject) : id;
+        };
+
+        const childMapIdsByProject = new Map();
+        registry.forEach((projectNode, projectId) => {
+            const parentId = resolveProjectId(getParentProjectIdentifier(projectNode));
+            if (!parentId || parentId === projectId || !registry.has(parentId)) {
+                return;
+            }
+            if (!childMapIdsByProject.has(parentId)) {
+                childMapIdsByProject.set(parentId, new Set());
+            }
+            childMapIdsByProject.get(parentId).add(projectId);
+        });
+        registry.forEach((projectNode, projectId) => {
+            const regions = Array.isArray(projectNode?.regions) ? projectNode.regions : [];
+            regions.forEach((region) => {
+                const children = Array.isArray(region?.children) ? region.children : [];
+                children.forEach((child) => {
+                    const parsed = parseTableChildKey(child);
+                    const childProjectId = parsed?.type === 'map' ? resolveProjectId(parsed.id) : '';
+                    if (!parsed || parsed.type !== 'map' || !childProjectId || childProjectId === projectId) {
+                        return;
+                    }
+                    if (!childMapIdsByProject.has(projectId)) {
+                        childMapIdsByProject.set(projectId, new Set());
+                    }
+                    childMapIdsByProject.get(projectId).add(childProjectId);
+                });
+            });
+        });
+
+        return {
+            registry,
+            lookup,
+            childMapIdsByProject,
+        };
+    };
+
+    const buildLocationTableRows = ({ project, linkedProjects, scope, includeParentProject }) => {
+        const rows = [];
+        const seen = new Set();
+        const tableContext = buildTableProjectContext(project, linkedProjects);
+        const pushFloors = (projectNode, source) => {
+            const floors = Array.isArray(projectNode?.floors) ? projectNode.floors : [];
+            const ownerId = getProjectIdentifier(projectNode) || source;
+            const ownerName = getProjectDisplayName(projectNode);
+            floors.forEach((floor, index) => {
+                if (!floor || typeof floor !== 'object') {
+                    return;
+                }
+                const floorKey = buildFloorKey(floor) || `index:${index}`;
+                const key = `${ownerId}:${floorKey}`;
+                if (seen.has(key)) {
+                    return;
+                }
+                seen.add(key);
+                rows.push({
+                    floor,
+                    source,
+                    parentName: source === 'current' ? '' : ownerName,
+                    url: resolveFloorDetailUrl(floor) || findRegionUrlForFloor(projectNode, floor),
+                });
+            });
+        };
+
+        pushFloors(project, 'current');
+
+        if (scope === 'hierarchy') {
+            const rootId = getProjectIdentifier(project);
+            const { registry, childMapIdsByProject } = tableContext;
+            const visited = new Set(rootId ? [rootId] : []);
+            const appendDescendants = (projectId) => {
+                const childIds = childMapIdsByProject.get(projectId);
+                if (!childIds) {
+                    return;
+                }
+                childIds.forEach((childId) => {
+                    if (!childId || visited.has(childId)) {
+                        return;
+                    }
+                    visited.add(childId);
+                    const childProject = registry.get(childId);
+                    if (!childProject) {
+                        return;
+                    }
+                    pushFloors(childProject, 'descendant');
+                    appendDescendants(childId);
+                });
+            };
+            if (rootId) {
+                appendDescendants(rootId);
+            }
+        }
+
+        if (includeParentProject) {
+            pushFloors(includeParentProject, 'parent');
+        }
+
+        return rows;
+    };
+
+    const buildLocationTableStatuses = ({ project, linkedProjects, statuses, scope }) => {
+        const merged = [];
+        const seen = new Set();
+        const addStatus = (status) => {
+            if (!status || typeof status !== 'object') {
+                return;
+            }
+            const key = String(status.id ?? status.key ?? status.label ?? '').trim().toLowerCase();
+            if (!key || seen.has(key)) {
+                return;
+            }
+            seen.add(key);
+            merged.push(status);
+        };
+        (Array.isArray(statuses) ? statuses : []).forEach(addStatus);
+        (Array.isArray(project?.palette?.statuses) ? project.palette.statuses : []).forEach(addStatus);
+        if (scope === 'hierarchy') {
+            (Array.isArray(linkedProjects) ? linkedProjects : []).forEach((linkedProject) => {
+                (Array.isArray(linkedProject?.palette?.statuses) ? linkedProject.palette.statuses : []).forEach(addStatus);
+            });
+        }
+        return merged;
     };
 
     const buildTableRows = (currentFloors, parentFloors, parentName) => {
@@ -839,50 +1310,53 @@
         }
         if (!dataset.length) {
             tbody.innerHTML =
-                '<tr class="dm-dashboard__empty-row"><td colspan="7">Žiadne lokality nevyhovujú filtrom.</td></tr>';
+                '<tr class="dm-dashboard__empty-row"><td colspan="11">Žiadne byty nevyhovujú filtrom.</td></tr>';
             return;
         }
         const markup = dataset
             .map((entry) => {
                 const floor = entry.floor || {};
+                const unitValue = resolveApartmentName(floor);
                 const typeValue = floor.type ? escapeHtml(String(floor.type)) : '—';
-                const designation = escapeHtml(
-                    floor.designation ?? floor.shortcode ?? floor.label ?? '—',
-                );
                 const areaText = escapeHtml(formatAreaValue(floor.area));
+                const loggiaText = escapeHtml(formatAreaValue(floor.loggiaArea ?? floor.loggia ?? floor.meta?.loggiaArea ?? ''));
+                const terraceText = escapeHtml(formatAreaValue(floor.terraceArea ?? floor.terrace ?? floor.meta?.terraceArea ?? ''));
+                const totalAreaText = escapeHtml(formatAreaValue(resolveTotalAreaValue(floor)));
+                const rawParkingSpaces = floor.parkingSpaces ?? floor.parkingPlace ?? floor.meta?.parkingSpaces ?? '';
+                const parkingSpaces = escapeHtml(String(rawParkingSpaces).trim() || '—');
                 const priceText = escapeHtml(formatPriceDisplay(floor.price ?? floor.meta?.price ?? ''));
-                const rentText = escapeHtml(formatRentDisplay(floor.rent ?? floor.meta?.rent ?? ''));
+                const parkingPriceText = escapeHtml(formatPriceDisplay(floor.parkingPrice ?? floor.meta?.parkingPrice ?? ''));
+                const totalPriceText = escapeHtml(formatPriceDisplay(floor.totalPrice ?? floor.meta?.totalPrice ?? floor.price ?? floor.meta?.price ?? ''));
                 const status = resolveStatusDisplay(floor, statuses);
                 const statusVariant = escapeHtml(status.variant || 'unknown');
                 const statusLabel = escapeHtml(status.label || 'Neznáme');
-                const detailUrl = normaliseUrl(
-                    floor.detailUrl ??
-                        floor.url ??
-                        (floor.meta && (floor.meta.detailUrl ?? floor.meta.url)) ??
-                        '',
-                );
-                const nameValue = floor.name ?? floor.label ?? floor.designation ?? '—';
+                const statusColor = sanitiseDisplayColor(status.color);
+                const statusStyle = [
+                    `background:${escapeHtml(toRgba(statusColor, 0.14))}`,
+                    `border-color:${escapeHtml(toRgba(statusColor, 0.28))}`,
+                    `color:${escapeHtml(statusColor)}`,
+                ].join(';');
+                const detailUrl = normaliseUrl(entry.url) || resolveFloorDetailUrl(floor);
+                const nameValue = unitValue;
                 const nameMarkup = detailUrl
                     ? `<a class="dm-dashboard__link" href="${escapeHtml(detailUrl)}">${escapeHtml(nameValue)}</a>`
                     : `<span class="dm-dashboard__text">${escapeHtml(nameValue)}</span>`;
-                const parentTag =
-                    entry.source === 'parent'
-                        ? `<span class="dm-dashboard__parent-tag">${
-                              entry.parentName
-                                  ? `Mapa ${escapeHtml(entry.parentName)}`
-                                  : 'Nadradená mapa'
-                          }</span>`
-                        : '';
+                const rowClass = detailUrl ? ' class="is-clickable" data-row-link="true"' : '';
+                const rowHref = detailUrl ? ` data-href="${escapeHtml(detailUrl)}" tabindex="0" aria-label="Otvoriť byt ${escapeHtml(nameValue)}"` : '';
                 return `
-                    <tr role="row">
+                    <tr role="row"${rowClass}${rowHref}>
+                        <td role="cell" data-label="Byt">${nameMarkup}</td>
                         <td role="cell" data-label="Typ">${typeValue}</td>
-                        <td role="cell" data-label="Názov">${nameMarkup}${parentTag}</td>
-                        <td role="cell" data-label="Označenie">${designation}</td>
-                        <td role="cell" data-label="Rozloha">${areaText}</td>
-                        <td role="cell" data-label="Cena">${priceText}</td>
-                        <td role="cell" data-label="Prenájom">${rentText}</td>
+                        <td role="cell" data-label="Výmera">${areaText}</td>
+                        <td role="cell" data-label="Lodžia">${loggiaText}</td>
+                        <td role="cell" data-label="Terasa">${terraceText}</td>
+                        <td role="cell" data-label="Spolu m²">${totalAreaText}</td>
+                        <td role="cell" data-label="Park.">${parkingSpaces}</td>
+                        <td role="cell" data-label="Cena bytu">${priceText}</td>
+                        <td role="cell" data-label="Parkovanie">${parkingPriceText}</td>
+                        <td role="cell" data-label="Spolu">${totalPriceText}</td>
                         <td role="cell" data-label="Stav">
-                            <span class="dm-status dm-status--${statusVariant}">${statusLabel}</span>
+                            <span class="dm-status dm-status--${statusVariant}" style="${statusStyle}">${statusLabel}</span>
                         </td>
                     </tr>
                 `;
@@ -912,9 +1386,9 @@
         const summaryEl = root.querySelector('[data-role="table-summary"]');
         const parentNote = root.querySelector('[data-role="parent-note"]');
 
-        const hasParentRows = rows.some((row) => row.source === 'parent');
+        const hasContextRows = rows.some((row) => row.source !== 'current');
         if (parentNote) {
-            parentNote.hidden = !hasParentRows || !parentNote.textContent.trim();
+            parentNote.hidden = !hasContextRows || !parentNote.textContent.trim();
         }
 
         const state = {
@@ -970,8 +1444,8 @@
             if (state.priceOrder === 'asc' || state.priceOrder === 'desc') {
                 const direction = state.priceOrder === 'asc' ? 1 : -1;
                 dataset = [...dataset].sort((a, b) => {
-                    const priceA = parsePriceValue(a.floor?.price ?? a.floor?.meta?.price ?? '');
-                    const priceB = parsePriceValue(b.floor?.price ?? b.floor?.meta?.price ?? '');
+                    const priceA = parsePriceValue(resolveSortablePrice(a.floor));
+                    const priceB = parsePriceValue(resolveSortablePrice(b.floor));
                     if (priceA === priceB) {
                         return 0;
                     }
@@ -987,7 +1461,7 @@
             renderTableRows(tbody, dataset, statuses);
             if (summaryEl) {
                 const count = dataset.length;
-                summaryEl.textContent = count ? `${count} ${formatCountLabel(count)}` : 'Žiadne lokality';
+                summaryEl.textContent = count ? `${count} ${formatCountLabel(count)}` : 'Žiadne byty';
             }
         };
 
@@ -1012,14 +1486,44 @@
             });
         }
 
+        if (tbody) {
+            tbody.addEventListener('click', (event) => {
+                const row = event.target.closest('tr[data-href]');
+                if (!row || event.target.closest('button, input, select, textarea')) {
+                    return;
+                }
+                const href = row.getAttribute('data-href');
+                if (href) {
+                    event.preventDefault();
+                    window.location.href = href;
+                }
+            });
+            tbody.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                    return;
+                }
+                const row = event.target.closest('tr[data-href]');
+                if (!row) {
+                    return;
+                }
+                event.preventDefault();
+                const href = row.getAttribute('data-href');
+                if (href) {
+                    window.location.href = href;
+                }
+            });
+        }
+
         applyFilters();
     };
 
-    const createMapTableElement = ({ map, statuses, includeParent, isCurrent }) => {
+    const createMapTableElement = ({ map, statuses, includeParent, isCurrent, rows: providedRows, noteText, subtitle }) => {
         const floors = Array.isArray(map?.floors) ? map.floors : [];
         const parentFloors = includeParent && Array.isArray(includeParent.floors) ? includeParent.floors : [];
         const parentName = includeParent?.name ?? includeParent?.title ?? includeParent?.label ?? '';
-        const rows = buildTableRows(floors, parentFloors, parentName);
+        const rows = Array.isArray(providedRows)
+            ? providedRows
+            : buildTableRows(floors, parentFloors, parentName);
         const resolvedStatuses = Array.isArray(statuses) ? statuses : [];
         const statusOptions = [
             '<option value="">Všetky stavy</option>',
@@ -1071,17 +1575,23 @@
         section.className = 'dm-dashboard dm-dashboard--public';
         const mapName =
             map?.name ?? map?.title ?? map?.label ?? map?.publicKey ?? map?.shortcode ?? 'Mapa';
-        const noteText = includeParent ? `Vrátane lokalít mapy ${escapeHtml(parentName || mapName)}` : '';
+        const resolvedNoteText =
+            typeof noteText === 'string'
+                ? noteText
+                : includeParent
+                    ? `Vrátane bytov mapy ${parentName || mapName}`
+                    : '';
+        const resolvedSubtitle = subtitle || (isCurrent ? 'Aktuálna mapa' : 'Mapa v hierarchii');
         section.innerHTML = `
             <div class="dm-dashboard__card">
                 <div class="dm-dashboard__heading">
                     <h1>${escapeHtml(mapName)}</h1>
-                    <p>${escapeHtml(isCurrent ? 'Aktuálna mapa' : 'Mapa v hierarchii')}</p>
+                    <p>${escapeHtml(resolvedSubtitle)}</p>
                 </div>
                 <div class="dm-dashboard__toolbar" role="search">
                     <label class="dm-dashboard__search">
                         <span class="dm-dashboard__search-icon" aria-hidden="true">${DASHBOARD_ICONS.search}</span>
-                        <input type="search" placeholder="Vyhľadať lokalitu" data-role="search" aria-label="Vyhľadať lokalitu" />
+                        <input type="search" placeholder="Vyhľadať byt" data-role="search" aria-label="Vyhľadať byt" />
                     </label>
                     <div class="dm-dashboard__select" data-role="status-filter-wrapper">
                         <span class="dm-dashboard__select-label" id="${statusLabelId}">Stav</span>
@@ -1114,17 +1624,21 @@
                 </div>
                 ${legendMarkup}
                 <div class="dm-dashboard__summary" data-role="table-summary"></div>
-                <p class="dm-dashboard__heading-note" data-role="parent-note"${noteText ? '' : ' hidden'}>${noteText}</p>
-                <div class="dm-dashboard__table-wrapper">
-                    <table class="dm-dashboard__table" role="table">
+                <p class="dm-dashboard__heading-note" data-role="parent-note"${resolvedNoteText ? '' : ' hidden'}>${escapeHtml(resolvedNoteText)}</p>
+                <div class="dm-dashboard__table-wrapper dm-dashboard__table-wrapper--inventory">
+                    <table class="dm-dashboard__table dm-dashboard__table--inventory dm-dashboard__table--inventory-public" role="table">
                         <thead>
                             <tr role="row">
+                                <th scope="col">Byt</th>
                                 <th scope="col">Typ</th>
-                                <th scope="col">Názov</th>
-                                <th scope="col">Označenie</th>
-                                <th scope="col">Rozloha</th>
-                                <th scope="col">Cena</th>
-                                <th scope="col">Prenájom</th>
+                                <th scope="col">Výmera</th>
+                                <th scope="col">Lodžia</th>
+                                <th scope="col">Terasa</th>
+                                <th scope="col">Spolu m²</th>
+                                <th scope="col">Park.</th>
+                                <th scope="col">Cena bytu</th>
+                                <th scope="col">Parkovanie</th>
+                                <th scope="col">Spolu</th>
                                 <th scope="col">Stav</th>
                             </tr>
                         </thead>
@@ -1145,34 +1659,45 @@
         return section;
     };
 
-    const renderLocationTables = ({ root, project, ancestors, preferences, statuses }) => {
+    const renderLocationTables = ({ root, project, ancestors, linkedProjects, preferences, statuses }) => {
         if (!root || !preferences?.enabled) {
             return;
         }
-        const maps = buildHierarchyMaps(project, ancestors, preferences.scope);
-        if (!maps.length) {
-            return;
-        }
         const parentForCurrent = ancestors.length ? ancestors[ancestors.length - 1] : null;
-        let rendered = 0;
-        maps.forEach((mapEntry) => {
-            const mapStatuses = Array.isArray(mapEntry?.palette?.statuses)
-                ? mapEntry.palette.statuses
-                : statuses;
-            const includeParent =
-                preferences.includeParent && mapEntry === project ? parentForCurrent : null;
-            const tableEl = createMapTableElement({
-                map: mapEntry,
-                statuses: mapStatuses,
-                includeParent,
-                isCurrent: mapEntry === project,
-            });
-            if (tableEl) {
-                root.appendChild(tableEl);
-                rendered += 1;
-            }
+        const effectiveScope = preferences.scope === 'hierarchy' ? 'hierarchy' : 'current';
+        const rows = buildLocationTableRows({
+            project,
+            linkedProjects,
+            scope: effectiveScope,
+            includeParentProject: preferences.includeParent ? parentForCurrent : null,
         });
-        if (!rendered) {
+        const noteParts = [];
+        if (effectiveScope === 'hierarchy') {
+            noteParts.push('Vrátane bytov z prepojených podmáp');
+        }
+        if (preferences.includeParent && parentForCurrent) {
+            noteParts.push(`vrátane bytov nadradenej mapy ${getProjectDisplayName(parentForCurrent)}`);
+        }
+        const tableStatuses = buildLocationTableStatuses({
+            project,
+            linkedProjects,
+            statuses,
+            scope: effectiveScope,
+        });
+        const tableEl = createMapTableElement({
+            map: project,
+            statuses: tableStatuses,
+            rows,
+            isCurrent: true,
+            noteText: noteParts.join(', '),
+            subtitle:
+                effectiveScope === 'hierarchy'
+                    ? 'Aktuálna mapa a podradená hierarchia'
+                    : 'Aktuálna mapa',
+        });
+        if (tableEl) {
+            root.appendChild(tableEl);
+        } else {
             root.remove();
         }
     };
@@ -1223,6 +1748,7 @@
             const payload = await response.json();
             const project = payload?.project;
             const ancestors = Array.isArray(payload?.ancestors) ? payload.ancestors : [];
+            const linkedProjects = Array.isArray(payload?.linkedProjects) ? payload.linkedProjects : [];
 
             if (!project || typeof project !== 'object') {
                 throw new Error('Missing project payload');
@@ -1280,9 +1806,12 @@
             const lookupStatus = (statusId) => {
                 const sought = String(statusId ?? '').trim();
                 if (!sought) return null;
+                const normalisedSought = normaliseText(sought);
                 return (
                     statuses.find((status) => String(status.key) === sought) ||
                     statuses.find((status) => String(status.id ?? '') === sought) ||
+                    statuses.find((status) => normaliseText(status.label) === normalisedSought) ||
+                    statuses.find((status) => normaliseText(status.key) === normalisedSought) ||
                     null
                 );
             };
@@ -1340,6 +1869,7 @@
                         root: tableRoot,
                         project,
                         ancestors,
+                        linkedProjects,
                         preferences: tablePreferences,
                         statuses,
                     });
@@ -1432,7 +1962,6 @@
             };
             traversePayload(project);
 
-            const linkedProjects = Array.isArray(payload?.linkedProjects) ? payload.linkedProjects : [];
             linkedProjects.forEach((linkedProject) => {
                 traversePayload(linkedProject);
             });
@@ -1716,6 +2245,7 @@
             popover.innerHTML = `
                 <div class="dm-map-viewer__popover-card">
                     <div class="dm-map-viewer__popover-summary" data-role="summary"></div>
+                    <div class="dm-map-viewer__popover-apartment" data-role="apartment-detail" hidden></div>
                     <ul class="dm-map-viewer__popover-list" data-role="list"></ul>
                     <div class="dm-map-viewer__popover-empty" data-role="empty"></div>
                     <button type="button" class="dm-map-viewer__popover-cta" data-role="cta">Detail</button>
@@ -1723,6 +2253,7 @@
             `;
             surface.appendChild(popover);
             const summaryEl = popover.querySelector('[data-role="summary"]');
+            const apartmentDetailEl = popover.querySelector('[data-role="apartment-detail"]');
             const listEl = popover.querySelector('[data-role="list"]');
             const emptyEl = popover.querySelector('[data-role="empty"]');
             const ctaButton = popover.querySelector('[data-role="cta"]');
@@ -1827,14 +2358,20 @@
 
                     linkedFloors.push(floor);
 
-                    const statusIdRaw = sanitiseId(floor.statusId ?? floor.status ?? '');
+                    const statusIdRaw = sanitiseId(floor.statusId ?? floor.statusKey ?? floor.status ?? '');
                     const statusInfo = lookupStatus(statusIdRaw);
                     const label =
                         statusInfo?.label ??
                         floor.statusLabel ??
                         (statusIdRaw || 'Bez stavu');
                     const key = (statusInfo?.id ?? statusInfo?.key ?? statusIdRaw) || label;
-                    const color = statusInfo?.color ?? floor.statusColor ?? '#6366f1';
+                    const color =
+                        statusInfo?.color ??
+                        floor.statusColor ??
+                        floor.color ??
+                        floor.meta?.statusColor ??
+                        floor.meta?.color ??
+                        '#6366f1';
                     const normalisedLabel = normaliseLabel(label);
                     const entry =
                         entriesMap.get(key) ?? {
@@ -2030,6 +2567,88 @@
                 return emptyState;
             };
 
+            const resolvePopoverTitle = (region) => {
+                const directTitle = String(
+                    region?.name ??
+                        region?.title ??
+                        region?.label ??
+                        region?.meta?.name ??
+                        region?.meta?.title ??
+                        region?.meta?.label ??
+                        '',
+                ).trim();
+                if (directTitle) {
+                    return directTitle;
+                }
+                const children = Array.isArray(region?.children) ? region.children : [];
+                for (const child of children) {
+                    const parsed = parseRegionChildKey(child);
+                    if (!parsed || parsed.type !== 'map' || !parsed.id) {
+                        continue;
+                    }
+                    const projectNode = projectRegistry.get(sanitiseId(parsed.id));
+                    const projectTitle = String(
+                        projectNode?.name ??
+                            projectNode?.title ??
+                            projectNode?.label ??
+                            projectNode?.publicKey ??
+                            projectNode?.shortcode ??
+                            '',
+                    ).trim();
+                    if (projectTitle) {
+                        return projectTitle;
+                    }
+                }
+                return '';
+            };
+
+            const renderStatusCounts = (summary) => {
+                const entries = Array.isArray(summary?.entries) ? summary.entries : [];
+                if (!entries.length) {
+                    return '<p class="dm-map-viewer__popover-empty">Žiadne byty</p>';
+                }
+                const formatStatusCountLabel = (entry) => {
+                    const count = Number(entry?.count ?? 0);
+                    const label = String(entry?.label ?? '').trim();
+                    const normalised = normaliseLabel(label);
+                    const pluralForm = count === 1 ? 'one' : count >= 2 && count <= 4 ? 'few' : 'many';
+                    const dictionary = [
+                        {
+                            matches: ['voln', 'dostup'],
+                            forms: { one: 'Voľný', few: 'Voľné', many: 'Voľných' },
+                        },
+                        {
+                            matches: ['rezerv'],
+                            forms: { one: 'Rezervovaný', few: 'Rezervované', many: 'Rezervovaných' },
+                        },
+                        {
+                            matches: ['predan'],
+                            forms: { one: 'Predaný', few: 'Predané', many: 'Predaných' },
+                        },
+                    ];
+                    const matched = dictionary.find((item) =>
+                        item.matches.some((needle) => normalised.includes(needle)),
+                    );
+                    return matched ? matched.forms[pluralForm] : (label || 'Bez stavu');
+                };
+                return `
+                    <div class="dm-map-viewer__popover-statuses">
+                        ${entries.map((entry) => {
+                            const color = sanitiseColorValue(entry.color, neutralFillColor);
+                            const bg = toRgba(color, 0.14);
+                            const border = toRgba(color, 0.28);
+                            const label = formatStatusCountLabel(entry);
+                            return `
+                                <span class="dm-map-viewer__popover-status" style="--dm-popover-status-bg:${escapeHtml(bg)}; --dm-popover-status-border:${escapeHtml(border)}; --dm-popover-status-color:${escapeHtml(color)}">
+                                    <span>${escapeHtml(label)}</span>
+                                    <span class="dm-map-viewer__popover-status-count">${escapeHtml(String(entry.count ?? 0))}</span>
+                                </span>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            };
+
             const applyRegionFill = (polygon, summary) => {
                 if (!polygon) {
                     return;
@@ -2085,6 +2704,40 @@
                 const { headline, headlineColor } = resolveRegionState(summary);
                 const tone = headlineColor || headlineDefaultColor;
                 summaryEl.innerHTML = `<strong style="color:${escapeHtml(tone)}">${escapeHtml(headline)}</strong>`;
+                const apartment = Array.isArray(summary?.linkedFloors) && summary.linkedFloors.length === 1
+                    ? summary.linkedFloors[0]
+                    : null;
+                if (apartment && apartmentDetailEl) {
+                    const name = resolveApartmentName(apartment);
+                    const totalArea = formatAreaValue(resolveTotalAreaValue(apartment));
+                    const rooms = resolveRoomCount(apartment) || '—';
+                    const price = formatPriceDisplay(apartment.price ?? apartment.meta?.price ?? '');
+                    apartmentDetailEl.innerHTML = `
+                        <h3 class="dm-map-viewer__popover-title">${escapeHtml(name)}</h3>
+                        <dl class="dm-map-viewer__popover-meta">
+                            <div>
+                                <dt>Výmera spolu</dt>
+                                <dd>${escapeHtml(totalArea)}</dd>
+                            </div>
+                            <div>
+                                <dt>Počet izieb</dt>
+                                <dd>${escapeHtml(rooms)}</dd>
+                            </div>
+                            <div>
+                                <dt>Cena bytu</dt>
+                                <dd>${escapeHtml(price)}</dd>
+                            </div>
+                        </dl>
+                    `;
+                    apartmentDetailEl.hidden = false;
+                } else if (apartmentDetailEl) {
+                    const title = resolvePopoverTitle(region);
+                    apartmentDetailEl.innerHTML = `
+                        ${title ? `<h3 class="dm-map-viewer__popover-title">${escapeHtml(title)}</h3>` : ''}
+                        ${renderStatusCounts(summary)}
+                    `;
+                    apartmentDetailEl.hidden = false;
+                }
                 listEl.hidden = true;
                 listEl.innerHTML = '';
                 emptyEl.hidden = true;
@@ -2109,8 +2762,12 @@
                 if (top < 8) {
                     top = (bbox.y + bbox.height) * scaleY + 16;
                 }
-                left = Math.max(8, Math.min(left, surfaceRect.width - cardRect.width - 8));
-                top = Math.max(8, Math.min(top, surfaceRect.height - cardRect.height - 8));
+                const viewportMinLeft = 8 - surfaceRect.left;
+                const viewportMaxLeft = window.innerWidth - surfaceRect.left - cardRect.width - 8;
+                const viewportMinTop = 8 - surfaceRect.top;
+                const viewportMaxTop = window.innerHeight - surfaceRect.top - cardRect.height - 8;
+                left = Math.max(viewportMinLeft, Math.min(left, viewportMaxLeft));
+                top = Math.max(viewportMinTop, Math.min(top, viewportMaxTop));
                 popover.style.left = `${left}px`;
                 popover.style.top = `${top}px`;
             };
@@ -2123,6 +2780,10 @@
                 popover.style.display = 'none';
                 popover.classList.remove('is-visible');
                 summaryEl.textContent = '';
+                if (apartmentDetailEl) {
+                    apartmentDetailEl.innerHTML = '';
+                    apartmentDetailEl.hidden = true;
+                }
                 listEl.innerHTML = '';
                 listEl.hidden = true;
                 emptyEl.textContent = '';

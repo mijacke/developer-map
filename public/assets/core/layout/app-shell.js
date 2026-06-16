@@ -1,10 +1,12 @@
-import { APP_VIEWS } from '../constants.js';
-import { renderMapsView } from '../views/maps-view.js';
-import { renderDashboardView } from '../views/dashboard-view.js';
-import { renderSettingsView } from '../views/settings-view.js';
-import { renderGuidesView } from '../views/guides-view.js';
-
-export function renderAppShell(state, data, { renderHeader, assetsBase }) {
+export function renderAppShell(state, data, {
+    renderHeader,
+    renderMapsView,
+    renderDashboardView,
+    renderSettingsView,
+    renderGuidesView,
+    APP_VIEWS,
+    assetsBase,
+}) {
     return `
         <div class="dm-app">
             ${renderHeader(state, assetsBase)}

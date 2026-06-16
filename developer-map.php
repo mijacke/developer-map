@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Developer Map by FuuDobre
  * Description: Administrátorský dashboard pre vytváranie interaktívnych máp a lokalít a ich zobrazenie na vašom webe.
- * Version: 0.4.4
+ * Version: 5.0.11
  * Author: Mario
  */
 
@@ -77,7 +77,7 @@ function dm_handle_ajax_ping(): void
 }
 add_action('wp_ajax_dm_ping', 'dm_handle_ajax_ping');
 
-define('DM_PLUGIN_VERSION', '0.4.4');
+define('DM_PLUGIN_VERSION', '5.0.11');
 define('DM_DEV_PAGE_SLUG', 'devtest-9kq7wza3');
 define('DM_PLUGIN_STYLE_HANDLE', 'developer-map-style');
 define('DM_PLUGIN_SCRIPT_HANDLE', 'developer-map-script');
@@ -92,46 +92,11 @@ if (!defined('DM_ENABLE_SHORTCODE_COMPAT')) {
 }
 
 /**
- * Build a cache-busting version that bumps whenever any asset changes.
+ * Return the shared plugin and asset cache version.
  */
 function dm_get_assets_version(): string
 {
-    static $version = null;
-
-    if ($version !== null) {
-        return $version;
-    }
-
-    $base_path = plugin_dir_path(__FILE__) . 'public/assets/';
-    $latest_mtime = 0;
-
-    if (is_dir($base_path)) {
-        $flags = FilesystemIterator::SKIP_DOTS;
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($base_path, $flags)
-        );
-
-        foreach ($iterator as $file) {
-            if (!$file instanceof SplFileInfo || !$file->isFile()) {
-                continue;
-            }
-
-            $ext = strtolower($file->getExtension());
-            if (!in_array($ext, ['js', 'mjs', 'cjs', 'css', 'map', 'json', 'svg', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'woff', 'woff2'], true)) {
-                continue;
-            }
-
-            $mtime = $file->getMTime();
-            if ($mtime > $latest_mtime) {
-                $latest_mtime = $mtime;
-            }
-        }
-    }
-
-    $suffix = $latest_mtime ?: time();
-    $version = sprintf('%s-%s', DM_PLUGIN_VERSION, $suffix);
-
-    return $version;
+    return DM_PLUGIN_VERSION;
 }
 
 /**
@@ -338,7 +303,7 @@ function dm_enqueue_admin_assets(): void
         'ajaxUrl'       => esc_url_raw(admin_url('admin-ajax.php')),
         'ajaxNonce'     => wp_create_nonce(DM_NONCE_ACTION_AJAX),
         'ajaxAction'    => 'dm_ping',
-        'ver'           => isset($GLOBALS['dm_assets_ver']) ? $GLOBALS['dm_assets_ver'] : time(),
+        'ver'           => isset($GLOBALS['dm_assets_ver']) ? $GLOBALS['dm_assets_ver'] : DM_PLUGIN_VERSION,
     ];
 
     $region_bootstrap = DM_Rest_Controller::get_region_registry_bootstrap();
@@ -411,7 +376,7 @@ function dm_render_fuudobre_map_shortcode($atts = []): string
         [
             'map_key' => '',
             'show_table' => '0',
-            'table_mode' => 'current',
+            'table_mode' => '',
             'include_parent' => '0',
         ],
         $atts,
@@ -433,8 +398,8 @@ function dm_render_fuudobre_map_shortcode($atts = []): string
     $include_parent = $normalise_bool($atts['include_parent']);
 
     $table_mode = strtolower(trim((string) $atts['table_mode']));
-    if (!in_array($table_mode, ['current', 'hierarchy'], true)) {
-        $table_mode = 'current';
+    if ($table_mode !== '' && !in_array($table_mode, ['current', 'hierarchy'], true)) {
+        $table_mode = '';
     }
 
     dm_register_frontend_map_assets();

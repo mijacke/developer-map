@@ -287,15 +287,7 @@ final class DM_Rest_Controller
         $current = $project;
 
         while (true) {
-            $parentId = '';
-
-            if (isset($current['parentId'])) {
-                $parentId = strtolower(trim((string) $current['parentId']));
-            }
-
-            if ($parentId === '' && isset($current['parent']) && is_array($current['parent']) && isset($current['parent']['id'])) {
-                $parentId = strtolower(trim((string) $current['parent']['id']));
-            }
+            $parentId = self::resolve_project_parent_id($current);
 
             if ($parentId === '' || isset($visited[$parentId]) || !isset($projectsById[$parentId])) {
                 break;
@@ -349,6 +341,49 @@ final class DM_Rest_Controller
 
             self::collect_linked_projects_recursive($childProject, $projectsById, $projectsByKey, $result, $visited);
         }
+
+        if ($projectId === '') {
+            return;
+        }
+
+        foreach ($projectsById as $candidateId => $candidateProject) {
+            if (isset($visited[$candidateId])) {
+                continue;
+            }
+
+            $parentId = self::resolve_project_parent_id($candidateProject);
+            if ($parentId === '' || $parentId !== $projectId) {
+                continue;
+            }
+
+            $result[$candidateId] = $candidateProject;
+            $visited[$candidateId] = true;
+
+            self::collect_linked_projects_recursive($candidateProject, $projectsById, $projectsByKey, $result, $visited);
+        }
+    }
+
+    private static function resolve_project_parent_id(array $project): string
+    {
+        $candidates = [
+            $project['parentId'] ?? null,
+            $project['parent_id'] ?? null,
+            $project['parentID'] ?? null,
+        ];
+
+        if (isset($project['parent']) && is_array($project['parent'])) {
+            $candidates[] = $project['parent']['id'] ?? null;
+            $candidates[] = $project['parent']['projectId'] ?? null;
+        }
+
+        foreach ($candidates as $candidate) {
+            $value = strtolower(trim((string) ($candidate ?? '')));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
     }
 
     /**

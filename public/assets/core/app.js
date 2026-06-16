@@ -1,18 +1,22 @@
 // Dynamic imports with cache-busting for production compatibility
-const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfig?.ver) || Date.now();
+const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfig?.ver) || '5.0.11';
 
 async function loadModules() {
     const ver = getVersion();
     const base = import.meta.url.substring(0, import.meta.url.lastIndexOf('/'));
 
-    const [constants, data, layout, modals, storage, wpAdmin, header] = await Promise.all([
+    const [constants, data, layout, modals, storage, wpAdmin, header, mapsView, dashboardView, settingsView, guidesView] = await Promise.all([
         import(`${base}/constants.js?ver=${ver}`),
         import(`${base}/data.js?ver=${ver}`),
         import(`${base}/layout/app-shell.js?ver=${ver}`),
         import(`${base}/modals/index.js?ver=${ver}`),
         import(`${base}/storage-client.js?ver=${ver}`),
         import(`${base}/wp-admin-layout.js?ver=${ver}`),
-        import(`${base}/layout/header.js?ver=${ver}`)
+        import(`${base}/layout/header.js?ver=${ver}`),
+        import(`${base}/views/maps-view.js?ver=${ver}`),
+        import(`${base}/views/dashboard-view.js?ver=${ver}`),
+        import(`${base}/views/settings-view.js?ver=${ver}`),
+        import(`${base}/views/guides-view.js?ver=${ver}`)
     ]);
 
     return {
@@ -27,6 +31,10 @@ async function loadModules() {
         getAvailableFonts: data.getAvailableFonts,
         renderAppShell: layout.renderAppShell,
         renderHeader: header.renderHeader,
+        renderMapsView: mapsView.renderMapsView,
+        renderDashboardView: dashboardView.renderDashboardView,
+        renderSettingsView: settingsView.renderSettingsView,
+        renderGuidesView: guidesView.renderGuidesView,
         renderModal: modals.renderModal,
         renderLocalitiesPopup: modals.renderLocalitiesPopup,
         createStorageClient: storage.createStorageClient,
@@ -52,7 +60,8 @@ export async function initDeveloperMap(options) {
     const {
         APP_VIEWS, MAP_SECTIONS, SETTINGS_SECTIONS, DRAW_VIEWBOX,
         createInitialData, getDefaultTypes, getDefaultStatuses, getDefaultColors, getAvailableFonts,
-        renderAppShell, renderHeader, renderModal, renderLocalitiesPopup, createStorageClient, WPAdminLayoutManager, assetsBase
+        renderAppShell, renderHeader, renderMapsView, renderDashboardView, renderSettingsView, renderGuidesView,
+        renderModal, renderLocalitiesPopup, createStorageClient, WPAdminLayoutManager, assetsBase
     } = modules;
 
     if (!root || !(root instanceof HTMLElement)) {
@@ -2007,10 +2016,16 @@ export async function initDeveloperMap(options) {
         const urlInput = form.querySelector('input[data-dm-field="url"]');
         const detailUrlInput = form.querySelector('input[data-dm-field="detail-url"]');
         const areaInput = form.querySelector('input[data-dm-field="area"]');
+        const loggiaAreaInput = form.querySelector('input[data-dm-field="loggia-area"]');
+        const terraceAreaInput = form.querySelector('input[data-dm-field="terrace-area"]');
+        const totalAreaInput = form.querySelector('input[data-dm-field="total-area"]');
+        const parkingSpacesInput = form.querySelector('input[data-dm-field="parking-spaces"]');
         const suffixInput = form.querySelector('input[data-dm-field="suffix"]');
         const prefixInput = form.querySelector('input[data-dm-field="prefix"]');
         const designationInput = form.querySelector('input[data-dm-field="designation"]');
         const priceInput = form.querySelector('input[data-dm-field="price"]');
+        const parkingPriceInput = form.querySelector('input[data-dm-field="parking-price"]');
+        const totalPriceInput = form.querySelector('input[data-dm-field="total-price"]');
         const rentInput = form.querySelector('input[data-dm-field="rent"]');
 
         const nameValue = nameInput ? nameInput.value.trim() : '';
@@ -2049,10 +2064,16 @@ export async function initDeveloperMap(options) {
         const urlValue = urlInput ? urlInput.value.trim() : '';
         const detailUrlValue = detailUrlInput ? detailUrlInput.value.trim() : '';
         const areaValue = areaInput ? areaInput.value.trim() : '';
+        const loggiaAreaValue = loggiaAreaInput ? loggiaAreaInput.value.trim() : '';
+        const terraceAreaValue = terraceAreaInput ? terraceAreaInput.value.trim() : '';
+        const totalAreaValue = totalAreaInput ? totalAreaInput.value.trim() : '';
+        const parkingSpacesValue = parkingSpacesInput ? parkingSpacesInput.value.trim() : '';
         const suffixValue = suffixInput ? suffixInput.value.trim() : 'm²';
         const prefixValue = prefixInput ? prefixInput.value.trim() : '';
         const designationValue = designationInput ? designationInput.value.trim() : '';
         const priceValue = priceInput ? priceInput.value.trim() : '';
+        const parkingPriceValue = parkingPriceInput ? parkingPriceInput.value.trim() : '';
+        const totalPriceValue = totalPriceInput ? totalPriceInput.value.trim() : '';
         const rentValue = rentInput ? rentInput.value.trim() : '';
 
         let parentId = null;
@@ -2073,10 +2094,16 @@ export async function initDeveloperMap(options) {
             url: urlValue,
             detailUrl: detailUrlValue,
             area: areaValue,
+            loggiaArea: loggiaAreaValue,
+            terraceArea: terraceAreaValue,
+            totalArea: totalAreaValue,
+            parkingSpaces: parkingSpacesValue,
             suffix: suffixValue,
             prefix: prefixValue,
             designation: designationValue,
             price: priceValue,
+            parkingPrice: parkingPriceValue,
+            totalPrice: totalPriceValue,
             rent: rentValue,
             elements: {
                 nameInput,
@@ -2385,7 +2412,18 @@ export async function initDeveloperMap(options) {
     }
 
     function render() {
-        root.innerHTML = [renderAppShell(state, data, { renderHeader, assetsBase }), renderModal(state, data)].join('');
+        root.innerHTML = [
+            renderAppShell(state, data, {
+                renderHeader,
+                renderMapsView,
+                renderDashboardView,
+                renderSettingsView,
+                renderGuidesView,
+                APP_VIEWS,
+                assetsBase,
+            }),
+            renderModal(state, data),
+        ].join('');
         applyStatusStyles(data.statuses);
         attachEventHandlers();
         adjustSearchWidth();
@@ -2934,10 +2972,16 @@ export async function initDeveloperMap(options) {
                         currentFormData.url = locationFields.url;
                         currentFormData.detailUrl = locationFields.detailUrl;
                         currentFormData.area = locationFields.area;
+                        currentFormData.loggiaArea = locationFields.loggiaArea;
+                        currentFormData.terraceArea = locationFields.terraceArea;
+                        currentFormData.totalArea = locationFields.totalArea;
+                        currentFormData.parkingSpaces = locationFields.parkingSpaces;
                         currentFormData.suffix = locationFields.suffix;
                         currentFormData.prefix = locationFields.prefix;
                         currentFormData.designation = locationFields.designation;
                         currentFormData.price = locationFields.price;
+                        currentFormData.parkingPrice = locationFields.parkingPrice;
+                        currentFormData.totalPrice = locationFields.totalPrice;
                         currentFormData.rent = locationFields.rent;
                     }
                 } else {
@@ -3256,11 +3300,17 @@ export async function initDeveloperMap(options) {
         result.item.url = fields.url;
         result.item.detailUrl = fields.detailUrl;
         result.item.area = fields.area;
+        result.item.loggiaArea = fields.loggiaArea;
+        result.item.terraceArea = fields.terraceArea;
+        result.item.totalArea = fields.totalArea;
+        result.item.parkingSpaces = fields.parkingSpaces;
         result.item.suffix = fields.suffix;
         result.item.prefix = fields.prefix;
         result.item.designation = fields.designation;
         result.item.rent = fields.rent;
         result.item.price = fields.price;
+        result.item.parkingPrice = fields.parkingPrice;
+        result.item.totalPrice = fields.totalPrice;
 
         // Update image if provided
         if (imageData) {
@@ -3372,11 +3422,17 @@ export async function initDeveloperMap(options) {
                 url: fields.url,
                 detailUrl: fields.detailUrl,
                 area: fields.area,
+                loggiaArea: fields.loggiaArea,
+                terraceArea: fields.terraceArea,
+                totalArea: fields.totalArea,
+                parkingSpaces: fields.parkingSpaces,
                 suffix: fields.suffix,
                 prefix: fields.prefix,
                 designation: fields.designation,
                 rent: fields.rent,
                 price: fields.price,
+                parkingPrice: fields.parkingPrice,
+                totalPrice: fields.totalPrice,
                 image: imageData || '',
                 imageUrl: imageData || '',
                 image_id: imageSelection?.id ?? null,
@@ -4452,8 +4508,6 @@ export async function initDeveloperMap(options) {
         const tableEnabledToggle = drawRoot.querySelector('[data-dm-table-enabled]');
         const tableScopeWrapper = drawRoot.querySelector('[data-dm-table-scope-wrapper]');
         const tableScopeField = drawRoot.querySelector('[data-dm-table-scope]');
-        const includeParentWrapper = drawRoot.querySelector('[data-dm-table-parent-wrapper]');
-        const includeParentToggle = drawRoot.querySelector('[data-dm-table-include-parent]');
 
         const updateLocalitiesSummary = () => {
             if (!localitiesSummaryCount || !regionChildrenFieldset) {
@@ -4570,14 +4624,11 @@ export async function initDeveloperMap(options) {
             }
             if (tableScopeField) {
                 tableScopeField.disabled = !enabled;
-                tableScopeField.value = tableSettings.scope === 'hierarchy' ? 'hierarchy' : 'current';
-            }
-            if (includeParentWrapper) {
-                includeParentWrapper.hidden = !enabled;
-            }
-            if (includeParentToggle) {
-                includeParentToggle.disabled = !enabled;
-                includeParentToggle.checked = Boolean(tableSettings.includeParent);
+                if (tableScopeField.type === 'checkbox') {
+                    tableScopeField.checked = tableSettings.scope === 'hierarchy';
+                } else {
+                    tableScopeField.value = tableSettings.scope === 'hierarchy' ? 'hierarchy' : 'current';
+                }
             }
             if (tableEnabledToggle) {
                 tableEnabledToggle.checked = enabled;
@@ -4594,12 +4645,10 @@ export async function initDeveloperMap(options) {
             }
             if (tableScopeField) {
                 tableScopeField.addEventListener('change', () => {
-                    tableSettings.scope = tableScopeField.value === 'hierarchy' ? 'hierarchy' : 'current';
-                });
-            }
-            if (includeParentToggle) {
-                includeParentToggle.addEventListener('change', () => {
-                    tableSettings.includeParent = includeParentToggle.checked;
+                    tableSettings.scope =
+                        tableScopeField.type === 'checkbox'
+                            ? (tableScopeField.checked ? 'hierarchy' : 'current')
+                            : (tableScopeField.value === 'hierarchy' ? 'hierarchy' : 'current');
                 });
             }
         }

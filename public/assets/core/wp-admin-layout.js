@@ -13,7 +13,7 @@
  * - Aplikuje offsety na všetky overlaye (editor + modály)
  * - Čistý vanilla JS, žiadne závislosti
  * 
- * @version 1.2.0
+ * @version 5.0.11
  * @date 2025-11-03
  */
 

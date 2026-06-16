@@ -8,6 +8,7 @@ import { migrateLocalStorage } from './core/storage-migration.js';
  */
 
 const ROOT_SELECTOR = '#dm-root[data-dm-app="developer-map"]';
+const ASSET_VERSION = '5.0.11';
 const runtimeConfig = (typeof window !== 'undefined') ? window.dmRuntimeConfig : null;
 let booted = false;
 
@@ -63,7 +64,7 @@ async function boot() {
     }
 
     const base = new URL('./', import.meta.url);
-    const ver  = runtimeConfig.ver || Date.now();
+    const ver  = runtimeConfig.ver || ASSET_VERSION;
     
     // Use import map workaround: append version to all module URLs
     const appUrl = new URL(`./core/app.js?ver=${ver}`, base).href;

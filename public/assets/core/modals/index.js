@@ -87,7 +87,7 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
     const arrowIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right-icon lucide-arrow-right"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
     const isEdit = title === 'Upraviť mapu';
     const headerIcon = isEdit ? arrowIcon : plusIcon;
-    
+
     // Zisti položku, ktorú upravujeme (project alebo floor)
     let editItem = null;
     let editParent = null;
@@ -173,7 +173,7 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
     const typePlaceholderLabel = typeOptionsSource.length
         ? 'Vyberte typ'
         : 'Najprv pridajte typ v nastaveniach';
-    
+
     const typeOptions = typeOptionsSource
         .map((option) => {
             const value = option.label;
@@ -181,7 +181,7 @@ function renderFormModal(title, cta, data, itemId = null, modalState = null) {
             return `<option value="${escapeHtml(value)}"${isSelected ? ' selected' : ''}>${escapeHtml(option.label)}</option>`;
         })
         .join('');
-    
+
     return `
         <div class="dm-modal-overlay">
             <div class="dm-modal dm-modal--map">
@@ -265,7 +265,7 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
     const arrowIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right-icon lucide-arrow-right"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
     const isEdit = title.includes('Upraviť');
     const headerIcon = isEdit ? arrowIcon : plusIcon;
-    
+
     // Find the location being edited
     let editLocation = null;
     let editParent = null;
@@ -314,7 +314,7 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
 
     // Status select
     const statusOptionsSource = Array.isArray(data.statuses) ? data.statuses : [];
-    
+
     // Find active project for table settings
     const activeProject = (() => {
         // If editing, use parent project
@@ -328,7 +328,7 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
         // Otherwise use first project
         return projects[0] ?? null;
     })();
-    
+
     const tableSettings = (() => {
         const frontend = activeProject && typeof activeProject.frontend === 'object' ? activeProject.frontend : null;
         const table = frontend && typeof frontend.locationTable === 'object' ? frontend.locationTable : null;
@@ -372,11 +372,13 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
     const urlValue = formData.url ?? editLocation?.url ?? '';
     const detailUrlValue = formData.detailUrl ?? editLocation?.detailUrl ?? '';
     const areaValue = formData.area ?? editLocation?.area ?? '';
-    const suffixValue = formData.suffix ?? editLocation?.suffix ?? '';
-    const prefixValue = formData.prefix ?? editLocation?.prefix ?? '';
-    const designationValue = formData.designation ?? editLocation?.designation ?? editLocation?.label ?? '';
+    const loggiaAreaValue = formData.loggiaArea ?? editLocation?.loggiaArea ?? editLocation?.loggia ?? '';
+    const terraceAreaValue = formData.terraceArea ?? editLocation?.terraceArea ?? editLocation?.terrace ?? '';
+    const totalAreaValue = formData.totalArea ?? editLocation?.totalArea ?? '';
+    const parkingSpacesValue = formData.parkingSpaces ?? editLocation?.parkingSpaces ?? editLocation?.parkingPlace ?? '';
     const priceValue = formData.price ?? editLocation?.price ?? editLocation?.rent ?? '';
-    const rentValue = formData.rent ?? editLocation?.rent ?? editLocation?.price ?? '';
+    const parkingPriceValue = formData.parkingPrice ?? editLocation?.parkingPrice ?? '';
+    const totalPriceValue = formData.totalPrice ?? editLocation?.totalPrice ?? editLocation?.price ?? '';
 
     // Image selection logic
     const imageSelection = modalState?.imageSelection ?? null;
@@ -446,43 +448,9 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <label class="dm-field__label">Typ<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Názov lokality" data-tooltip="Názov lokality">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Číslo alebo názov bytu" data-tooltip="Číslo alebo názov bytu/lokality">${infoIcon}</button>
                                             <input required type="text" autocomplete="off" class="dm-field__input" data-dm-field="name" placeholder=" " value="${escapeHtml(nameValue)}">
-                                            <label class="dm-field__label">Názov<span class="dm-field__required">*</span></label>
-                                        </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Označenie lokality" data-tooltip="Označenie lokality">${infoIcon}</button>
-                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="designation" placeholder=" " value="${escapeHtml(designationValue)}">
-                                            <label class="dm-field__label">Označenie</label>
-                                        </div>
-                                    </div>
-                                    <div class="dm-form__column">
-                                        <div class="dm-field dm-field--with-unit" data-unit="m²">
-                                            <button type="button" class="dm-field__info" aria-label="Rozloha lokality v m²" data-tooltip="Rozloha lokality v m²">${infoIcon}</button>
-                                            <input type="number" step="0.01" autocomplete="off" class="dm-field__input" data-dm-field="area" placeholder=" " value="${escapeHtml(areaValue)}">
-                                            <label class="dm-field__label">Rozloha (m²)</label>
-                                        </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Prefix lokality" data-tooltip="Prefix lokality">${infoIcon}</button>
-                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="prefix" placeholder=" " value="${escapeHtml(prefixValue)}">
-                                            <label class="dm-field__label">Prefix</label>
-                                        </div>
-                                        <div class="dm-field dm-field--with-unit" data-unit="€">
-                                            <button type="button" class="dm-field__info" aria-label="Cena v €" data-tooltip="Cena v €">${infoIcon}</button>
-                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="price" placeholder=" " value="${escapeHtml(priceValue)}">
-                                            <label class="dm-field__label">Cena (€)</label>
-                                        </div>
-                                    </div>
-                                    <div class="dm-form__column">
-                                        <div class="dm-field dm-field--with-unit" data-unit="€">
-                                            <button type="button" class="dm-field__info" aria-label="Prenájom v €" data-tooltip="Prenájom v €">${infoIcon}</button>
-                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="rent" placeholder=" " value="${escapeHtml(rentValue)}">
-                                            <label class="dm-field__label">Prenájom (€)</label>
-                                        </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Suffix pre rozlohu" data-tooltip="Suffix pre rozlohu">${infoIcon}</button>
-                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="suffix" placeholder=" " value="${escapeHtml(suffixValue)}">
-                                            <label class="dm-field__label">Suffix</label>
+                                            <label class="dm-field__label">Byt<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Stav lokality" data-tooltip="Stav lokality">${infoIcon}</button>
@@ -491,6 +459,50 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                                 ${statusOptions}
                                             </select>
                                             <label class="dm-field__label">Stav<span class="dm-field__required">*</span></label>
+                                        </div>
+                                    </div>
+                                    <div class="dm-form__column">
+                                        <div class="dm-field dm-field--with-unit" data-unit="m²">
+                                            <button type="button" class="dm-field__info" aria-label="Výmera lokality v m²" data-tooltip="Výmera lokality v m²">${infoIcon}</button>
+                                            <input type="text" inputmode="decimal" autocomplete="off" class="dm-field__input" data-dm-field="area" placeholder=" " value="${escapeHtml(areaValue)}">
+                                            <label class="dm-field__label">Výmera</label>
+                                        </div>
+                                        <div class="dm-field dm-field--with-unit" data-unit="m²">
+                                            <button type="button" class="dm-field__info" aria-label="Výmera lodžie v m²" data-tooltip="Výmera lodžie v m²">${infoIcon}</button>
+                                            <input type="text" inputmode="decimal" autocomplete="off" class="dm-field__input" data-dm-field="loggia-area" placeholder=" " value="${escapeHtml(loggiaAreaValue)}">
+                                            <label class="dm-field__label">Lodžia</label>
+                                        </div>
+                                        <div class="dm-field dm-field--with-unit" data-unit="m²">
+                                            <button type="button" class="dm-field__info" aria-label="Výmera terasy v m²" data-tooltip="Výmera terasy v m²">${infoIcon}</button>
+                                            <input type="text" inputmode="decimal" autocomplete="off" class="dm-field__input" data-dm-field="terrace-area" placeholder=" " value="${escapeHtml(terraceAreaValue)}">
+                                            <label class="dm-field__label">Terasa</label>
+                                        </div>
+                                        <div class="dm-field dm-field--with-unit" data-unit="m²">
+                                            <button type="button" class="dm-field__info" aria-label="Celková výmera v m²" data-tooltip="Výmera spolu vrátane exteriérov">${infoIcon}</button>
+                                            <input type="text" inputmode="decimal" autocomplete="off" class="dm-field__input" data-dm-field="total-area" placeholder=" " value="${escapeHtml(totalAreaValue)}">
+                                            <label class="dm-field__label">Výmera spolu</label>
+                                        </div>
+                                    </div>
+                                    <div class="dm-form__column">
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Počet parkovacích miest" data-tooltip="Počet parkovacích miest">${infoIcon}</button>
+                                            <input type="text" inputmode="numeric" autocomplete="off" class="dm-field__input" data-dm-field="parking-spaces" placeholder=" " value="${escapeHtml(parkingSpacesValue)}">
+                                            <label class="dm-field__label">Parkovacie miesto</label>
+                                        </div>
+                                        <div class="dm-field dm-field--with-unit" data-unit="€">
+                                            <button type="button" class="dm-field__info" aria-label="Cena bytu s DPH bez parkovania" data-tooltip="Cena bytu s DPH bez parkovacieho miesta">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="price" placeholder=" " value="${escapeHtml(priceValue)}">
+                                            <label class="dm-field__label">Cena bytu s DPH</label>
+                                        </div>
+                                        <div class="dm-field dm-field--with-unit" data-unit="€">
+                                            <button type="button" class="dm-field__info" aria-label="Cena parkovania s DPH" data-tooltip="Cena parkovania s DPH">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="parking-price" placeholder=" " value="${escapeHtml(parkingPriceValue)}">
+                                            <label class="dm-field__label">Parkovanie s DPH</label>
+                                        </div>
+                                        <div class="dm-field dm-field--with-unit" data-unit="€">
+                                            <button type="button" class="dm-field__info" aria-label="Spolu byt s parkovacím miestom" data-tooltip="Spolu byt s parkovacím miestom">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="total-price" placeholder=" " value="${escapeHtml(totalPriceValue)}">
+                                            <label class="dm-field__label">Spolu s parkovaním</label>
                                         </div>
                                     </div>
                                 </div>
@@ -760,12 +772,12 @@ function renderDrawModal(state, data) {
     const npSorted =
         contextType === 'project'
             ? floorsForChildren
-                  .filter((floor) => /NP$/i.test(floor.label ?? ''))
-                  .sort((a, b) => {
-                      const aNum = parseInt(String(a.label).replace(/\D/g, ''), 10) || 0;
-                      const bNum = parseInt(String(b.label).replace(/\D/g, ''), 10) || 0;
-                      return bNum - aNum;
-                  })
+                .filter((floor) => /NP$/i.test(floor.label ?? ''))
+                .sort((a, b) => {
+                    const aNum = parseInt(String(a.label).replace(/\D/g, ''), 10) || 0;
+                    const bNum = parseInt(String(b.label).replace(/\D/g, ''), 10) || 0;
+                    return bNum - aNum;
+                })
             : [];
     const npLabels = (npSorted.length > 4 ? npSorted.slice(1, 5) : npSorted.slice(0, 4)).map((floor) => floor.label);
     const ppLabel =
@@ -807,29 +819,29 @@ function renderDrawModal(state, data) {
     const selectedChildKeys = new Set(
         Array.isArray(activeRegion?.children)
             ? activeRegion.children
-                  .map((child) => resolveRegionChildKey(child))
-                  .filter(Boolean)
+                .map((child) => resolveRegionChildKey(child))
+                .filter(Boolean)
             : []
     );
 
     const regionListMarkup = regions.length
         ? regions
-              .map((region, index) => {
-                  // Always use region.id as key, never index
-                  const id = String(region.id ?? region.lotId ?? '');
-                  if (!id) {
-                      console.warn('[renderDrawModal] Region missing id:', region);
-                      return '';
-                  }
-                  const isActive = activeRegion
-                      ? String(activeRegion.id ?? '') === id
-                      : index === 0 && !activeRegionId;
-                  const label = region.label ?? region.name ?? `Zóna ${index + 1}`;
-                  const childCount = Array.isArray(region.children) ? region.children.length : 0;
-                  const connectionMeta = childCount > 0
-                      ? `Prepojených: ${childCount}`
-                      : 'Bez prepojení';
-                  return `
+            .map((region, index) => {
+                // Always use region.id as key, never index
+                const id = String(region.id ?? region.lotId ?? '');
+                if (!id) {
+                    console.warn('[renderDrawModal] Region missing id:', region);
+                    return '';
+                }
+                const isActive = activeRegion
+                    ? String(activeRegion.id ?? '') === id
+                    : index === 0 && !activeRegionId;
+                const label = region.label ?? region.name ?? `Zóna ${index + 1}`;
+                const childCount = Array.isArray(region.children) ? region.children.length : 0;
+                const connectionMeta = childCount > 0
+                    ? `Prepojených: ${childCount}`
+                    : 'Bez prepojení';
+                return `
                         <li class="dm-editor__zone-item${isActive ? ' dm-editor__zone-item--active' : ''}" data-dm-region-item="${escapeHtml(id)}">
                             <button type="button" class="dm-editor__zone-button" data-dm-region-trigger="${escapeHtml(id)}">
                                 <span class="dm-editor__zone-name">${escapeHtml(label)}</span>
@@ -837,9 +849,9 @@ function renderDrawModal(state, data) {
                             </button>
                         </li>
                     `;
-              })
-              .filter(Boolean)
-              .join('')
+            })
+            .filter(Boolean)
+            .join('')
         : `
                 <li class="dm-editor__zone-item dm-editor__zone-item--empty">
                     <span class="dm-editor__empty-text">Zatiaľ žiadne zóny</span>
@@ -1211,12 +1223,12 @@ function renderDrawModal(state, data) {
             const metaText = metaParts.join(' • ');
             const statusBadges = aggregate.statuses.length
                 ? aggregate.statuses
-                      .map((entry) => {
-                          const variant = slugifyStatus(entry.label);
-                          const inlineColor = entry.color ? ` style=\"--dm-status-color:${escapeHtml(entry.color)}\"` : '';
-                          return `<span class="dm-status dm-status--${escapeHtml(variant)}"${inlineColor}>${escapeHtml(entry.label)} (${entry.count})</span>`;
-                      })
-                      .join('')
+                    .map((entry) => {
+                        const variant = slugifyStatus(entry.label);
+                        const inlineColor = entry.color ? ` style=\"--dm-status-color:${escapeHtml(entry.color)}\"` : '';
+                        return `<span class="dm-status dm-status--${escapeHtml(variant)}"${inlineColor}>${escapeHtml(entry.label)} (${entry.count})</span>`;
+                    })
+                    .join('')
                 : '<span class="dm-localities-table__empty">Bez prepojených lokalít</span>';
             const descendantRowsAttr = descendantRowIds.length
                 ? ` data-dm-descendant-rows="${escapeHtml(descendantRowIds.join(' '))}"`
@@ -1274,9 +1286,13 @@ function renderDrawModal(state, data) {
             if (typeLabel) {
                 metaBits.push(`Typ: ${typeLabel}`);
             }
-            const prefixSuffix = `${floor?.prefix ?? ''}${floor?.suffix ?? ''}`.trim();
-            if (prefixSuffix) {
-                metaBits.push(prefixSuffix);
+            const areaValue = floor?.totalArea ?? floor?.area ?? '';
+            if (areaValue) {
+                metaBits.push(`Výmera: ${areaValue} m²`);
+            }
+            const priceValue = floor?.totalPrice ?? floor?.price ?? '';
+            if (priceValue) {
+                metaBits.push(`Cena: ${priceValue}`);
             }
             const metaText = metaBits.join(' • ');
             const indentStep = 24;
@@ -1348,10 +1364,10 @@ function renderDrawModal(state, data) {
                     data-dm-draw-root
                     data-dm-owner="${escapeHtml(contextType)}"
                     data-dm-owner-id="${escapeHtml(
-                        contextType === 'floor'
-                            ? activeFloor?.id ?? ''
-                            : activeProject?.id ?? '',
-                    )}"
+        contextType === 'floor'
+            ? activeFloor?.id ?? ''
+            : activeProject?.id ?? '',
+    )}"
                     data-dm-project-id="${escapeHtml(activeProject?.id ?? '')}"
                     data-dm-floor-name="${escapeHtml(surfaceLabel)}"
                     data-dm-active-region="${activeRegion ? escapeHtml(String(activeRegion.id)) : ''}"
@@ -1404,14 +1420,14 @@ function renderDrawModal(state, data) {
                                 ${levelLabels.length ? `
                                 <ul class="dm-draw__levels">
                                     ${levelLabels
-                                        .map(
-                                            (label) => `
+                .map(
+                    (label) => `
                                                 <li class="${activeFloor?.label === label ? 'is-active' : ''}">
                                                     ${escapeHtml(label)}
                                                 </li>
                                             `,
-                                        )
-                                        .join('')}
+                )
+                .join('')}
                                 </ul>` : ''}
                                 <button type="button" class="dm-draw__fullscreen-toggle" data-dm-fullscreen-toggle aria-pressed="false" aria-label="Zobraziť na celú obrazovku">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1455,34 +1471,27 @@ function renderDrawModal(state, data) {
                                     <label class="dm-field__label">URL</label>
                                 </div>
                                 ${contextType === 'project'
-                                    ? (() => {
-                                          const settings = tableSettings ?? {
-                                              enabled: false,
-                                              scope: 'current',
-                                              includeParent: false,
-                                          };
-                                          return `
+            ? (() => {
+                const settings = tableSettings ?? {
+                    enabled: false,
+                    scope: 'current',
+                    includeParent: false,
+                };
+                return `
                                         <div class="dm-editor__fieldset dm-editor__fieldset--table">
                                             <label class="dm-toggle">
                                                 <input type="checkbox" data-dm-table-enabled${settings.enabled ? ' checked' : ''}>
-                                                <span>Zobrazovať tabuľku lokalít pod každou mapou v hierarchii</span>
+                                                <span>Zobraziť tabuľku lokalít pod aktuálnou mapou</span>
                                             </label>
                                             <p class="dm-toggle__hint">Zobrazí rovnaké stĺpce ako v dashboarde priamo pod mapou.</p>
-                                            <div class="dm-field dm-field--compact" data-dm-table-scope-wrapper${settings.enabled ? '' : ' hidden'}>
-                                                <select class="dm-field__input" data-dm-table-scope${settings.enabled ? '' : ' disabled'}>
-                                                    <option value="current"${settings.scope === 'current' ? ' selected' : ''}>Len aktuálna mapa</option>
-                                                    <option value="hierarchy"${settings.scope === 'hierarchy' ? ' selected' : ''}>Celá hierarchia</option>
-                                                </select>
-                                                <label class="dm-field__label">Rozsah tabuľky</label>
-                                            </div>
-                                            <label class="dm-toggle dm-toggle--nested" data-dm-table-parent-wrapper${settings.enabled ? '' : ' hidden'}>
-                                                <input type="checkbox" data-dm-table-include-parent${settings.includeParent ? ' checked' : ''}${settings.enabled ? '' : ' disabled'}>
-                                                <span>Zobraziť aj lokality nadradenej mapy</span>
+                                            <label class="dm-toggle dm-toggle--nested" data-dm-table-scope-wrapper${settings.enabled ? '' : ' hidden'}>
+                                                <input type="checkbox" data-dm-table-scope value="hierarchy"${settings.scope === 'hierarchy' ? ' checked' : ''}${settings.enabled ? '' : ' disabled'}>
+                                                <span>Zahrnúť lokality z celej podradenej hierarchie</span>
                                             </label>
                                         </div>
                                         `;
-                                      })()
-                                    : ''}
+            })()
+            : ''}
                             </div>
                         </div>
                         
@@ -1493,8 +1502,8 @@ function renderDrawModal(state, data) {
                             </div>
                             <div class="dm-editor__panel-content dm-editor__panel-content--scrollable">
                                 ${contextType === 'project'
-                                    ? hasLinkableRows
-                                        ? `
+            ? hasLinkableRows
+                ? `
                                             <button type="button" class="dm-button dm-button--primary dm-button--full-width" data-dm-open-localities-popup>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
@@ -1513,12 +1522,12 @@ function renderDrawModal(state, data) {
                                                 </table>
                                             </div>
                                         `
-                                        : `
+                : `
                                             <p class="dm-editor__empty-message">
                                                 Žiadne dostupné prepojenia. Skontrolujte, či projekt obsahuje podriadené mapy alebo lokality.
                                             </p>
                                         `
-                                    : `
+            : `
                                         <p class="dm-editor__empty-message">
                                             V tomto režime nie sú dostupné prepojenia.
                                         </p>
@@ -1572,7 +1581,7 @@ function renderLocalitiesPopup() {
                             <tr>
                                 <th class="dm-localities-table__th dm-localities-table__th--sticky">Prepojenie</th>
                                 <th class="dm-localities-table__th">Typ</th>
-                                <th class="dm-localities-table__th">Názov</th>
+                                <th class="dm-localities-table__th">Byt / názov</th>
                                 <th class="dm-localities-table__th">Stav</th>
                             </tr>
                         </thead>
@@ -1620,7 +1629,7 @@ function renderSimpleForm(placeholder) {
 function renderColorModal(data, payload) {
     const colorId = payload || 'color-1';
     const color = data.colors.find((c) => c.id === colorId) || data.colors[0];
-    
+
     return `
         <div class="dm-modal-overlay">
             <div class="dm-modal dm-modal--narrow">

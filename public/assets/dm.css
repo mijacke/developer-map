@@ -1,6 +1,6 @@
 /* Developer Map - Compiled CSS */
 /* Generated: 2025-10-31 08:58:33 */
-/* Version: 0.2.1 */
+/* Version: 5.0.11 */
 
 /* === base.css === */
 #dm-root.dm-root {
@@ -2319,6 +2319,11 @@
     overflow: visible;
 }
 
+.dm-dashboard__table-wrapper--inventory {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
 .dm-dashboard__table {
     display: flex;
     flex-direction: column;
@@ -2372,6 +2377,77 @@
     background: transparent !important;
     position: relative;
     overflow: visible;
+}
+
+.dm-dashboard__table--inventory thead tr,
+.dm-dashboard__table--inventory tbody tr {
+    grid-template-columns:
+        minmax(44px, 0.46fr)
+        minmax(42px, 0.42fr)
+        minmax(72px, 0.78fr)
+        minmax(70px, 0.76fr)
+        minmax(70px, 0.76fr)
+        minmax(78px, 0.8fr)
+        minmax(40px, 0.38fr)
+        minmax(92px, 0.96fr)
+        minmax(84px, 0.86fr)
+        minmax(90px, 0.92fr)
+        minmax(126px, 1.14fr)
+        minmax(96px, 0.88fr);
+    gap: 10px;
+    padding: 14px 16px;
+}
+
+.dm-dashboard__table--inventory-public thead tr,
+.dm-dashboard__table--inventory-public tbody tr {
+    grid-template-columns:
+        minmax(44px, 0.46fr)
+        minmax(42px, 0.42fr)
+        minmax(72px, 0.78fr)
+        minmax(70px, 0.76fr)
+        minmax(70px, 0.76fr)
+        minmax(78px, 0.8fr)
+        minmax(40px, 0.38fr)
+        minmax(92px, 0.96fr)
+        minmax(84px, 0.86fr)
+        minmax(90px, 0.92fr)
+        minmax(126px, 1.14fr);
+}
+
+.dm-dashboard__table--inventory th {
+    font-size: 11px;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    white-space: normal;
+}
+
+.dm-dashboard__table--inventory td {
+    font-size: 13px;
+    line-height: 1.25;
+}
+
+.dm-dashboard__table--inventory .dm-status {
+    max-width: none;
+    padding-inline: 10px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.dm-dashboard__table--inventory td[data-label="Byt"],
+.dm-dashboard__table--inventory td[data-label="Typ"],
+.dm-dashboard__table--inventory td[data-label="Park."],
+.dm-dashboard__table--inventory th:nth-child(1),
+.dm-dashboard__table--inventory th:nth-child(2),
+.dm-dashboard__table--inventory th:nth-child(7) {
+    font-size: 12px;
+}
+
+.dm-dashboard__table--inventory td[data-label="Stav"] {
+    overflow: visible;
+}
+
+.dm-dashboard__table--inventory {
+    min-width: 1040px;
 }
 
 .dm-dashboard__table tbody tr:nth-child(even) {
@@ -2601,6 +2677,10 @@
 
     .dm-dashboard__table {
         gap: clamp(12px, 2vw, 16px);
+    }
+
+    .dm-dashboard__table--inventory {
+        min-width: 0;
     }
 
     .dm-dashboard__table thead {
@@ -2899,6 +2979,16 @@ body:not(.wp-admin) .dm-modal-overlay {
 .dm-modal--map,
 .dm-modal--location {
     scrollbar-color: color-mix(in srgb, var(--dm-map-modal-content-color) 18%, transparent) transparent;
+}
+
+.dm-modal--location,
+.dm-modal--location .dm-modal__body,
+.dm-modal--location .dm-modal__form,
+.dm-modal--location .dm-modal__form-layout,
+.dm-modal--location .dm-modal__form-fields,
+.dm-modal--location .dm-form__grid,
+.dm-modal--location .dm-form__column {
+    overflow: visible;
 }
 
 .dm-modal--map {
@@ -3578,6 +3668,38 @@ body:not(.wp-admin) .dm-modal-overlay {
     width: 100%;
 }
 
+.dm-modal--location .dm-modal__form {
+    --dm-modal-media-width: clamp(240px, 28vw, 320px);
+    --dm-modal-field-width: 18ch;
+}
+
+.dm-modal--location .dm-modal__form-fields {
+    gap: 22px;
+}
+
+.dm-modal--location .dm-modal__form .dm-form__grid {
+    gap: 20px 24px;
+}
+
+.dm-modal--location .dm-modal__form .dm-form__column {
+    gap: 20px;
+}
+
+.dm-modal--location .dm-field__input,
+.dm-modal--location .dm-select__trigger {
+    min-height: 54px;
+    padding-block: 0.9rem;
+    font-size: 0.94rem;
+}
+
+.dm-modal--location .dm-field__label {
+    max-width: calc(100% - 56px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
+
 .dm-field--flex-1 {
     flex: 1;
     min-width: 0;
@@ -3765,7 +3887,7 @@ body:not(.wp-admin) .dm-modal-overlay {
 }
 
 .dm-field--select-open {
-    z-index: 60;
+    z-index: 10020;
 }
 
 .dm-field__label {
@@ -3878,7 +4000,7 @@ body:not(.wp-admin) .dm-modal-overlay {
 }
 
 .dm-select--open {
-    z-index: 70;
+    z-index: 10030;
 }
 
 .dm-select__dropdown {
@@ -3898,8 +4020,16 @@ body:not(.wp-admin) .dm-modal-overlay {
     pointer-events: none;
     transform: translateY(-6px);
     transition: opacity 0.18s ease, transform 0.18s ease;
-    z-index: 80;
+    z-index: 10040;
     overflow: hidden;
+}
+
+.dm-modal--location .dm-select__dropdown {
+    max-height: min(360px, calc(100vh - 180px));
+}
+
+.dm-modal--location .dm-select__list {
+    max-height: min(320px, calc(100vh - 220px));
 }
 
 .dm-select--open .dm-select__dropdown {

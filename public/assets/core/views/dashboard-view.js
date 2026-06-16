@@ -39,7 +39,7 @@ function resolveStatus(floor, statuses) {
     const statusById = floor.statusId && statuses?.length > 0
         ? statuses.find((status) => String(status.id) === String(floor.statusId))
         : null;
-    
+
     // Get label from various sources
     const label = statusById?.label ?? floor.statusLabel ?? floor.status ?? 'Neznáme';
     const hasExplicitStatus = Boolean(statusById || floor.status || floor.statusLabel);
@@ -97,6 +97,8 @@ function matchesSearchTerm(floor, searchTerm) {
         normaliseText(floor?.designation),
         normaliseText(floor?.label),
         normaliseText(floor?.type),
+        normaliseText(floor?.parkingSpaces),
+        normaliseText(floor?.totalPrice),
     ].filter(Boolean);
     return candidates.some((value) => value.includes(needle));
 }
@@ -129,6 +131,45 @@ function formatArea(value) {
         return escapeHtml(display);
     }
     return escapeHtml(`${raw} m²`);
+}
+
+function parseDecimalValue(value) {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : null;
+    }
+    const raw = String(value ?? '').trim();
+    if (!raw) {
+        return null;
+    }
+    const cleaned = raw
+        .replace(/\s+/g, '')
+        .replace(/m²|m2/gi, '')
+        .replace(',', '.')
+        .replace(/[^0-9.+-]/g, '');
+    const numeric = Number(cleaned);
+    return Number.isFinite(numeric) ? numeric : null;
+}
+
+function formatDecimalDisplay(value) {
+    const numeric = parseDecimalValue(value);
+    if (numeric === null) {
+        return '';
+    }
+    return String(Number(numeric.toFixed(2))).replace('.', ',');
+}
+
+function resolveTotalArea(floor) {
+    const explicit = floor?.totalArea ?? floor?.meta?.totalArea;
+    if (String(explicit ?? '').trim()) {
+        return explicit;
+    }
+    const parts = [floor?.area, floor?.loggiaArea ?? floor?.loggia, floor?.terraceArea ?? floor?.terrace]
+        .map(parseDecimalValue)
+        .filter((value) => value !== null);
+    if (!parts.length) {
+        return '';
+    }
+    return formatDecimalDisplay(parts.reduce((sum, value) => sum + value, 0));
 }
 
 function normaliseCurrencyDisplay(value) {
@@ -166,6 +207,10 @@ function formatPrice(value) {
         return escapeHtml('—');
     }
     return escapeHtml(display);
+}
+
+function resolveSortablePrice(floor) {
+    return floor?.totalPrice ?? floor?.meta?.totalPrice ?? floor?.price ?? floor?.meta?.price ?? '';
 }
 
 function formatRent(value) {
@@ -238,58 +283,68 @@ export function renderDashboardView(state, data) {
     const orderedFloors =
         filteredFloors.length > 1 && (priceOrder === 'asc' || priceOrder === 'desc')
             ? [...filteredFloors].sort((a, b) => {
-                  const priceA = parsePriceValue(a.price);
-                  const priceB = parsePriceValue(b.price);
-                  if (priceA === null && priceB === null) return 0;
-                  if (priceA === null) return priceOrder === 'asc' ? 1 : -1;
-                  if (priceB === null) return priceOrder === 'asc' ? -1 : 1;
-                  return priceOrder === 'asc' ? priceA - priceB : priceB - priceA;
-              })
+                const priceA = parsePriceValue(resolveSortablePrice(a));
+                const priceB = parsePriceValue(resolveSortablePrice(b));
+                if (priceA === null && priceB === null) return 0;
+                if (priceA === null) return priceOrder === 'asc' ? 1 : -1;
+                if (priceB === null) return priceOrder === 'asc' ? -1 : 1;
+                return priceOrder === 'asc' ? priceA - priceB : priceB - priceA;
+            })
             : filteredFloors;
 
     const tableRows =
         orderedFloors.length > 0
             ? orderedFloors
-                  .map((floor) => {
-                      const status = resolveStatus(floor, statuses);
-                      const designation = floor.designation ?? floor.shortcode ?? floor.label;
+                .map((floor) => {
+                    const status = resolveStatus(floor, statuses);
+                    const unit = floor.name ?? floor.designation ?? floor.shortcode ?? floor.label;
+                    const loggiaArea = floor.loggiaArea ?? floor.loggia ?? floor.meta?.loggiaArea ?? '';
+                    const terraceArea = floor.terraceArea ?? floor.terrace ?? floor.meta?.terraceArea ?? '';
+                    const totalArea = resolveTotalArea(floor);
+                    const parkingSpaces = floor.parkingSpaces ?? floor.parkingPlace ?? floor.meta?.parkingSpaces ?? '';
+                    const parkingPrice = floor.parkingPrice ?? floor.meta?.parkingPrice ?? '';
+                    const totalPrice = floor.totalPrice ?? floor.meta?.totalPrice ?? floor.price;
 
-                      return `
+                    return `
                         <tr role="row">
+                            <td role="cell" data-label="Byt">${safeText(unit)}</td>
                             <td role="cell" data-label="Typ">${safeText(floor.type)}</td>
-                            <td role="cell" data-label="Názov">${safeText(floor.name)}</td>
-                            <td role="cell" data-label="Označenie">${safeText(designation)}</td>
-                            <td role="cell" data-label="Rozloha">${formatArea(floor.area)}</td>
-                            <td role="cell" data-label="Cena">${formatPrice(floor.price)}</td>
-                            <td role="cell" data-label="Prenájom">${formatRent(floor.rent)}</td>
+                            <td role="cell" data-label="Výmera">${formatArea(floor.area)}</td>
+                            <td role="cell" data-label="Lodžia">${formatArea(loggiaArea)}</td>
+                            <td role="cell" data-label="Terasa">${formatArea(terraceArea)}</td>
+                            <td role="cell" data-label="Spolu m²">${formatArea(totalArea)}</td>
+                            <td role="cell" data-label="Park.">${safeText(parkingSpaces)}</td>
+                            <td role="cell" data-label="Cena bytu">${formatPrice(floor.price)}</td>
+                            <td role="cell" data-label="Parkovanie">${formatPrice(parkingPrice)}</td>
+                            <td role="cell" data-label="Spolu">${formatPrice(totalPrice)}</td>
                             <td role="cell" data-label="Stav">${renderStatusBadge(status)}</td>
                             <td role="cell" data-label="Akcie" class="dm-dashboard__cell--actions">
                                 ${renderDashboardAction(
-                                    'edit',
-                                    'edit-location',
-                                    floor.id,
-                                    'Upraviť',
-                                )}
+                        'edit',
+                        'edit-location',
+                        floor.id,
+                        'Upraviť',
+                    )}
                                 ${renderDashboardAction(
-                                    'open',
-                                    'draw-coordinates',
-                                    floor.id,
-                                    'Editor súradníc',
-                                )}
+                        'open',
+                        'draw-coordinates',
+                        floor.id,
+                        'Editor súradníc',
+                    )}
                                 ${renderDashboardAction(
-                                    'delete',
-                                    'delete-map',
-                                    floor.id,
-                                    'Zmazať',
-                                )}
+                        'delete',
+                        'delete-map',
+                        floor.id,
+                        'Zmazať',
+                    )}
                             </td>
                         </tr>
                     `;
-                  })
-                  .join('')
+                })
+                .join('')
             : `
                 <tr role="row" class="dm-dashboard__empty-row">
-                    <td role="cell" colspan="8" class="dm-dashboard__empty-cell">
+                    <td role="cell" colspan="12" class="dm-dashboard__empty-cell">
                         <div class="dm-dashboard__empty-state" role="group" aria-label="Žiadne lokality">
                             <span class="dm-dashboard__empty-icon" aria-hidden="true">${TOOLBAR_ICONS.plus}</span>
                             <h3>Žiadne lokality</h3>
@@ -343,11 +398,11 @@ export function renderDashboardView(state, data) {
                             <select id="dm-dashboard-status" name="dm-dashboard-status" class="dm-field__input" data-dm-select data-dm-dashboard-status>
                                 <option value=""${statusFilter === '' ? ' selected' : ''}>Všetky stavy</option>
                                 ${statuses
-                                    .map(
-                                        (status) =>
-                                            `<option value="${escapeHtml(String(status.id))}"${String(status.id) === statusFilter ? ' selected' : ''}>${escapeHtml(status.label)}</option>`,
-                                    )
-                                    .join('')}
+            .map(
+                (status) =>
+                    `<option value="${escapeHtml(String(status.id))}"${String(status.id) === statusFilter ? ' selected' : ''}>${escapeHtml(status.label)}</option>`,
+            )
+            .join('')}
                             </select>
                             <label class="dm-field__label" for="dm-dashboard-status">Stav</label>
                         </div>
@@ -365,16 +420,20 @@ export function renderDashboardView(state, data) {
                         </button>
                     </div>
                 </header>
-                <div class="dm-dashboard__table-wrapper">
-                    <table class="dm-dashboard__table" role="table">
+                <div class="dm-dashboard__table-wrapper dm-dashboard__table-wrapper--inventory">
+                    <table class="dm-dashboard__table dm-dashboard__table--inventory" role="table">
                         <thead>
                             <tr role="row">
+                                <th scope="col">Byt</th>
                                 <th scope="col">Typ</th>
-                                <th scope="col">Názov</th>
-                                <th scope="col">Označenie</th>
-                                <th scope="col">Rozloha</th>
-                                <th scope="col">Cena</th>
-                                <th scope="col">Prenájom</th>
+                                <th scope="col">Výmera</th>
+                                <th scope="col">Lodžia</th>
+                                <th scope="col">Terasa</th>
+                                <th scope="col">Spolu m²</th>
+                                <th scope="col">Park.</th>
+                                <th scope="col">Cena bytu</th>
+                                <th scope="col">Parkovanie</th>
+                                <th scope="col">Spolu</th>
                                 <th scope="col">Stav</th>
                                 <th scope="col">Akcie</th>
                             </tr>
