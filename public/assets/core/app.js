@@ -1,5 +1,5 @@
 // Dynamic imports with cache-busting for production compatibility
-const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfig?.ver) || '5.0.11';
+const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfig?.ver) || '5.0.12';
 
 async function loadModules() {
     const ver = getVersion();
@@ -2020,6 +2020,7 @@ export async function initDeveloperMap(options) {
         const terraceAreaInput = form.querySelector('input[data-dm-field="terrace-area"]');
         const totalAreaInput = form.querySelector('input[data-dm-field="total-area"]');
         const parkingSpacesInput = form.querySelector('input[data-dm-field="parking-spaces"]');
+        const cellarInput = form.querySelector('input[data-dm-field="cellar"]');
         const suffixInput = form.querySelector('input[data-dm-field="suffix"]');
         const prefixInput = form.querySelector('input[data-dm-field="prefix"]');
         const designationInput = form.querySelector('input[data-dm-field="designation"]');
@@ -2068,6 +2069,7 @@ export async function initDeveloperMap(options) {
         const terraceAreaValue = terraceAreaInput ? terraceAreaInput.value.trim() : '';
         const totalAreaValue = totalAreaInput ? totalAreaInput.value.trim() : '';
         const parkingSpacesValue = parkingSpacesInput ? parkingSpacesInput.value.trim() : '';
+        const cellarValue = cellarInput ? cellarInput.value.trim() : '';
         const suffixValue = suffixInput ? suffixInput.value.trim() : 'm²';
         const prefixValue = prefixInput ? prefixInput.value.trim() : '';
         const designationValue = designationInput ? designationInput.value.trim() : '';
@@ -2098,6 +2100,7 @@ export async function initDeveloperMap(options) {
             terraceArea: terraceAreaValue,
             totalArea: totalAreaValue,
             parkingSpaces: parkingSpacesValue,
+            cellar: cellarValue,
             suffix: suffixValue,
             prefix: prefixValue,
             designation: designationValue,
@@ -2976,6 +2979,7 @@ export async function initDeveloperMap(options) {
                         currentFormData.terraceArea = locationFields.terraceArea;
                         currentFormData.totalArea = locationFields.totalArea;
                         currentFormData.parkingSpaces = locationFields.parkingSpaces;
+                        currentFormData.cellar = locationFields.cellar;
                         currentFormData.suffix = locationFields.suffix;
                         currentFormData.prefix = locationFields.prefix;
                         currentFormData.designation = locationFields.designation;
@@ -3304,6 +3308,7 @@ export async function initDeveloperMap(options) {
         result.item.terraceArea = fields.terraceArea;
         result.item.totalArea = fields.totalArea;
         result.item.parkingSpaces = fields.parkingSpaces;
+        result.item.cellar = fields.cellar;
         result.item.suffix = fields.suffix;
         result.item.prefix = fields.prefix;
         result.item.designation = fields.designation;
@@ -3426,6 +3431,7 @@ export async function initDeveloperMap(options) {
                 terraceArea: fields.terraceArea,
                 totalArea: fields.totalArea,
                 parkingSpaces: fields.parkingSpaces,
+                cellar: fields.cellar,
                 suffix: fields.suffix,
                 prefix: fields.prefix,
                 designation: fields.designation,

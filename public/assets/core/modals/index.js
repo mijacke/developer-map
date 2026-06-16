@@ -376,6 +376,7 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
     const terraceAreaValue = formData.terraceArea ?? editLocation?.terraceArea ?? editLocation?.terrace ?? '';
     const totalAreaValue = formData.totalArea ?? editLocation?.totalArea ?? '';
     const parkingSpacesValue = formData.parkingSpaces ?? editLocation?.parkingSpaces ?? editLocation?.parkingPlace ?? '';
+    const cellarValue = formData.cellar ?? editLocation?.cellar ?? editLocation?.kobka ?? editLocation?.storageCellar ?? '';
     const priceValue = formData.price ?? editLocation?.price ?? editLocation?.rent ?? '';
     const parkingPriceValue = formData.parkingPrice ?? editLocation?.parkingPrice ?? '';
     const totalPriceValue = formData.totalPrice ?? editLocation?.totalPrice ?? editLocation?.price ?? '';
@@ -488,6 +489,11 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <button type="button" class="dm-field__info" aria-label="Počet parkovacích miest" data-tooltip="Počet parkovacích miest">${infoIcon}</button>
                                             <input type="text" inputmode="numeric" autocomplete="off" class="dm-field__input" data-dm-field="parking-spaces" placeholder=" " value="${escapeHtml(parkingSpacesValue)}">
                                             <label class="dm-field__label">Parkovacie miesto</label>
+                                        </div>
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Označenie kobky" data-tooltip="Označenie kobky">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="cellar" placeholder=" " value="${escapeHtml(cellarValue)}">
+                                            <label class="dm-field__label">Kobka</label>
                                         </div>
                                         <div class="dm-field dm-field--with-unit" data-unit="€">
                                             <button type="button" class="dm-field__info" aria-label="Cena bytu s DPH bez parkovania" data-tooltip="Cena bytu s DPH bez parkovacieho miesta">${infoIcon}</button>

@@ -1,6 +1,6 @@
 /* Developer Map - Compiled CSS */
-/* Generated: 2025-10-31 08:58:33 */
-/* Version: 5.0.11 */
+/* Generated: 2026-06-16 13:22:48 CEST */
+/* Version: 5.0.12 */
 
 /* === base.css === */
 #dm-root.dm-root {
@@ -2322,6 +2322,8 @@
 .dm-dashboard__table-wrapper--inventory {
     overflow-x: auto;
     overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
 }
 
 .dm-dashboard__table {
@@ -2389,6 +2391,7 @@
         minmax(70px, 0.76fr)
         minmax(78px, 0.8fr)
         minmax(40px, 0.38fr)
+        minmax(54px, 0.52fr)
         minmax(92px, 0.96fr)
         minmax(84px, 0.86fr)
         minmax(90px, 0.92fr)
@@ -2408,6 +2411,7 @@
         minmax(70px, 0.76fr)
         minmax(78px, 0.8fr)
         minmax(40px, 0.38fr)
+        minmax(54px, 0.52fr)
         minmax(92px, 0.96fr)
         minmax(84px, 0.86fr)
         minmax(90px, 0.92fr)
@@ -2436,9 +2440,11 @@
 .dm-dashboard__table--inventory td[data-label="Byt"],
 .dm-dashboard__table--inventory td[data-label="Typ"],
 .dm-dashboard__table--inventory td[data-label="Park."],
+.dm-dashboard__table--inventory td[data-label="Kobka"],
 .dm-dashboard__table--inventory th:nth-child(1),
 .dm-dashboard__table--inventory th:nth-child(2),
-.dm-dashboard__table--inventory th:nth-child(7) {
+.dm-dashboard__table--inventory th:nth-child(7),
+.dm-dashboard__table--inventory th:nth-child(8) {
     font-size: 12px;
 }
 
@@ -2447,7 +2453,7 @@
 }
 
 .dm-dashboard__table--inventory {
-    min-width: 1040px;
+    min-width: 1120px;
 }
 
 .dm-dashboard__table tbody tr:nth-child(even) {
@@ -2680,7 +2686,7 @@
     }
 
     .dm-dashboard__table--inventory {
-        min-width: 0;
+        min-width: 1120px;
     }
 
     .dm-dashboard__table thead {
@@ -2746,6 +2752,46 @@
     .dm-dashboard__cell--actions .dm-icon-button__icon svg {
         width: clamp(14px, 3.5vw, 16px);
         height: clamp(14px, 3.5vw, 16px);
+    }
+
+    .dm-dashboard__table--inventory thead {
+        display: block;
+    }
+
+    .dm-dashboard__table--inventory thead tr,
+    .dm-dashboard__table--inventory tbody tr {
+        display: grid;
+        flex-direction: initial;
+        gap: 10px;
+        padding: 14px 16px;
+        border: none;
+        border-bottom: 1px solid #d5d6e0;
+        border-radius: 0;
+        background: transparent !important;
+    }
+
+    .dm-dashboard__table--inventory tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .dm-dashboard__table--inventory td {
+        display: block;
+        width: auto;
+        white-space: nowrap;
+    }
+
+    .dm-dashboard__table--inventory td::before {
+        content: none;
+    }
+
+    .dm-dashboard__table--inventory .dm-dashboard__cell--actions {
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        margin-top: 0;
+    }
+
+    .dm-dashboard__table--inventory .dm-dashboard__cell--actions::before {
+        content: none;
     }
 }
 

@@ -13,8 +13,8 @@
  * - Aplikuje offsety na všetky overlaye (editor + modály)
  * - Čistý vanilla JS, žiadne závislosti
  * 
- * @version 5.0.11
- * @date 2025-11-03
+ * @version 5.0.12
+ * @date 2026-06-16
  */
 
 export class WPAdminLayoutManager {

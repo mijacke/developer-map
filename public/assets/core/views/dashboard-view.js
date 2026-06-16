@@ -98,6 +98,7 @@ function matchesSearchTerm(floor, searchTerm) {
         normaliseText(floor?.label),
         normaliseText(floor?.type),
         normaliseText(floor?.parkingSpaces),
+        normaliseText(floor?.cellar ?? floor?.kobka ?? floor?.storageCellar),
         normaliseText(floor?.totalPrice),
     ].filter(Boolean);
     return candidates.some((value) => value.includes(needle));
@@ -302,6 +303,7 @@ export function renderDashboardView(state, data) {
                     const terraceArea = floor.terraceArea ?? floor.terrace ?? floor.meta?.terraceArea ?? '';
                     const totalArea = resolveTotalArea(floor);
                     const parkingSpaces = floor.parkingSpaces ?? floor.parkingPlace ?? floor.meta?.parkingSpaces ?? '';
+                    const cellar = floor.cellar ?? floor.kobka ?? floor.storageCellar ?? floor.meta?.cellar ?? floor.meta?.kobka ?? '';
                     const parkingPrice = floor.parkingPrice ?? floor.meta?.parkingPrice ?? '';
                     const totalPrice = floor.totalPrice ?? floor.meta?.totalPrice ?? floor.price;
 
@@ -314,6 +316,7 @@ export function renderDashboardView(state, data) {
                             <td role="cell" data-label="Terasa">${formatArea(terraceArea)}</td>
                             <td role="cell" data-label="Spolu m²">${formatArea(totalArea)}</td>
                             <td role="cell" data-label="Park.">${safeText(parkingSpaces)}</td>
+                            <td role="cell" data-label="Kobka">${safeText(cellar)}</td>
                             <td role="cell" data-label="Cena bytu">${formatPrice(floor.price)}</td>
                             <td role="cell" data-label="Parkovanie">${formatPrice(parkingPrice)}</td>
                             <td role="cell" data-label="Spolu">${formatPrice(totalPrice)}</td>
@@ -344,7 +347,7 @@ export function renderDashboardView(state, data) {
                 .join('')
             : `
                 <tr role="row" class="dm-dashboard__empty-row">
-                    <td role="cell" colspan="12" class="dm-dashboard__empty-cell">
+                    <td role="cell" colspan="13" class="dm-dashboard__empty-cell">
                         <div class="dm-dashboard__empty-state" role="group" aria-label="Žiadne lokality">
                             <span class="dm-dashboard__empty-icon" aria-hidden="true">${TOOLBAR_ICONS.plus}</span>
                             <h3>Žiadne lokality</h3>
@@ -431,6 +434,7 @@ export function renderDashboardView(state, data) {
                                 <th scope="col">Terasa</th>
                                 <th scope="col">Spolu m²</th>
                                 <th scope="col">Park.</th>
+                                <th scope="col">Kobka</th>
                                 <th scope="col">Cena bytu</th>
                                 <th scope="col">Parkovanie</th>
                                 <th scope="col">Spolu</th>

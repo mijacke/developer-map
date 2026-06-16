@@ -397,7 +397,7 @@
             .dm-dashboard--public .dm-dashboard__select-option.is-disabled:focus { background: transparent; color: inherit; transform: none; box-shadow: none; }
             .dm-dashboard--public .dm-dashboard__select-native { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
             .dm-dashboard--public .dm-dashboard__table-wrapper { background: #ffffff; border-radius: 24px; border: 1px solid #d2d2dc; padding: clamp(18px, 3vw, 24px); box-shadow: 0 10px 28px rgba(22, 22, 29, 0.06); }
-            .dm-dashboard--public .dm-dashboard__table-wrapper--inventory { overflow-x: auto; overflow-y: visible; }
+            .dm-dashboard--public .dm-dashboard__table-wrapper--inventory { overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
             .dm-dashboard--public .dm-dashboard__table {
                 display: flex;
                 flex-direction: column;
@@ -405,10 +405,10 @@
                 border-collapse: separate;
                 border-spacing: 0;
             }
-            .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 920px; }
+            .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 1040px; }
             .dm-dashboard--public .dm-dashboard__table thead { display: block; }
             .dm-dashboard--public .dm-dashboard__table thead tr,
-            .dm-dashboard--public .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(50px, 0.5fr) minmax(33px, 0.33fr) minmax(72px, 0.78fr) minmax(70px, 0.76fr) minmax(48px, 0.52fr) minmax(78px, 0.8fr) minmax(40px, 0.38fr) minmax(92px, 0.96fr) minmax(84px, 0.86fr) minmax(90px, 0.92fr) minmax(126px, 1.14fr); gap: 10px; align-items: center; }
+            .dm-dashboard--public .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(50px, 0.5fr) minmax(33px, 0.33fr) minmax(72px, 0.78fr) minmax(70px, 0.76fr) minmax(48px, 0.52fr) minmax(78px, 0.8fr) minmax(40px, 0.38fr) minmax(54px, 0.52fr) minmax(92px, 0.96fr) minmax(84px, 0.86fr) minmax(90px, 0.92fr) minmax(126px, 1.14fr); gap: 10px; align-items: center; }
             .dm-dashboard--public .dm-dashboard__table thead tr { background: transparent; border-radius: 0; padding: 0 0 12px; border-bottom: 1px solid rgba(28, 19, 79, 0.08); }
             .dm-dashboard--public .dm-dashboard__table th,
             .dm-dashboard--public .dm-dashboard__table td { border: none !important; box-shadow: none !important; background: transparent; }
@@ -422,7 +422,8 @@
             .dm-dashboard--public .dm-dashboard__table td { font-size: 0.82rem; line-height: 1.25; color: #1C134F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .dm-dashboard--public .dm-dashboard__table td[data-label="Byt"],
             .dm-dashboard--public .dm-dashboard__table td[data-label="Typ"],
-            .dm-dashboard--public .dm-dashboard__table td[data-label="Park."] { font-size: 0.76rem; }
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Park."],
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Kobka"] { font-size: 0.76rem; }
             .dm-dashboard--public .dm-dashboard__table td[data-label="Byt"] { overflow: visible; text-overflow: clip; }
             .dm-dashboard--public .dm-dashboard__table td[data-label="Stav"] { overflow: visible; }
             .dm-dashboard--public .dm-dashboard__link { color: #1C134F; font-weight: 600; text-decoration: none; }
@@ -441,11 +442,6 @@
             .dm-dashboard--public .dm-dashboard__legend-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(28, 19, 79, 0.12); background: rgba(28, 19, 79, 0.04); color: #1C134F; }
             .dm-dashboard--public .dm-dashboard__legend-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(28, 19, 79, 0.08); }
             .dm-dashboard--public .dm-dashboard__legend--public { justify-content: flex-start; }
-            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table--inventory { min-width: 0; }
-            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table thead { display: none; }
-            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table tbody tr { display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(28, 19, 79, 0.08); border-radius: 18px; padding: 18px 18px; margin: 0; background: #ffffff; }
-            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table td { width: 100%; display: flex; justify-content: space-between; align-items: center; white-space: normal; background: transparent; }
-            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table td::before { content: attr(data-label); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(45, 45, 78, 0.6); margin-right: 12px; }
             .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__toolbar { grid-template-columns: 1fr; }
             @media (max-width: 900px) {
                 .dm-map-viewer__popover-card { min-width: 160px; max-width: min(210px, calc(100vw - 28px)); border-radius: 12px; padding: 10px 12px; gap: 7px; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2); }
@@ -458,11 +454,7 @@
                 .dm-map-viewer__popover-meta dd { font-size: 0.72rem; }
                 .dm-map-viewer__popover-status { font-size: 0.64rem; padding: 4px 7px; }
                 .dm-map-viewer__popover-cta { min-width: 100px; padding: 7px 12px; border-radius: 8px; font-size: 0.74rem; }
-                .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 0; }
-                .dm-dashboard--public .dm-dashboard__table thead { display: none; }
-                .dm-dashboard--public .dm-dashboard__table tbody tr { display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(28, 19, 79, 0.08); border-radius: 18px; padding: 18px 18px; margin: 0; background: #ffffff; }
-                .dm-dashboard--public .dm-dashboard__table td { width: 100%; display: flex; justify-content: space-between; align-items: center; white-space: normal; background: transparent; }
-                .dm-dashboard--public .dm-dashboard__table td::before { content: attr(data-label); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(45, 45, 78, 0.6); margin-right: 12px; }
+                .dm-dashboard--public .dm-dashboard__table-wrapper--inventory { margin-inline: calc(clamp(18px, 3vw, 24px) * -1); border-radius: 0; border-inline: 0; }
             }
             @media (max-width: 640px) {
                 .dm-dashboard--public .dm-dashboard__toolbar { grid-template-columns: 1fr; }
@@ -792,6 +784,7 @@
             normaliseText(floor?.type),
             normaliseText(floor?.shortcode),
             normaliseText(floor?.parkingSpaces),
+            normaliseText(floor?.cellar ?? floor?.kobka ?? floor?.storageCellar),
         ].filter(Boolean);
         return candidates.some((candidate) => candidate.includes(needle));
     };
@@ -1310,7 +1303,7 @@
         }
         if (!dataset.length) {
             tbody.innerHTML =
-                '<tr class="dm-dashboard__empty-row"><td colspan="11">Žiadne byty nevyhovujú filtrom.</td></tr>';
+                '<tr class="dm-dashboard__empty-row"><td colspan="12">Žiadne byty nevyhovujú filtrom.</td></tr>';
             return;
         }
         const markup = dataset
@@ -1324,6 +1317,8 @@
                 const totalAreaText = escapeHtml(formatAreaValue(resolveTotalAreaValue(floor)));
                 const rawParkingSpaces = floor.parkingSpaces ?? floor.parkingPlace ?? floor.meta?.parkingSpaces ?? '';
                 const parkingSpaces = escapeHtml(String(rawParkingSpaces).trim() || '—');
+                const rawCellar = floor.cellar ?? floor.kobka ?? floor.storageCellar ?? floor.meta?.cellar ?? floor.meta?.kobka ?? '';
+                const cellar = escapeHtml(String(rawCellar).trim() || '—');
                 const priceText = escapeHtml(formatPriceDisplay(floor.price ?? floor.meta?.price ?? ''));
                 const parkingPriceText = escapeHtml(formatPriceDisplay(floor.parkingPrice ?? floor.meta?.parkingPrice ?? ''));
                 const totalPriceText = escapeHtml(formatPriceDisplay(floor.totalPrice ?? floor.meta?.totalPrice ?? floor.price ?? floor.meta?.price ?? ''));
@@ -1352,6 +1347,7 @@
                         <td role="cell" data-label="Terasa">${terraceText}</td>
                         <td role="cell" data-label="Spolu m²">${totalAreaText}</td>
                         <td role="cell" data-label="Park.">${parkingSpaces}</td>
+                        <td role="cell" data-label="Kobka">${cellar}</td>
                         <td role="cell" data-label="Cena bytu">${priceText}</td>
                         <td role="cell" data-label="Parkovanie">${parkingPriceText}</td>
                         <td role="cell" data-label="Spolu">${totalPriceText}</td>
@@ -1636,6 +1632,7 @@
                                 <th scope="col">Terasa</th>
                                 <th scope="col">Spolu m²</th>
                                 <th scope="col">Park.</th>
+                                <th scope="col">Kobka</th>
                                 <th scope="col">Cena bytu</th>
                                 <th scope="col">Parkovanie</th>
                                 <th scope="col">Spolu</th>
