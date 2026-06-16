@@ -18,6 +18,7 @@ yarn-error.log*
 # Build artifacts
 dist/
 build/
+graphify-out/
 
 # OS generated files
 .DS_Store

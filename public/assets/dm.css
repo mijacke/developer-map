@@ -2401,17 +2401,14 @@
 .dm-dashboard__table--inventory-public thead tr,
 .dm-dashboard__table--inventory-public tbody tr {
     grid-template-columns:
-        minmax(44px, 0.46fr)
-        minmax(42px, 0.42fr)
-        minmax(72px, 0.78fr)
-        minmax(70px, 0.76fr)
-        minmax(70px, 0.76fr)
-        minmax(78px, 0.8fr)
-        minmax(40px, 0.38fr)
-        minmax(92px, 0.96fr)
-        minmax(84px, 0.86fr)
-        minmax(90px, 0.92fr)
-        minmax(126px, 1.14fr);
+        minmax(92px, 0.95fr)
+        minmax(150px, 1.45fr)
+        minmax(76px, 0.68fr)
+        minmax(76px, 0.68fr)
+        minmax(86px, 0.76fr)
+        minmax(64px, 0.52fr)
+        minmax(112px, 1fr)
+        minmax(130px, 1.05fr);
 }
 
 .dm-dashboard__table--inventory th {
@@ -2433,7 +2430,7 @@
     white-space: nowrap;
 }
 
-.dm-dashboard__table--inventory td[data-label="Byt"],
+.dm-dashboard__table--inventory td[data-label="Dom/Byt"],
 .dm-dashboard__table--inventory td[data-label="Typ"],
 .dm-dashboard__table--inventory td[data-label="Park."],
 .dm-dashboard__table--inventory th:nth-child(1),
@@ -2442,12 +2439,23 @@
     font-size: 12px;
 }
 
+.dm-dashboard__table--inventory td[data-label="Dom/Byt"],
+.dm-dashboard__table--inventory td[data-label="Typ"] {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+}
+
 .dm-dashboard__table--inventory td[data-label="Stav"] {
     overflow: visible;
 }
 
 .dm-dashboard__table--inventory {
     min-width: 1040px;
+}
+
+.dm-dashboard__table--inventory-public {
+    min-width: 860px;
 }
 
 .dm-dashboard__table tbody tr:nth-child(even) {

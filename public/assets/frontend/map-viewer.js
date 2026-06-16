@@ -341,8 +341,8 @@
             .dm-map-viewer__popover-list li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
             .dm-map-viewer__popover-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dm-status-color, #6366f1); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15); }
             .dm-map-viewer__popover-empty { font-size: 0.85rem; color: #64748b; text-align: center; }
-            .dm-map-viewer__popover-cta { border: 1px solid #276183; border-radius: 10px; padding: 10px 18px; background: #276183; color: #ffffff; font-weight: 600; font-size: 0.9rem; cursor: pointer; align-self: center; min-width: 140px; text-align: center; transition: background-color 0.15s ease, color 0.15s ease; box-shadow: none; }
-            .dm-map-viewer__popover-cta:hover { background: #ffffff; color: #276183; border-color: #276183; box-shadow: none; }
+            .dm-map-viewer__popover-cta { border: 1px solid #83b572; border-radius: 10px; padding: 10px 18px; background: #83b572; color: #ffffff; font-weight: 600; font-size: 0.9rem; cursor: pointer; align-self: center; min-width: 140px; text-align: center; transition: background-color 0.15s ease, color 0.15s ease; box-shadow: none; }
+            .dm-map-viewer__popover-cta:hover { background: #ffffff; color: #83b572; border-color: #83b572; box-shadow: none; }
             .dm-map-viewer__popover-cta:active { transform: translateY(0); }
             .dm-map-viewer__tables { margin-top: 32px; display: flex; flex-direction: column; gap: 40px; }
             .dm-dashboard--public {
@@ -405,10 +405,10 @@
                 border-collapse: separate;
                 border-spacing: 0;
             }
-            .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 920px; }
+            .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 860px; }
             .dm-dashboard--public .dm-dashboard__table thead { display: block; }
             .dm-dashboard--public .dm-dashboard__table thead tr,
-            .dm-dashboard--public .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(50px, 0.5fr) minmax(33px, 0.33fr) minmax(72px, 0.78fr) minmax(70px, 0.76fr) minmax(48px, 0.52fr) minmax(78px, 0.8fr) minmax(40px, 0.38fr) minmax(92px, 0.96fr) minmax(84px, 0.86fr) minmax(90px, 0.92fr) minmax(126px, 1.14fr); gap: 10px; align-items: center; }
+            .dm-dashboard--public .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(92px, 0.95fr) minmax(150px, 1.45fr) minmax(76px, 0.68fr) minmax(76px, 0.68fr) minmax(86px, 0.76fr) minmax(64px, 0.52fr) minmax(112px, 1fr) minmax(130px, 1.05fr); gap: 12px; align-items: center; }
             .dm-dashboard--public .dm-dashboard__table thead tr { background: transparent; border-radius: 0; padding: 0 0 12px; border-bottom: 1px solid rgba(28, 19, 79, 0.08); }
             .dm-dashboard--public .dm-dashboard__table th,
             .dm-dashboard--public .dm-dashboard__table td { border: none !important; box-shadow: none !important; background: transparent; }
@@ -420,10 +420,11 @@
             .dm-dashboard--public .dm-dashboard__table tbody tr.is-clickable:focus-visible { background: #e4e6eb; box-shadow: inset 0 0 0 1px rgba(28, 19, 79, 0.06); outline: none; }
             .dm-dashboard--public .dm-dashboard__table tbody tr:last-child { border-bottom: none; }
             .dm-dashboard--public .dm-dashboard__table td { font-size: 0.82rem; line-height: 1.25; color: #1C134F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .dm-dashboard--public .dm-dashboard__table td[data-label="Byt"],
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Dom/Byt"],
             .dm-dashboard--public .dm-dashboard__table td[data-label="Typ"],
             .dm-dashboard--public .dm-dashboard__table td[data-label="Park."] { font-size: 0.76rem; }
-            .dm-dashboard--public .dm-dashboard__table td[data-label="Byt"] { overflow: visible; text-overflow: clip; }
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Dom/Byt"],
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Typ"] { overflow: visible; text-overflow: clip; white-space: normal; }
             .dm-dashboard--public .dm-dashboard__table td[data-label="Stav"] { overflow: visible; }
             .dm-dashboard--public .dm-dashboard__link { color: #1C134F; font-weight: 600; text-decoration: none; }
             .dm-dashboard--public .dm-dashboard__link:hover,
@@ -670,6 +671,18 @@
         floor?.name ?? floor?.designation ?? floor?.shortcode ?? floor?.label ?? '—'
     );
 
+    const resolveFloorType = (floor) => {
+        const raw =
+            floor?.type ??
+            floor?.meta?.type ??
+            floor?.kind ??
+            floor?.meta?.kind ??
+            floor?.category ??
+            floor?.meta?.category ??
+            '';
+        return String(raw ?? '').trim();
+    };
+
     const resolveRoomCount = (floor) => {
         const raw =
             floor?.roomCount ??
@@ -698,7 +711,7 @@
     };
 
     const resolveSortablePrice = (floor) => (
-        floor?.totalPrice ?? floor?.meta?.totalPrice ?? floor?.price ?? floor?.meta?.price ?? ''
+        floor?.price ?? floor?.meta?.price ?? ''
     );
 
     const formatRentDisplay = (value) => {
@@ -819,12 +832,12 @@
 
     const formatCountLabel = (count) => {
         if (count === 1) {
-            return 'byt';
+            return 'dom/byt';
         }
         if (count >= 2 && count <= 4) {
-            return 'byty';
+            return 'domy/byty';
         }
-        return 'bytov';
+        return 'domov/bytov';
     };
 
     const parseBooleanFlag = (value) => {
@@ -1310,23 +1323,20 @@
         }
         if (!dataset.length) {
             tbody.innerHTML =
-                '<tr class="dm-dashboard__empty-row"><td colspan="11">Žiadne byty nevyhovujú filtrom.</td></tr>';
+                '<tr class="dm-dashboard__empty-row"><td colspan="8">Žiadne domy/byty nevyhovujú filtrom.</td></tr>';
             return;
         }
         const markup = dataset
             .map((entry) => {
                 const floor = entry.floor || {};
                 const unitValue = resolveApartmentName(floor);
-                const typeValue = floor.type ? escapeHtml(String(floor.type)) : '—';
+                const typeValue = resolveFloorType(floor) ? escapeHtml(resolveFloorType(floor)) : '—';
                 const areaText = escapeHtml(formatAreaValue(floor.area));
-                const loggiaText = escapeHtml(formatAreaValue(floor.loggiaArea ?? floor.loggia ?? floor.meta?.loggiaArea ?? ''));
                 const terraceText = escapeHtml(formatAreaValue(floor.terraceArea ?? floor.terrace ?? floor.meta?.terraceArea ?? ''));
                 const totalAreaText = escapeHtml(formatAreaValue(resolveTotalAreaValue(floor)));
                 const rawParkingSpaces = floor.parkingSpaces ?? floor.parkingPlace ?? floor.meta?.parkingSpaces ?? '';
                 const parkingSpaces = escapeHtml(String(rawParkingSpaces).trim() || '—');
                 const priceText = escapeHtml(formatPriceDisplay(floor.price ?? floor.meta?.price ?? ''));
-                const parkingPriceText = escapeHtml(formatPriceDisplay(floor.parkingPrice ?? floor.meta?.parkingPrice ?? ''));
-                const totalPriceText = escapeHtml(formatPriceDisplay(floor.totalPrice ?? floor.meta?.totalPrice ?? floor.price ?? floor.meta?.price ?? ''));
                 const status = resolveStatusDisplay(floor, statuses);
                 const statusVariant = escapeHtml(status.variant || 'unknown');
                 const statusLabel = escapeHtml(status.label || 'Neznáme');
@@ -1342,19 +1352,16 @@
                     ? `<a class="dm-dashboard__link" href="${escapeHtml(detailUrl)}">${escapeHtml(nameValue)}</a>`
                     : `<span class="dm-dashboard__text">${escapeHtml(nameValue)}</span>`;
                 const rowClass = detailUrl ? ' class="is-clickable" data-row-link="true"' : '';
-                const rowHref = detailUrl ? ` data-href="${escapeHtml(detailUrl)}" tabindex="0" aria-label="Otvoriť byt ${escapeHtml(nameValue)}"` : '';
+                const rowHref = detailUrl ? ` data-href="${escapeHtml(detailUrl)}" tabindex="0" aria-label="Otvoriť dom/byt ${escapeHtml(nameValue)}"` : '';
                 return `
                     <tr role="row"${rowClass}${rowHref}>
-                        <td role="cell" data-label="Byt">${nameMarkup}</td>
+                        <td role="cell" data-label="Dom/Byt">${nameMarkup}</td>
                         <td role="cell" data-label="Typ">${typeValue}</td>
                         <td role="cell" data-label="Výmera">${areaText}</td>
-                        <td role="cell" data-label="Lodžia">${loggiaText}</td>
                         <td role="cell" data-label="Terasa">${terraceText}</td>
                         <td role="cell" data-label="Spolu m²">${totalAreaText}</td>
                         <td role="cell" data-label="Park.">${parkingSpaces}</td>
-                        <td role="cell" data-label="Cena bytu">${priceText}</td>
-                        <td role="cell" data-label="Parkovanie">${parkingPriceText}</td>
-                        <td role="cell" data-label="Spolu">${totalPriceText}</td>
+                        <td role="cell" data-label="Cena">${priceText}</td>
                         <td role="cell" data-label="Stav">
                             <span class="dm-status dm-status--${statusVariant}" style="${statusStyle}">${statusLabel}</span>
                         </td>
@@ -1365,6 +1372,21 @@
         tbody.innerHTML = markup;
     };
 
+    const buildTypeOptions = (rows) => {
+        const seen = new Set();
+        return (Array.isArray(rows) ? rows : [])
+            .map((entry) => resolveFloorType(entry?.floor))
+            .filter((label) => {
+                const key = normaliseText(label);
+                if (!key || seen.has(key)) {
+                    return false;
+                }
+                seen.add(key);
+                return true;
+            })
+            .sort((a, b) => a.localeCompare(b, 'sk', { sensitivity: 'base' }));
+    };
+
     const createTableController = ({ root, rows, statuses }) => {
         if (!root) {
             return;
@@ -1372,12 +1394,18 @@
         const tbody = root.querySelector('[data-role="table-body"]');
         const searchInput = root.querySelector('[data-role="search"]');
         const statusSelect = root.querySelector('[data-role="status-filter"]');
+        const typeSelect = root.querySelector('[data-role="type-filter"]');
         const priceSelect = root.querySelector('[data-role="price-filter"]');
         const statusSelectWrapper = root.querySelector('[data-role="status-filter-wrapper"]');
         const statusTrigger = root.querySelector('[data-role="status-trigger"]');
         const statusDropdown = root.querySelector('[data-role="status-dropdown"]');
         const statusDropdownList = root.querySelector('[data-role="status-dropdown-inner"]');
         const statusValueDisplay = root.querySelector('[data-role="status-value"]');
+        const typeSelectWrapper = root.querySelector('[data-role="type-filter-wrapper"]');
+        const typeTrigger = root.querySelector('[data-role="type-trigger"]');
+        const typeDropdown = root.querySelector('[data-role="type-dropdown"]');
+        const typeDropdownList = root.querySelector('[data-role="type-dropdown-inner"]');
+        const typeValueDisplay = root.querySelector('[data-role="type-value"]');
         const priceSelectWrapper = root.querySelector('[data-role="price-filter-wrapper"]');
         const priceTrigger = root.querySelector('[data-role="price-trigger"]');
         const priceDropdown = root.querySelector('[data-role="price-dropdown"]');
@@ -1394,6 +1422,7 @@
         const state = {
             searchTerm: '',
             statusFilter: '',
+            typeFilter: '',
             priceOrder: '',
         };
 
@@ -1411,6 +1440,23 @@
                 dropdown: statusDropdown,
                 list: statusDropdownList,
                 valueEl: statusValueDisplay,
+            });
+        }
+
+        if (
+            typeSelect &&
+            typeSelectWrapper &&
+            typeTrigger &&
+            typeDropdown &&
+            typeDropdownList &&
+            typeValueDisplay
+        ) {
+            registerCustomSelect(typeSelect, {
+                wrapper: typeSelectWrapper,
+                trigger: typeTrigger,
+                dropdown: typeDropdown,
+                list: typeDropdownList,
+                valueEl: typeValueDisplay,
             });
         }
 
@@ -1441,6 +1487,11 @@
                     (entry) => resolveStatusId(entry.floor, statuses) === state.statusFilter,
                 );
             }
+            if (state.typeFilter) {
+                dataset = dataset.filter(
+                    (entry) => normaliseText(resolveFloorType(entry.floor)) === state.typeFilter,
+                );
+            }
             if (state.priceOrder === 'asc' || state.priceOrder === 'desc') {
                 const direction = state.priceOrder === 'asc' ? 1 : -1;
                 dataset = [...dataset].sort((a, b) => {
@@ -1461,7 +1512,7 @@
             renderTableRows(tbody, dataset, statuses);
             if (summaryEl) {
                 const count = dataset.length;
-                summaryEl.textContent = count ? `${count} ${formatCountLabel(count)}` : 'Žiadne byty';
+                summaryEl.textContent = count ? `${count} ${formatCountLabel(count)}` : 'Žiadne domy/byty';
             }
         };
 
@@ -1475,6 +1526,13 @@
         if (statusSelect) {
             statusSelect.addEventListener('change', (event) => {
                 state.statusFilter = event.target.value || '';
+                applyFilters();
+            });
+        }
+
+        if (typeSelect) {
+            typeSelect.addEventListener('change', (event) => {
+                state.typeFilter = event.target.value || '';
                 applyFilters();
             });
         }
@@ -1539,6 +1597,12 @@
                 })
                 .filter(Boolean),
         ].join('');
+        const typeOptions = [
+            '<option value="">Všetky typy</option>',
+            ...buildTypeOptions(rows).map(
+                (type) => `<option value="${escapeHtml(normaliseText(type))}">${escapeHtml(type)}</option>`,
+            ),
+        ].join('');
         const legendEntries = buildLegendEntries(rows, resolvedStatuses);
         const legendMarkup = legendEntries.length
             ? `<div class="dm-dashboard__legend dm-dashboard__legend--public" role="list">
@@ -1568,6 +1632,9 @@
         const statusLabelId = `${instanceId}-status-label`;
         const statusValueId = `${instanceId}-status-value`;
         const statusNativeId = `${instanceId}-status-native`;
+        const typeLabelId = `${instanceId}-type-label`;
+        const typeValueId = `${instanceId}-type-value`;
+        const typeNativeId = `${instanceId}-type-native`;
         const priceLabelId = `${instanceId}-price-label`;
         const priceValueId = `${instanceId}-price-value`;
         const priceNativeId = `${instanceId}-price-native`;
@@ -1579,7 +1646,7 @@
             typeof noteText === 'string'
                 ? noteText
                 : includeParent
-                    ? `Vrátane bytov mapy ${parentName || mapName}`
+                    ? `Vrátane domov / bytov mapy ${parentName || mapName}`
                     : '';
         const resolvedSubtitle = subtitle || (isCurrent ? 'Aktuálna mapa' : 'Mapa v hierarchii');
         section.innerHTML = `
@@ -1591,7 +1658,7 @@
                 <div class="dm-dashboard__toolbar" role="search">
                     <label class="dm-dashboard__search">
                         <span class="dm-dashboard__search-icon" aria-hidden="true">${DASHBOARD_ICONS.search}</span>
-                        <input type="search" placeholder="Vyhľadať byt" data-role="search" aria-label="Vyhľadať byt" />
+                        <input type="search" placeholder="Vyhľadať dom/byt" data-role="search" aria-label="Vyhľadať dom/byt" />
                     </label>
                     <div class="dm-dashboard__select" data-role="status-filter-wrapper">
                         <span class="dm-dashboard__select-label" id="${statusLabelId}">Stav</span>
@@ -1604,6 +1671,19 @@
                         </div>
                         <select id="${statusNativeId}" class="dm-dashboard__select-native" data-role="status-filter" aria-labelledby="${statusLabelId}" tabindex="-1" aria-hidden="true">
                             ${statusOptions}
+                        </select>
+                    </div>
+                    <div class="dm-dashboard__select" data-role="type-filter-wrapper">
+                        <span class="dm-dashboard__select-label" id="${typeLabelId}">Typ</span>
+                        <button type="button" class="dm-dashboard__select-trigger" data-role="type-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="${typeLabelId} ${typeValueId}">
+                            <span class="dm-dashboard__select-value" data-role="type-value" id="${typeValueId}">Všetky typy</span>
+                            <span class="dm-dashboard__select-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="dm-dashboard__select-dropdown" data-role="type-dropdown" role="listbox" aria-labelledby="${typeLabelId}" hidden>
+                            <div class="dm-dashboard__select-dropdown-inner" data-role="type-dropdown-inner"></div>
+                        </div>
+                        <select id="${typeNativeId}" class="dm-dashboard__select-native" data-role="type-filter" aria-labelledby="${typeLabelId}" tabindex="-1" aria-hidden="true">
+                            ${typeOptions}
                         </select>
                     </div>
                     <div class="dm-dashboard__select" data-role="price-filter-wrapper">
@@ -1629,16 +1709,13 @@
                     <table class="dm-dashboard__table dm-dashboard__table--inventory dm-dashboard__table--inventory-public" role="table">
                         <thead>
                             <tr role="row">
-                                <th scope="col">Byt</th>
+                                <th scope="col">Dom/Byt</th>
                                 <th scope="col">Typ</th>
                                 <th scope="col">Výmera</th>
-                                <th scope="col">Lodžia</th>
                                 <th scope="col">Terasa</th>
                                 <th scope="col">Spolu m²</th>
                                 <th scope="col">Park.</th>
-                                <th scope="col">Cena bytu</th>
-                                <th scope="col">Parkovanie</th>
-                                <th scope="col">Spolu</th>
+                                <th scope="col">Cena</th>
                                 <th scope="col">Stav</th>
                             </tr>
                         </thead>
@@ -1673,10 +1750,10 @@
         });
         const noteParts = [];
         if (effectiveScope === 'hierarchy') {
-            noteParts.push('Vrátane bytov z prepojených podmáp');
+            noteParts.push('Vrátane domov / bytov z prepojených podmáp');
         }
         if (preferences.includeParent && parentForCurrent) {
-            noteParts.push(`vrátane bytov nadradenej mapy ${getProjectDisplayName(parentForCurrent)}`);
+            noteParts.push(`vrátane domov / bytov nadradenej mapy ${getProjectDisplayName(parentForCurrent)}`);
         }
         const tableStatuses = buildLocationTableStatuses({
             project,
@@ -2605,7 +2682,7 @@
             const renderStatusCounts = (summary) => {
                 const entries = Array.isArray(summary?.entries) ? summary.entries : [];
                 if (!entries.length) {
-                    return '<p class="dm-map-viewer__popover-empty">Žiadne byty</p>';
+                    return '<p class="dm-map-viewer__popover-empty">Žiadne domy/byty</p>';
                 }
                 const formatStatusCountLabel = (entry) => {
                     const count = Number(entry?.count ?? 0);
@@ -2710,7 +2787,7 @@
                 if (apartment && apartmentDetailEl) {
                     const name = resolveApartmentName(apartment);
                     const totalArea = formatAreaValue(resolveTotalAreaValue(apartment));
-                    const rooms = resolveRoomCount(apartment) || '—';
+                    const type = resolveFloorType(apartment) || resolveRoomCount(apartment) || '—';
                     const price = formatPriceDisplay(apartment.price ?? apartment.meta?.price ?? '');
                     apartmentDetailEl.innerHTML = `
                         <h3 class="dm-map-viewer__popover-title">${escapeHtml(name)}</h3>
@@ -2720,11 +2797,11 @@
                                 <dd>${escapeHtml(totalArea)}</dd>
                             </div>
                             <div>
-                                <dt>Počet izieb</dt>
-                                <dd>${escapeHtml(rooms)}</dd>
+                                <dt>Typ</dt>
+                                <dd>${escapeHtml(type)}</dd>
                             </div>
                             <div>
-                                <dt>Cena bytu</dt>
+                                <dt>Cena</dt>
                                 <dd>${escapeHtml(price)}</dd>
                             </div>
                         </dl>
