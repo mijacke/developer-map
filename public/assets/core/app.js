@@ -1,5 +1,5 @@
 // Dynamic imports with cache-busting for production compatibility
-const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfig?.ver) || '5.0.12';
+const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfig?.ver) || '5.0.13';
 
 async function loadModules() {
     const ver = getVersion();
@@ -1799,6 +1799,7 @@ export async function initDeveloperMap(options) {
         searchTerm: '',
         dashboardSearchTerm: '',
         dashboardStatusFilter: '',
+        dashboardTypeFilter: '',
         dashboardPriceOrder: '',
         modal: null,
         runtimeConfig,
@@ -2027,6 +2028,9 @@ export async function initDeveloperMap(options) {
         const parkingPriceInput = form.querySelector('input[data-dm-field="parking-price"]');
         const totalPriceInput = form.querySelector('input[data-dm-field="total-price"]');
         const rentInput = form.querySelector('input[data-dm-field="rent"]');
+        const existingLocation = state.modal?.type === 'edit-location'
+            ? findMapItem(state.modal.payload)?.item ?? null
+            : null;
 
         const nameValue = nameInput ? nameInput.value.trim() : '';
         const typeValue = typeSelect ? (typeSelect.value || '').trim() : '';
@@ -2064,7 +2068,9 @@ export async function initDeveloperMap(options) {
         const urlValue = urlInput ? urlInput.value.trim() : '';
         const detailUrlValue = detailUrlInput ? detailUrlInput.value.trim() : '';
         const areaValue = areaInput ? areaInput.value.trim() : '';
-        const loggiaAreaValue = loggiaAreaInput ? loggiaAreaInput.value.trim() : '';
+        const loggiaAreaValue = loggiaAreaInput
+            ? loggiaAreaInput.value.trim()
+            : String(existingLocation?.loggiaArea ?? existingLocation?.loggia ?? '').trim();
         const terraceAreaValue = terraceAreaInput ? terraceAreaInput.value.trim() : '';
         const totalAreaValue = totalAreaInput ? totalAreaInput.value.trim() : '';
         const parkingSpacesValue = parkingSpacesInput ? parkingSpacesInput.value.trim() : '';
@@ -2072,8 +2078,12 @@ export async function initDeveloperMap(options) {
         const prefixValue = prefixInput ? prefixInput.value.trim() : '';
         const designationValue = designationInput ? designationInput.value.trim() : '';
         const priceValue = priceInput ? priceInput.value.trim() : '';
-        const parkingPriceValue = parkingPriceInput ? parkingPriceInput.value.trim() : '';
-        const totalPriceValue = totalPriceInput ? totalPriceInput.value.trim() : '';
+        const parkingPriceValue = parkingPriceInput
+            ? parkingPriceInput.value.trim()
+            : String(existingLocation?.parkingPrice ?? '').trim();
+        const totalPriceValue = totalPriceInput
+            ? totalPriceInput.value.trim()
+            : String(existingLocation?.totalPrice ?? '').trim();
         const rentValue = rentInput ? rentInput.value.trim() : '';
 
         let parentId = null;
@@ -2750,6 +2760,13 @@ export async function initDeveloperMap(options) {
         if (dashboardStatusSelect) {
             dashboardStatusSelect.addEventListener('change', (event) => {
                 setState({ dashboardStatusFilter: String(event.target.value ?? '') });
+            });
+        }
+
+        const dashboardTypeSelect = root.querySelector('[data-dm-dashboard-type]');
+        if (dashboardTypeSelect) {
+            dashboardTypeSelect.addEventListener('change', (event) => {
+                setState({ dashboardTypeFilter: String(event.target.value ?? '') });
             });
         }
 

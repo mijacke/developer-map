@@ -120,6 +120,23 @@ function matchesStatusFilter(floor, statusFilter, statuses) {
     return resolveStatusId(floor, statuses) === statusFilter;
 }
 
+function resolveFloorType(floor) {
+    const raw =
+        floor?.type ??
+        floor?.meta?.type ??
+        floor?.kind ??
+        floor?.meta?.kind ??
+        floor?.category ??
+        floor?.meta?.category ??
+        '';
+    return String(raw ?? '').trim();
+}
+
+function matchesTypeFilter(floor, typeFilter) {
+    if (!typeFilter) return true;
+    return normaliseText(resolveFloorType(floor)) === typeFilter;
+}
+
 function formatArea(value) {
     const raw = String(value ?? '').trim();
     if (!raw) {
@@ -210,7 +227,7 @@ function formatPrice(value) {
 }
 
 function resolveSortablePrice(floor) {
-    return floor?.totalPrice ?? floor?.meta?.totalPrice ?? floor?.price ?? floor?.meta?.price ?? '';
+    return floor?.price ?? floor?.meta?.price ?? '';
 }
 
 function formatRent(value) {
@@ -272,12 +289,16 @@ export function renderDashboardView(state, data) {
     const projectImageUrl = project?.image ?? project?.imageUrl ?? '';
 
     const statusFilter = String(state.dashboardStatusFilter ?? '').trim();
+    const typeFilter = String(state.dashboardTypeFilter ?? '').trim();
     const searchTerm = String(state.dashboardSearchTerm ?? '');
     const priceOrder = String(state.dashboardPriceOrder ?? '').trim();
 
     const filteredFloors =
         floors.length > 0
-            ? floors.filter((floor) => matchesSearchTerm(floor, searchTerm)).filter((floor) => matchesStatusFilter(floor, statusFilter, statuses))
+            ? floors
+                .filter((floor) => matchesSearchTerm(floor, searchTerm))
+                .filter((floor) => matchesStatusFilter(floor, statusFilter, statuses))
+                .filter((floor) => matchesTypeFilter(floor, typeFilter))
             : [];
 
     const orderedFloors =
@@ -298,25 +319,20 @@ export function renderDashboardView(state, data) {
                 .map((floor) => {
                     const status = resolveStatus(floor, statuses);
                     const unit = floor.name ?? floor.designation ?? floor.shortcode ?? floor.label;
-                    const loggiaArea = floor.loggiaArea ?? floor.loggia ?? floor.meta?.loggiaArea ?? '';
+                    const type = resolveFloorType(floor);
                     const terraceArea = floor.terraceArea ?? floor.terrace ?? floor.meta?.terraceArea ?? '';
                     const totalArea = resolveTotalArea(floor);
                     const parkingSpaces = floor.parkingSpaces ?? floor.parkingPlace ?? floor.meta?.parkingSpaces ?? '';
-                    const parkingPrice = floor.parkingPrice ?? floor.meta?.parkingPrice ?? '';
-                    const totalPrice = floor.totalPrice ?? floor.meta?.totalPrice ?? floor.price;
 
                     return `
                         <tr role="row">
-                            <td role="cell" data-label="Byt">${safeText(unit)}</td>
-                            <td role="cell" data-label="Typ">${safeText(floor.type)}</td>
+                            <td role="cell" data-label="Dom/Byt">${safeText(unit)}</td>
+                            <td role="cell" data-label="Typ">${safeText(type)}</td>
                             <td role="cell" data-label="Výmera">${formatArea(floor.area)}</td>
-                            <td role="cell" data-label="Lodžia">${formatArea(loggiaArea)}</td>
                             <td role="cell" data-label="Terasa">${formatArea(terraceArea)}</td>
                             <td role="cell" data-label="Spolu m²">${formatArea(totalArea)}</td>
                             <td role="cell" data-label="Park.">${safeText(parkingSpaces)}</td>
-                            <td role="cell" data-label="Cena bytu">${formatPrice(floor.price)}</td>
-                            <td role="cell" data-label="Parkovanie">${formatPrice(parkingPrice)}</td>
-                            <td role="cell" data-label="Spolu">${formatPrice(totalPrice)}</td>
+                            <td role="cell" data-label="Cena">${formatPrice(floor.price)}</td>
                             <td role="cell" data-label="Stav">${renderStatusBadge(status)}</td>
                             <td role="cell" data-label="Akcie" class="dm-dashboard__cell--actions">
                                 ${renderDashboardAction(
@@ -344,7 +360,7 @@ export function renderDashboardView(state, data) {
                 .join('')
             : `
                 <tr role="row" class="dm-dashboard__empty-row">
-                    <td role="cell" colspan="12" class="dm-dashboard__empty-cell">
+                    <td role="cell" colspan="9" class="dm-dashboard__empty-cell">
                         <div class="dm-dashboard__empty-state" role="group" aria-label="Žiadne lokality">
                             <span class="dm-dashboard__empty-icon" aria-hidden="true">${TOOLBAR_ICONS.plus}</span>
                             <h3>Žiadne lokality</h3>
@@ -357,6 +373,21 @@ export function renderDashboardView(state, data) {
                     </td>
                 </tr>
             `;
+
+    const typeOptions = (() => {
+        const seen = new Set();
+        return floors
+            .map((floor) => resolveFloorType(floor))
+            .filter((type) => {
+                const key = normaliseText(type);
+                if (!key || seen.has(key)) {
+                    return false;
+                }
+                seen.add(key);
+                return true;
+            })
+            .sort((a, b) => a.localeCompare(b, 'sk', { sensitivity: 'base' }));
+    })();
 
     return `
         <section class="dm-dashboard">
@@ -407,6 +438,18 @@ export function renderDashboardView(state, data) {
                             <label class="dm-field__label" for="dm-dashboard-status">Stav</label>
                         </div>
                         <div class="dm-field dm-dashboard__select">
+                            <select id="dm-dashboard-type" name="dm-dashboard-type" class="dm-field__input" data-dm-select data-dm-dashboard-type>
+                                <option value=""${typeFilter === '' ? ' selected' : ''}>Všetky typy</option>
+                                ${typeOptions
+            .map((type) => {
+                const value = normaliseText(type);
+                return `<option value="${escapeHtml(value)}"${value === typeFilter ? ' selected' : ''}>${escapeHtml(type)}</option>`;
+            })
+            .join('')}
+                            </select>
+                            <label class="dm-field__label" for="dm-dashboard-type">Typ</label>
+                        </div>
+                        <div class="dm-field dm-dashboard__select">
                             <select id="dm-dashboard-price" name="dm-dashboard-price" class="dm-field__input" data-dm-select data-dm-dashboard-price>
                                 <option value=""${priceOrder === '' ? ' selected' : ''}>Všetky ceny</option>
                                 <option value="asc"${priceOrder === 'asc' ? ' selected' : ''}>Najnižšia</option>
@@ -424,16 +467,13 @@ export function renderDashboardView(state, data) {
                     <table class="dm-dashboard__table dm-dashboard__table--inventory" role="table">
                         <thead>
                             <tr role="row">
-                                <th scope="col">Byt</th>
+                                <th scope="col">Dom/Byt</th>
                                 <th scope="col">Typ</th>
                                 <th scope="col">Výmera</th>
-                                <th scope="col">Lodžia</th>
                                 <th scope="col">Terasa</th>
                                 <th scope="col">Spolu m²</th>
                                 <th scope="col">Park.</th>
-                                <th scope="col">Cena bytu</th>
-                                <th scope="col">Parkovanie</th>
-                                <th scope="col">Spolu</th>
+                                <th scope="col">Cena</th>
                                 <th scope="col">Stav</th>
                                 <th scope="col">Akcie</th>
                             </tr>

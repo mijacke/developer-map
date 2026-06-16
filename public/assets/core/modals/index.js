@@ -448,9 +448,9 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <label class="dm-field__label">Typ<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Číslo alebo názov bytu" data-tooltip="Číslo alebo názov bytu/lokality">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Číslo alebo názov domu/bytu" data-tooltip="Číslo alebo názov domu/bytu alebo lokality">${infoIcon}</button>
                                             <input required type="text" autocomplete="off" class="dm-field__input" data-dm-field="name" placeholder=" " value="${escapeHtml(nameValue)}">
-                                            <label class="dm-field__label">Byt<span class="dm-field__required">*</span></label>
+                                            <label class="dm-field__label">Dom/Byt<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Stav lokality" data-tooltip="Stav lokality">${infoIcon}</button>
@@ -466,11 +466,6 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <button type="button" class="dm-field__info" aria-label="Výmera lokality v m²" data-tooltip="Výmera lokality v m²">${infoIcon}</button>
                                             <input type="text" inputmode="decimal" autocomplete="off" class="dm-field__input" data-dm-field="area" placeholder=" " value="${escapeHtml(areaValue)}">
                                             <label class="dm-field__label">Výmera</label>
-                                        </div>
-                                        <div class="dm-field dm-field--with-unit" data-unit="m²">
-                                            <button type="button" class="dm-field__info" aria-label="Výmera lodžie v m²" data-tooltip="Výmera lodžie v m²">${infoIcon}</button>
-                                            <input type="text" inputmode="decimal" autocomplete="off" class="dm-field__input" data-dm-field="loggia-area" placeholder=" " value="${escapeHtml(loggiaAreaValue)}">
-                                            <label class="dm-field__label">Lodžia</label>
                                         </div>
                                         <div class="dm-field dm-field--with-unit" data-unit="m²">
                                             <button type="button" class="dm-field__info" aria-label="Výmera terasy v m²" data-tooltip="Výmera terasy v m²">${infoIcon}</button>
@@ -490,19 +485,9 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <label class="dm-field__label">Parkovacie miesto</label>
                                         </div>
                                         <div class="dm-field dm-field--with-unit" data-unit="€">
-                                            <button type="button" class="dm-field__info" aria-label="Cena bytu s DPH bez parkovania" data-tooltip="Cena bytu s DPH bez parkovacieho miesta">${infoIcon}</button>
+                                            <button type="button" class="dm-field__info" aria-label="Cena s DPH" data-tooltip="Cena s DPH">${infoIcon}</button>
                                             <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="price" placeholder=" " value="${escapeHtml(priceValue)}">
-                                            <label class="dm-field__label">Cena bytu s DPH</label>
-                                        </div>
-                                        <div class="dm-field dm-field--with-unit" data-unit="€">
-                                            <button type="button" class="dm-field__info" aria-label="Cena parkovania s DPH" data-tooltip="Cena parkovania s DPH">${infoIcon}</button>
-                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="parking-price" placeholder=" " value="${escapeHtml(parkingPriceValue)}">
-                                            <label class="dm-field__label">Parkovanie s DPH</label>
-                                        </div>
-                                        <div class="dm-field dm-field--with-unit" data-unit="€">
-                                            <button type="button" class="dm-field__info" aria-label="Spolu byt s parkovacím miestom" data-tooltip="Spolu byt s parkovacím miestom">${infoIcon}</button>
-                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="total-price" placeholder=" " value="${escapeHtml(totalPriceValue)}">
-                                            <label class="dm-field__label">Spolu s parkovaním</label>
+                                            <label class="dm-field__label">Cena s DPH</label>
                                         </div>
                                     </div>
                                 </div>
