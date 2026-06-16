@@ -33,7 +33,7 @@ Po aktivácii je plugin dostupný v admin menu. Pri prvom spustení sa automatic
 
 ## Verzia
 
-**5.0.13** - Aktuálna stabilná verzia
+**5.0.14** - Aktuálna stabilná verzia
 
 ## Autor
 

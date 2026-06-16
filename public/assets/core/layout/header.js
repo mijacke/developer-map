@@ -2,7 +2,7 @@ import { APP_VIEWS } from '../constants.js';
 import { escapeHtml } from '../utils/html.js';
 
 // Plugin version - should match PHP version
-const PLUGIN_VERSION = '5.0.13';
+const PLUGIN_VERSION = '5.0.14';
 
 const getBrandIcons = (base) => ({
     logo: `<img src="${base}/img/Logo.svg" alt="Logo" style="display: block; width: auto; height: clamp(32px, 5vw, 48px);" />`,

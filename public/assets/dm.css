@@ -1,6 +1,6 @@
 /* Developer Map - Compiled CSS */
 /* Generated: 2025-10-31 08:58:33 */
-/* Version: 5.0.13 */
+/* Version: 5.0.14 */
 
 /* === base.css === */
 #dm-root.dm-root {
@@ -2084,6 +2084,7 @@
 .dm-dashboard__search {
     width: 100%;
     min-width: 160px;
+    max-width: 100%;
     height: var(--dm-dashboard-control-height);
     min-height: var(--dm-dashboard-control-height);
     border-radius: clamp(12px, 1.8vw, 14px);
@@ -2382,30 +2383,30 @@
 .dm-dashboard__table--inventory thead tr,
 .dm-dashboard__table--inventory tbody tr {
     grid-template-columns:
+        minmax(60px, 0.6fr)
+        minmax(108px, 0.9fr)
+        minmax(72px, 0.72fr)
+        minmax(70px, 0.68fr)
+        minmax(78px, 0.76fr)
+        minmax(40px, 0.38fr)
         minmax(92px, 0.9fr)
-        minmax(160px, 1.45fr)
-        minmax(88px, 0.75fr)
-        minmax(86px, 0.7fr)
-        minmax(96px, 0.85fr)
-        minmax(64px, 0.52fr)
-        minmax(120px, 1fr)
-        minmax(130px, 1.05fr)
-        minmax(190px, 1.35fr);
-    gap: 12px;
+        minmax(112px, 0.92fr)
+        minmax(132px, 1fr);
+    gap: 10px;
     padding: 14px 16px;
 }
 
 .dm-dashboard__table--inventory-public thead tr,
 .dm-dashboard__table--inventory-public tbody tr {
     grid-template-columns:
-        minmax(92px, 0.95fr)
-        minmax(150px, 1.45fr)
+        minmax(50px, 0.5fr)
+        minmax(108px, 1.1fr)
+        minmax(72px, 0.78fr)
         minmax(76px, 0.68fr)
-        minmax(76px, 0.68fr)
-        minmax(86px, 0.76fr)
-        minmax(64px, 0.52fr)
-        minmax(112px, 1fr)
-        minmax(130px, 1.05fr);
+        minmax(78px, 0.8fr)
+        minmax(40px, 0.38fr)
+        minmax(92px, 0.96fr)
+        minmax(126px, 1.14fr);
 }
 
 .dm-dashboard__table--inventory th {
@@ -2448,11 +2449,11 @@
 }
 
 .dm-dashboard__table--inventory {
-    min-width: 980px;
+    min-width: 900px;
 }
 
 .dm-dashboard__table--inventory-public {
-    min-width: 860px;
+    min-width: 780px;
 }
 
 .dm-dashboard__table tbody tr:nth-child(even) {
@@ -2616,9 +2617,9 @@
     position: relative !important;
     z-index: 1000 !important;
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     align-items: center;
-    gap: clamp(8px, 1.2vw, 14px);
+    gap: 8px;
     min-width: 0;
     overflow: visible !important;
 }
