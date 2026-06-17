@@ -11,7 +11,7 @@
     let selectInstanceCounter = 0;
     const customSelectRegistry = new Map();
     let openCustomSelectRef = null;
-    const DASHBOARD_STACK_BREAKPOINT = 1100;
+    const DASHBOARD_STACK_BREAKPOINT = 0;
     const stackedDashboards = new WeakSet();
     const fallbackDashboards = new Set();
     let fallbackResizeHandler = null;
@@ -397,7 +397,7 @@
             .dm-dashboard--public .dm-dashboard__select-option.is-disabled:focus { background: transparent; color: inherit; transform: none; box-shadow: none; }
             .dm-dashboard--public .dm-dashboard__select-native { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
             .dm-dashboard--public .dm-dashboard__table-wrapper { background: #ffffff; border-radius: 24px; border: 1px solid #d2d2dc; padding: clamp(18px, 3vw, 24px); box-shadow: 0 10px 28px rgba(22, 22, 29, 0.06); }
-            .dm-dashboard--public .dm-dashboard__table-wrapper--inventory { overflow-x: auto; overflow-y: visible; }
+            .dm-dashboard--public .dm-dashboard__table-wrapper--inventory { overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x; }
             .dm-dashboard--public .dm-dashboard__table {
                 display: flex;
                 flex-direction: column;
@@ -444,12 +444,16 @@
             .dm-dashboard--public .dm-dashboard__legend-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(28, 19, 79, 0.12); background: rgba(28, 19, 79, 0.04); color: #1C134F; }
             .dm-dashboard--public .dm-dashboard__legend-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(28, 19, 79, 0.08); }
             .dm-dashboard--public .dm-dashboard__legend--public { justify-content: flex-start; }
-            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table--inventory { min-width: 0; }
-            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table thead { display: none; }
-            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table tbody tr { display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(28, 19, 79, 0.08); border-radius: 18px; padding: 18px 18px; margin: 0; background: #ffffff; }
-            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table td { width: 100%; display: flex; justify-content: space-between; align-items: center; white-space: normal; background: transparent; }
-            .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__table td::before { content: attr(data-label); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(45, 45, 78, 0.6); margin-right: 12px; }
             .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__toolbar { grid-template-columns: 1fr; }
+            @media (max-width: 1200px) {
+                .dm-dashboard--public .dm-dashboard__table-wrapper--inventory { overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x; }
+                .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 1040px; width: max-content; }
+                .dm-dashboard--public .dm-dashboard__table thead { display: block; }
+                .dm-dashboard--public .dm-dashboard__table thead tr,
+                .dm-dashboard--public .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(50px, 0.5fr) minmax(108px, 1.1fr) minmax(72px, 0.78fr) minmax(70px, 0.76fr) minmax(78px, 0.8fr) minmax(40px, 0.38fr) minmax(92px, 0.96fr) minmax(126px, 1.14fr); gap: 10px; align-items: center; }
+                .dm-dashboard--public .dm-dashboard__table td { width: auto; display: block; white-space: nowrap; }
+                .dm-dashboard--public .dm-dashboard__table td::before { content: none; }
+            }
             @media (max-width: 900px) {
                 .dm-map-viewer__popover-card { min-width: 160px; max-width: min(210px, calc(100vw - 28px)); border-radius: 12px; padding: 10px 12px; gap: 7px; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2); }
                 .dm-map-viewer__popover-summary { font-size: 0.78rem; gap: 4px; }
@@ -461,11 +465,6 @@
                 .dm-map-viewer__popover-meta dd { font-size: 0.72rem; }
                 .dm-map-viewer__popover-status { font-size: 0.64rem; padding: 4px 7px; }
                 .dm-map-viewer__popover-cta { min-width: 100px; padding: 7px 12px; border-radius: 8px; font-size: 0.74rem; }
-                .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 0; }
-                .dm-dashboard--public .dm-dashboard__table thead { display: none; }
-                .dm-dashboard--public .dm-dashboard__table tbody tr { display: flex; flex-direction: column; gap: 12px; border: 1px solid rgba(28, 19, 79, 0.08); border-radius: 18px; padding: 18px 18px; margin: 0; background: #ffffff; }
-                .dm-dashboard--public .dm-dashboard__table td { width: 100%; display: flex; justify-content: space-between; align-items: center; white-space: normal; background: transparent; }
-                .dm-dashboard--public .dm-dashboard__table td::before { content: attr(data-label); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(45, 45, 78, 0.6); margin-right: 12px; }
             }
             @media (max-width: 640px) {
                 .dm-dashboard--public .dm-dashboard__toolbar { grid-template-columns: 1fr; }

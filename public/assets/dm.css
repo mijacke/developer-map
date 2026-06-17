@@ -1,6 +1,6 @@
 /* Developer Map - Compiled CSS */
 /* Generated: 2025-10-31 08:58:33 */
-/* Version: 5.0.15 */
+/* Version: 5.0.16 */
 
 /* === base.css === */
 #dm-root.dm-root {
@@ -2733,6 +2733,59 @@
 
     .dm-dashboard__table td>*:not(:last-child) {
         margin-right: 16px;
+    }
+
+    .dm-dashboard--public .dm-dashboard__table-wrapper--inventory {
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x;
+    }
+
+    .dm-dashboard__table--inventory-public {
+        min-width: 1040px;
+        width: max-content;
+    }
+
+    .dm-dashboard__table--inventory-public thead {
+        display: block;
+    }
+
+    .dm-dashboard__table--inventory-public thead tr,
+    .dm-dashboard__table--inventory-public tbody tr {
+        display: grid;
+        grid-template-columns:
+            minmax(50px, 0.5fr)
+            minmax(108px, 1.1fr)
+            minmax(72px, 0.78fr)
+            minmax(76px, 0.68fr)
+            minmax(78px, 0.8fr)
+            minmax(40px, 0.38fr)
+            minmax(92px, 0.96fr)
+            minmax(126px, 1.14fr);
+        gap: 10px;
+        align-items: center;
+    }
+
+    .dm-dashboard__table--inventory-public tbody tr {
+        padding: 18px 14px;
+        border: none;
+        border-bottom: 1px solid rgba(28, 19, 79, 0.06);
+        border-radius: 14px;
+        background: transparent !important;
+    }
+
+    .dm-dashboard__table--inventory-public td {
+        display: block;
+        width: auto;
+        padding: 0;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    .dm-dashboard__table--inventory-public td::before {
+        content: none;
     }
 
     .dm-dashboard__cell--actions {
