@@ -1,6 +1,6 @@
 /* Developer Map - Compiled CSS */
 /* Generated: 2025-10-31 08:58:33 */
-/* Version: 5.0.16 */
+/* Version: 5.0.17 */
 
 /* === base.css === */
 #dm-root.dm-root {
@@ -2384,14 +2384,16 @@
 .dm-dashboard__table--inventory tbody tr {
     grid-template-columns:
         minmax(60px, 0.6fr)
-        minmax(108px, 0.9fr)
-        minmax(72px, 0.72fr)
-        minmax(70px, 0.68fr)
-        minmax(78px, 0.76fr)
-        minmax(40px, 0.38fr)
-        minmax(92px, 0.9fr)
-        minmax(112px, 0.92fr)
-        minmax(132px, 1fr);
+        minmax(108px, 0.86fr)
+        minmax(88px, 0.72fr)
+        minmax(72px, 0.62fr)
+        minmax(78px, 0.64fr)
+        minmax(70px, 0.58fr)
+        minmax(78px, 0.64fr)
+        minmax(40px, 0.34fr)
+        minmax(92px, 0.78fr)
+        minmax(112px, 0.82fr)
+        minmax(132px, 0.95fr);
     gap: 10px;
     padding: 14px 16px;
 }
@@ -2399,14 +2401,16 @@
 .dm-dashboard__table--inventory-public thead tr,
 .dm-dashboard__table--inventory-public tbody tr {
     grid-template-columns:
-        minmax(50px, 0.5fr)
-        minmax(108px, 1.1fr)
-        minmax(72px, 0.78fr)
-        minmax(76px, 0.68fr)
-        minmax(78px, 0.8fr)
-        minmax(40px, 0.38fr)
-        minmax(92px, 0.96fr)
-        minmax(126px, 1.14fr);
+        minmax(58px, 0.5fr)
+        minmax(108px, 0.9fr)
+        minmax(88px, 0.74fr)
+        minmax(72px, 0.62fr)
+        minmax(78px, 0.66fr)
+        minmax(76px, 0.64fr)
+        minmax(78px, 0.66fr)
+        minmax(40px, 0.34fr)
+        minmax(92px, 0.82fr)
+        minmax(126px, 1.05fr);
 }
 
 .dm-dashboard__table--inventory-public th,
@@ -2435,15 +2439,18 @@
 
 .dm-dashboard__table--inventory td[data-label="Dom/Byt"],
 .dm-dashboard__table--inventory td[data-label="Typ"],
+.dm-dashboard__table--inventory td[data-label="Dispozícia"],
 .dm-dashboard__table--inventory td[data-label="Park."],
 .dm-dashboard__table--inventory th:nth-child(1),
 .dm-dashboard__table--inventory th:nth-child(2),
-.dm-dashboard__table--inventory th:nth-child(6) {
+.dm-dashboard__table--inventory th:nth-child(3),
+.dm-dashboard__table--inventory th:nth-child(8) {
     font-size: 12px;
 }
 
 .dm-dashboard__table--inventory td[data-label="Dom/Byt"],
-.dm-dashboard__table--inventory td[data-label="Typ"] {
+.dm-dashboard__table--inventory td[data-label="Typ"],
+.dm-dashboard__table--inventory td[data-label="Dispozícia"] {
     overflow: visible;
     text-overflow: clip;
     white-space: normal;
@@ -2454,11 +2461,11 @@
 }
 
 .dm-dashboard__table--inventory {
-    min-width: 900px;
+    min-width: 1120px;
 }
 
 .dm-dashboard__table--inventory-public {
-    min-width: 780px;
+    min-width: 1040px;
 }
 
 .dm-dashboard__table tbody tr:nth-child(even) {
@@ -2744,7 +2751,7 @@
     }
 
     .dm-dashboard__table--inventory-public {
-        min-width: 1040px;
+        min-width: 1220px;
         width: max-content;
     }
 
@@ -2756,14 +2763,16 @@
     .dm-dashboard__table--inventory-public tbody tr {
         display: grid;
         grid-template-columns:
-            minmax(50px, 0.5fr)
-            minmax(108px, 1.1fr)
-            minmax(72px, 0.78fr)
-            minmax(76px, 0.68fr)
-            minmax(78px, 0.8fr)
-            minmax(40px, 0.38fr)
-            minmax(92px, 0.96fr)
-            minmax(126px, 1.14fr);
+            minmax(58px, 0.5fr)
+            minmax(108px, 0.9fr)
+            minmax(88px, 0.74fr)
+            minmax(72px, 0.62fr)
+            minmax(78px, 0.66fr)
+            minmax(76px, 0.64fr)
+            minmax(78px, 0.66fr)
+            minmax(40px, 0.34fr)
+            minmax(92px, 0.82fr)
+            minmax(126px, 1.05fr);
         gap: 10px;
         align-items: center;
     }

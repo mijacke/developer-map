@@ -407,10 +407,10 @@
                 border: none !important;
                 outline: none !important;
             }
-            .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 780px; }
+            .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 1040px; }
             .dm-dashboard--public .dm-dashboard__table thead { display: block; }
             .dm-dashboard--public .dm-dashboard__table thead tr,
-            .dm-dashboard--public .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(50px, 0.5fr) minmax(108px, 1.1fr) minmax(72px, 0.78fr) minmax(70px, 0.76fr) minmax(78px, 0.8fr) minmax(40px, 0.38fr) minmax(92px, 0.96fr) minmax(126px, 1.14fr); gap: 10px; align-items: center; }
+            .dm-dashboard--public .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(58px, 0.5fr) minmax(108px, 0.9fr) minmax(88px, 0.74fr) minmax(72px, 0.62fr) minmax(78px, 0.66fr) minmax(76px, 0.64fr) minmax(78px, 0.66fr) minmax(40px, 0.34fr) minmax(92px, 0.82fr) minmax(126px, 1.05fr); gap: 10px; align-items: center; }
             .dm-dashboard--public .dm-dashboard__table thead tr { background: transparent; border-radius: 0; padding: 0 0 12px; border: none !important; }
             .dm-dashboard--public .dm-dashboard__table th,
             .dm-dashboard--public .dm-dashboard__table td { border: none !important; box-shadow: none !important; background: transparent; }
@@ -424,9 +424,11 @@
             .dm-dashboard--public .dm-dashboard__table td { text-align: center; font-size: 0.82rem; line-height: 1.25; color: #1C134F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .dm-dashboard--public .dm-dashboard__table td[data-label="Dom/Byt"],
             .dm-dashboard--public .dm-dashboard__table td[data-label="Typ"],
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Dispozícia"],
             .dm-dashboard--public .dm-dashboard__table td[data-label="Park."] { font-size: 0.76rem; }
             .dm-dashboard--public .dm-dashboard__table td[data-label="Dom/Byt"],
-            .dm-dashboard--public .dm-dashboard__table td[data-label="Typ"] { overflow: visible; text-overflow: clip; white-space: normal; }
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Typ"],
+            .dm-dashboard--public .dm-dashboard__table td[data-label="Dispozícia"] { overflow: visible; text-overflow: clip; white-space: normal; }
             .dm-dashboard--public .dm-dashboard__table td[data-label="Stav"] { overflow: visible; }
             .dm-dashboard--public .dm-dashboard__link { color: #1C134F; font-weight: 600; text-decoration: none; }
             .dm-dashboard--public .dm-dashboard__link:hover,
@@ -447,10 +449,10 @@
             .dm-dashboard--public.dm-dashboard--stacked .dm-dashboard__toolbar { grid-template-columns: 1fr; }
             @media (max-width: 1200px) {
                 .dm-dashboard--public .dm-dashboard__table-wrapper--inventory { overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x; }
-                .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 1040px; width: max-content; }
+                .dm-dashboard--public .dm-dashboard__table--inventory { min-width: 1220px; width: max-content; }
                 .dm-dashboard--public .dm-dashboard__table thead { display: block; }
                 .dm-dashboard--public .dm-dashboard__table thead tr,
-                .dm-dashboard--public .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(50px, 0.5fr) minmax(108px, 1.1fr) minmax(72px, 0.78fr) minmax(70px, 0.76fr) minmax(78px, 0.8fr) minmax(40px, 0.38fr) minmax(92px, 0.96fr) minmax(126px, 1.14fr); gap: 10px; align-items: center; }
+                .dm-dashboard--public .dm-dashboard__table tbody tr { display: grid; grid-template-columns: minmax(58px, 0.5fr) minmax(108px, 0.9fr) minmax(88px, 0.74fr) minmax(72px, 0.62fr) minmax(78px, 0.66fr) minmax(76px, 0.64fr) minmax(78px, 0.66fr) minmax(40px, 0.34fr) minmax(92px, 0.82fr) minmax(126px, 1.05fr); gap: 10px; align-items: center; }
                 .dm-dashboard--public .dm-dashboard__table td { width: auto; display: block; white-space: nowrap; }
                 .dm-dashboard--public .dm-dashboard__table td::before { content: none; }
             }
@@ -684,6 +686,26 @@
         return String(raw ?? '').trim();
     };
 
+    const resolveDisposition = (floor) => {
+        const raw =
+            floor?.disposition ??
+            floor?.meta?.disposition ??
+            floor?.layout ??
+            floor?.meta?.layout ??
+            '';
+        return String(raw ?? '').trim();
+    };
+
+    const resolvePlotArea = (floor) => (
+        floor?.plotArea ??
+        floor?.meta?.plotArea ??
+        floor?.landArea ??
+        floor?.meta?.landArea ??
+        floor?.lotArea ??
+        floor?.meta?.lotArea ??
+        ''
+    );
+
     const resolveRoomCount = (floor) => {
         const raw =
             floor?.roomCount ??
@@ -804,6 +826,8 @@
             normaliseText(floor?.label),
             normaliseText(floor?.designation),
             normaliseText(floor?.type),
+            normaliseText(resolveDisposition(floor)),
+            normaliseText(resolvePlotArea(floor)),
             normaliseText(floor?.shortcode),
             normaliseText(floor?.parkingSpaces),
         ].filter(Boolean);
@@ -1324,7 +1348,7 @@
         }
         if (!dataset.length) {
             tbody.innerHTML =
-                '<tr class="dm-dashboard__empty-row"><td colspan="8">Žiadne domy/byty nevyhovujú filtrom.</td></tr>';
+                '<tr class="dm-dashboard__empty-row"><td colspan="10">Žiadne domy/byty nevyhovujú filtrom.</td></tr>';
             return;
         }
         const markup = dataset
@@ -1332,7 +1356,9 @@
                 const floor = entry.floor || {};
                 const unitValue = resolveApartmentName(floor);
                 const typeValue = resolveFloorType(floor) ? escapeHtml(resolveFloorType(floor)) : '—';
+                const dispositionText = resolveDisposition(floor) ? escapeHtml(resolveDisposition(floor)) : '—';
                 const areaText = escapeHtml(formatAreaValue(floor.area));
+                const plotAreaText = escapeHtml(formatAreaValue(resolvePlotArea(floor)));
                 const terraceText = escapeHtml(formatAreaValue(floor.terraceArea ?? floor.terrace ?? floor.meta?.terraceArea ?? ''));
                 const totalAreaText = escapeHtml(formatAreaValue(resolveTotalAreaValue(floor)));
                 const rawParkingSpaces = floor.parkingSpaces ?? floor.parkingPlace ?? floor.meta?.parkingSpaces ?? '';
@@ -1358,7 +1384,9 @@
                     <tr role="row"${rowClass}${rowHref}>
                         <td role="cell" data-label="Dom/Byt">${nameMarkup}</td>
                         <td role="cell" data-label="Typ">${typeValue}</td>
+                        <td role="cell" data-label="Dispozícia">${dispositionText}</td>
                         <td role="cell" data-label="Výmera">${areaText}</td>
+                        <td role="cell" data-label="Pozemok">${plotAreaText}</td>
                         <td role="cell" data-label="Terasa">${terraceText}</td>
                         <td role="cell" data-label="Spolu m²">${totalAreaText}</td>
                         <td role="cell" data-label="Park.">${parkingSpaces}</td>
@@ -1712,7 +1740,9 @@
                             <tr role="row">
                                 <th scope="col">Dom/Byt</th>
                                 <th scope="col">Typ</th>
+                                <th scope="col">Dispozícia</th>
                                 <th scope="col">Výmera</th>
+                                <th scope="col">Pozemok</th>
                                 <th scope="col">Terasa</th>
                                 <th scope="col">Spolu m²</th>
                                 <th scope="col">Park.</th>

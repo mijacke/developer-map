@@ -372,7 +372,23 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
     const urlValue = formData.url ?? editLocation?.url ?? '';
     const detailUrlValue = formData.detailUrl ?? editLocation?.detailUrl ?? '';
     const areaValue = formData.area ?? editLocation?.area ?? '';
+    const dispositionValue =
+        formData.disposition ??
+        editLocation?.disposition ??
+        editLocation?.layout ??
+        editLocation?.meta?.disposition ??
+        editLocation?.meta?.layout ??
+        '';
     const loggiaAreaValue = formData.loggiaArea ?? editLocation?.loggiaArea ?? editLocation?.loggia ?? '';
+    const plotAreaValue =
+        formData.plotArea ??
+        editLocation?.plotArea ??
+        editLocation?.landArea ??
+        editLocation?.lotArea ??
+        editLocation?.meta?.plotArea ??
+        editLocation?.meta?.landArea ??
+        editLocation?.meta?.lotArea ??
+        '';
     const terraceAreaValue = formData.terraceArea ?? editLocation?.terraceArea ?? editLocation?.terrace ?? '';
     const totalAreaValue = formData.totalArea ?? editLocation?.totalArea ?? '';
     const parkingSpacesValue = formData.parkingSpaces ?? editLocation?.parkingSpaces ?? editLocation?.parkingPlace ?? '';
@@ -453,6 +469,11 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <label class="dm-field__label">Dom/Byt<span class="dm-field__required">*</span></label>
                                         </div>
                                         <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Dispozícia domu alebo bytu" data-tooltip="Dispozícia domu alebo bytu">${infoIcon}</button>
+                                            <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="disposition" placeholder=" " value="${escapeHtml(dispositionValue)}">
+                                            <label class="dm-field__label">Dispozícia</label>
+                                        </div>
+                                        <div class="dm-field">
                                             <button type="button" class="dm-field__info" aria-label="Stav lokality" data-tooltip="Stav lokality">${infoIcon}</button>
                                             <select required autocomplete="off" class="dm-field__input" data-dm-select data-dm-field="location-status">
                                                 <option value="" disabled${statusPlaceholderSelected} hidden>${escapeHtml(statusPlaceholderLabel)}</option>
@@ -466,6 +487,11 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <button type="button" class="dm-field__info" aria-label="Výmera lokality v m²" data-tooltip="Výmera lokality v m²">${infoIcon}</button>
                                             <input type="text" inputmode="decimal" autocomplete="off" class="dm-field__input" data-dm-field="area" placeholder=" " value="${escapeHtml(areaValue)}">
                                             <label class="dm-field__label">Výmera</label>
+                                        </div>
+                                        <div class="dm-field dm-field--with-unit" data-unit="m²">
+                                            <button type="button" class="dm-field__info" aria-label="Výmera pozemku v m²" data-tooltip="Výmera pozemku v m²">${infoIcon}</button>
+                                            <input type="text" inputmode="decimal" autocomplete="off" class="dm-field__input" data-dm-field="plot-area" placeholder=" " value="${escapeHtml(plotAreaValue)}">
+                                            <label class="dm-field__label">Pozemok</label>
                                         </div>
                                         <div class="dm-field dm-field--with-unit" data-unit="m²">
                                             <button type="button" class="dm-field__info" aria-label="Výmera terasy v m²" data-tooltip="Výmera terasy v m²">${infoIcon}</button>

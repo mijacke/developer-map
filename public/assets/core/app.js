@@ -1,5 +1,5 @@
 // Dynamic imports with cache-busting for production compatibility
-const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfig?.ver) || '5.0.16';
+const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfig?.ver) || '5.0.17';
 
 async function loadModules() {
     const ver = getVersion();
@@ -2017,7 +2017,9 @@ export async function initDeveloperMap(options) {
         const urlInput = form.querySelector('input[data-dm-field="url"]');
         const detailUrlInput = form.querySelector('input[data-dm-field="detail-url"]');
         const areaInput = form.querySelector('input[data-dm-field="area"]');
+        const dispositionInput = form.querySelector('input[data-dm-field="disposition"]');
         const loggiaAreaInput = form.querySelector('input[data-dm-field="loggia-area"]');
+        const plotAreaInput = form.querySelector('input[data-dm-field="plot-area"]');
         const terraceAreaInput = form.querySelector('input[data-dm-field="terrace-area"]');
         const totalAreaInput = form.querySelector('input[data-dm-field="total-area"]');
         const parkingSpacesInput = form.querySelector('input[data-dm-field="parking-spaces"]');
@@ -2068,9 +2070,15 @@ export async function initDeveloperMap(options) {
         const urlValue = urlInput ? urlInput.value.trim() : '';
         const detailUrlValue = detailUrlInput ? detailUrlInput.value.trim() : '';
         const areaValue = areaInput ? areaInput.value.trim() : '';
+        const dispositionValue = dispositionInput
+            ? dispositionInput.value.trim()
+            : String(existingLocation?.disposition ?? existingLocation?.layout ?? '').trim();
         const loggiaAreaValue = loggiaAreaInput
             ? loggiaAreaInput.value.trim()
             : String(existingLocation?.loggiaArea ?? existingLocation?.loggia ?? '').trim();
+        const plotAreaValue = plotAreaInput
+            ? plotAreaInput.value.trim()
+            : String(existingLocation?.plotArea ?? existingLocation?.landArea ?? existingLocation?.lotArea ?? '').trim();
         const terraceAreaValue = terraceAreaInput ? terraceAreaInput.value.trim() : '';
         const totalAreaValue = totalAreaInput ? totalAreaInput.value.trim() : '';
         const parkingSpacesValue = parkingSpacesInput ? parkingSpacesInput.value.trim() : '';
@@ -2104,7 +2112,9 @@ export async function initDeveloperMap(options) {
             url: urlValue,
             detailUrl: detailUrlValue,
             area: areaValue,
+            disposition: dispositionValue,
             loggiaArea: loggiaAreaValue,
+            plotArea: plotAreaValue,
             terraceArea: terraceAreaValue,
             totalArea: totalAreaValue,
             parkingSpaces: parkingSpacesValue,
@@ -2989,7 +2999,9 @@ export async function initDeveloperMap(options) {
                         currentFormData.url = locationFields.url;
                         currentFormData.detailUrl = locationFields.detailUrl;
                         currentFormData.area = locationFields.area;
+                        currentFormData.disposition = locationFields.disposition;
                         currentFormData.loggiaArea = locationFields.loggiaArea;
+                        currentFormData.plotArea = locationFields.plotArea;
                         currentFormData.terraceArea = locationFields.terraceArea;
                         currentFormData.totalArea = locationFields.totalArea;
                         currentFormData.parkingSpaces = locationFields.parkingSpaces;
@@ -3317,7 +3329,9 @@ export async function initDeveloperMap(options) {
         result.item.url = fields.url;
         result.item.detailUrl = fields.detailUrl;
         result.item.area = fields.area;
+        result.item.disposition = fields.disposition;
         result.item.loggiaArea = fields.loggiaArea;
+        result.item.plotArea = fields.plotArea;
         result.item.terraceArea = fields.terraceArea;
         result.item.totalArea = fields.totalArea;
         result.item.parkingSpaces = fields.parkingSpaces;
@@ -3439,7 +3453,9 @@ export async function initDeveloperMap(options) {
                 url: fields.url,
                 detailUrl: fields.detailUrl,
                 area: fields.area,
+                disposition: fields.disposition,
                 loggiaArea: fields.loggiaArea,
+                plotArea: fields.plotArea,
                 terraceArea: fields.terraceArea,
                 totalArea: fields.totalArea,
                 parkingSpaces: fields.parkingSpaces,

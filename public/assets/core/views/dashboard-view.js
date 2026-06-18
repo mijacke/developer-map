@@ -97,6 +97,8 @@ function matchesSearchTerm(floor, searchTerm) {
         normaliseText(floor?.designation),
         normaliseText(floor?.label),
         normaliseText(floor?.type),
+        normaliseText(resolveDisposition(floor)),
+        normaliseText(resolvePlotArea(floor)),
         normaliseText(floor?.parkingSpaces),
         normaliseText(floor?.totalPrice),
     ].filter(Boolean);
@@ -130,6 +132,28 @@ function resolveFloorType(floor) {
         floor?.meta?.category ??
         '';
     return String(raw ?? '').trim();
+}
+
+function resolveDisposition(floor) {
+    const raw =
+        floor?.disposition ??
+        floor?.meta?.disposition ??
+        floor?.layout ??
+        floor?.meta?.layout ??
+        '';
+    return String(raw ?? '').trim();
+}
+
+function resolvePlotArea(floor) {
+    return (
+        floor?.plotArea ??
+        floor?.meta?.plotArea ??
+        floor?.landArea ??
+        floor?.meta?.landArea ??
+        floor?.lotArea ??
+        floor?.meta?.lotArea ??
+        ''
+    );
 }
 
 function matchesTypeFilter(floor, typeFilter) {
@@ -320,6 +344,8 @@ export function renderDashboardView(state, data) {
                     const status = resolveStatus(floor, statuses);
                     const unit = floor.name ?? floor.designation ?? floor.shortcode ?? floor.label;
                     const type = resolveFloorType(floor);
+                    const disposition = resolveDisposition(floor);
+                    const plotArea = resolvePlotArea(floor);
                     const terraceArea = floor.terraceArea ?? floor.terrace ?? floor.meta?.terraceArea ?? '';
                     const totalArea = resolveTotalArea(floor);
                     const parkingSpaces = floor.parkingSpaces ?? floor.parkingPlace ?? floor.meta?.parkingSpaces ?? '';
@@ -328,7 +354,9 @@ export function renderDashboardView(state, data) {
                         <tr role="row">
                             <td role="cell" data-label="Dom/Byt">${safeText(unit)}</td>
                             <td role="cell" data-label="Typ">${safeText(type)}</td>
+                            <td role="cell" data-label="Dispozícia">${safeText(disposition)}</td>
                             <td role="cell" data-label="Výmera">${formatArea(floor.area)}</td>
+                            <td role="cell" data-label="Pozemok">${formatArea(plotArea)}</td>
                             <td role="cell" data-label="Terasa">${formatArea(terraceArea)}</td>
                             <td role="cell" data-label="Spolu m²">${formatArea(totalArea)}</td>
                             <td role="cell" data-label="Park.">${safeText(parkingSpaces)}</td>
@@ -360,7 +388,7 @@ export function renderDashboardView(state, data) {
                 .join('')
             : `
                 <tr role="row" class="dm-dashboard__empty-row">
-                    <td role="cell" colspan="9" class="dm-dashboard__empty-cell">
+                    <td role="cell" colspan="11" class="dm-dashboard__empty-cell">
                         <div class="dm-dashboard__empty-state" role="group" aria-label="Žiadne lokality">
                             <span class="dm-dashboard__empty-icon" aria-hidden="true">${TOOLBAR_ICONS.plus}</span>
                             <h3>Žiadne lokality</h3>
@@ -469,7 +497,9 @@ export function renderDashboardView(state, data) {
                             <tr role="row">
                                 <th scope="col">Dom/Byt</th>
                                 <th scope="col">Typ</th>
+                                <th scope="col">Dispozícia</th>
                                 <th scope="col">Výmera</th>
+                                <th scope="col">Pozemok</th>
                                 <th scope="col">Terasa</th>
                                 <th scope="col">Spolu m²</th>
                                 <th scope="col">Park.</th>
