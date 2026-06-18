@@ -473,14 +473,6 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="disposition" placeholder=" " value="${escapeHtml(dispositionValue)}">
                                             <label class="dm-field__label">Dispozícia</label>
                                         </div>
-                                        <div class="dm-field">
-                                            <button type="button" class="dm-field__info" aria-label="Stav lokality" data-tooltip="Stav lokality">${infoIcon}</button>
-                                            <select required autocomplete="off" class="dm-field__input" data-dm-select data-dm-field="location-status">
-                                                <option value="" disabled${statusPlaceholderSelected} hidden>${escapeHtml(statusPlaceholderLabel)}</option>
-                                                ${statusOptions}
-                                            </select>
-                                            <label class="dm-field__label">Stav<span class="dm-field__required">*</span></label>
-                                        </div>
                                     </div>
                                     <div class="dm-form__column">
                                         <div class="dm-field dm-field--with-unit" data-unit="m²">
@@ -514,6 +506,14 @@ function renderLocationModal(title, cta, data, itemId = null, modalState = null)
                                             <button type="button" class="dm-field__info" aria-label="Cena s DPH" data-tooltip="Cena s DPH">${infoIcon}</button>
                                             <input type="text" autocomplete="off" class="dm-field__input" data-dm-field="price" placeholder=" " value="${escapeHtml(priceValue)}">
                                             <label class="dm-field__label">Cena s DPH</label>
+                                        </div>
+                                        <div class="dm-field">
+                                            <button type="button" class="dm-field__info" aria-label="Stav lokality" data-tooltip="Stav lokality">${infoIcon}</button>
+                                            <select required autocomplete="off" class="dm-field__input" data-dm-select data-dm-field="location-status">
+                                                <option value="" disabled${statusPlaceholderSelected} hidden>${escapeHtml(statusPlaceholderLabel)}</option>
+                                                ${statusOptions}
+                                            </select>
+                                            <label class="dm-field__label">Stav<span class="dm-field__required">*</span></label>
                                         </div>
                                     </div>
                                 </div>

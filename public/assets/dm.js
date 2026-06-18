@@ -8,7 +8,7 @@ import { migrateLocalStorage } from './core/storage-migration.js';
  */
 
 const ROOT_SELECTOR = '#dm-root[data-dm-app="developer-map"]';
-const ASSET_VERSION = '5.0.17';
+const ASSET_VERSION = '5.0.18';
 const runtimeConfig = (typeof window !== 'undefined') ? window.dmRuntimeConfig : null;
 let booted = false;
 

@@ -1,5 +1,5 @@
 // Dynamic imports with cache-busting for production compatibility
-const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfig?.ver) || '5.0.17';
+const getVersion = () => (typeof window !== 'undefined' && window.dmRuntimeConfig?.ver) || '5.0.18';
 
 async function loadModules() {
     const ver = getVersion();
